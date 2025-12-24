@@ -18,17 +18,13 @@ export const economyAPI = {
 
   /**
    * Get detailed item economics with price history
-   * TODO: Reimpliment economy
-   * Currently returns items list as placeholder
    */
   async getItem(
     itemName: string,
     season?: number
   ): Promise<EconomyItemDetailResponse> {
-    // Temporary: return items list
-    // Backend needs /economy/items/:itemName endpoint with aggregated data
     return apiClient.get<EconomyItemDetailResponse>(
-      API_ENDPOINTS.economyItems,
+      `${API_ENDPOINTS.economyItems}/${itemName}`,
       {
         season,
       }
@@ -47,3 +43,4 @@ export const economyAPI = {
     );
   },
 };
+

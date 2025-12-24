@@ -37,30 +37,28 @@ export interface EconomyItemSummary {
   lastSeen: string;
 }
 
+export interface EconomyItemWithPriceData {
+  item_name: string;
+  price_data: PriceData[];
+}
+
 export interface EconomyOverviewResponse {
-  items: EconomyItemSummary[];
+  items: EconomyItemWithPriceData[];
   totalListings: number;
   lastUpdated: string;
 }
 
 export interface EconomyItemDetailResponse {
-  itemName: string;
-  listings: EconomyListing[];
-  stats: {
-    totalListings: number;
-    avgPrice: number | null;
-    medianPrice: number | null;
-    minPrice: number | null;
-    maxPrice: number | null;
-    priceHistory: Array<{
-      date: string;
-      avgPrice: number;
-      count: number;
-    }>;
-  };
+  allListings: EconomyListing[];
+  dataByIngestionDate: Array<{
+    trueDate: string;
+    price: number;
+    numListings: number;
+  }>;
 }
 
 export interface ListingsCountResponse {
   total: number;
   bySeason: Record<string, number>;
 }
+

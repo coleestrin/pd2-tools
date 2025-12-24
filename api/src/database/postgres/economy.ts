@@ -61,7 +61,7 @@ export class EconomyDB {
   }
 
   private async initSchema(): Promise<void> {
-    const createTableQuery = `
+    const createListingsTableQuery = `
             CREATE TABLE IF NOT EXISTS listings (
                 id SERIAL PRIMARY KEY,
                 bumped_ts BIGINT NOT NULL,
@@ -76,6 +76,18 @@ export class EconomyDB {
             );
         `;
 
+    const createSnapshotsTableQuery = `
+            CREATE TABLE IF NOT EXISTS price_snapshots (
+                id SERIAL PRIMARY KEY,
+                item_name TEXT NOT NULL,
+                ingestion_date TEXT NOT NULL,
+                calculated_price REAL NOT NULL,
+                num_listings INTEGER NOT NULL,
+                season INTEGER NOT NULL,
+                UNIQUE(item_name, ingestion_date, season)
+            );
+        `;
+
     const indexQueries = `
             CREATE INDEX IF NOT EXISTS idx_listings_item_date ON listings (item_name, data_date);
             CREATE INDEX IF NOT EXISTS idx_listings_item_ingestion_date ON listings (item_name, ingestion_date);
@@ -83,9 +95,12 @@ export class EconomyDB {
             CREATE INDEX IF NOT EXISTS idx_listings_ingestion_date_bumped_ts ON listings (ingestion_date, bumped_ts);
             CREATE INDEX IF NOT EXISTS idx_listings_season ON listings (season);
             CREATE INDEX IF NOT EXISTS idx_listings_item_season ON listings (item_name, season);
+            CREATE INDEX IF NOT EXISTS idx_snapshots_item_date ON price_snapshots (item_name, ingestion_date);
+            CREATE INDEX IF NOT EXISTS idx_snapshots_item_season ON price_snapshots (item_name, season);
         `;
 
-    await this.pool.query(createTableQuery);
+    await this.pool.query(createListingsTableQuery);
+    await this.pool.query(createSnapshotsTableQuery);
     await this.pool.query(indexQueries);
   }
 
@@ -433,7 +448,217 @@ export class EconomyDB {
     return parseInt(rows[0].count, 10);
   }
 
+  public async getItemsSummary(season?: number, daysOfHistory: number = 7): Promise<any[]> {
+    let query: string;
+    let params: unknown[] = [];
+
+    // Read pre-calculated price snapshots (no calculations!)
+    if (season !== undefined) {
+      query = `
+        WITH recent_snapshots AS (
+          SELECT
+            item_name,
+            ingestion_date as date,
+            calculated_price as price,
+            num_listings
+          FROM price_snapshots
+          WHERE season = $1
+            AND ingestion_date >= (CURRENT_DATE - INTERVAL '${daysOfHistory} days')::text
+        ),
+        items_with_recent_data AS (
+          SELECT DISTINCT item_name
+          FROM recent_snapshots
+        ),
+        fallback_snapshots AS (
+          SELECT DISTINCT ON (item_name)
+            item_name,
+            ingestion_date as date,
+            calculated_price as price,
+            num_listings
+          FROM price_snapshots
+          WHERE season = $1
+            AND item_name NOT IN (SELECT item_name FROM items_with_recent_data)
+          ORDER BY item_name, ingestion_date DESC
+        ),
+        combined_snapshots AS (
+          SELECT * FROM recent_snapshots
+          UNION ALL
+          SELECT * FROM fallback_snapshots
+        )
+        SELECT
+          item_name,
+          json_agg(
+            json_build_object(
+              'price', price,
+              'numListings', num_listings,
+              'date', date
+            ) ORDER BY date ASC
+          ) as price_data
+        FROM combined_snapshots
+        GROUP BY item_name
+        ORDER BY item_name
+      `;
+      params = [season];
+    } else {
+      query = `
+        WITH recent_snapshots AS (
+          SELECT
+            item_name,
+            ingestion_date as date,
+            calculated_price as price,
+            num_listings
+          FROM price_snapshots
+          WHERE ingestion_date >= (CURRENT_DATE - INTERVAL '${daysOfHistory} days')::text
+        ),
+        items_with_recent_data AS (
+          SELECT DISTINCT item_name
+          FROM recent_snapshots
+        ),
+        fallback_snapshots AS (
+          SELECT DISTINCT ON (item_name)
+            item_name,
+            ingestion_date as date,
+            calculated_price as price,
+            num_listings
+          FROM price_snapshots
+          WHERE item_name NOT IN (SELECT item_name FROM items_with_recent_data)
+          ORDER BY item_name, ingestion_date DESC
+        ),
+        combined_snapshots AS (
+          SELECT * FROM recent_snapshots
+          UNION ALL
+          SELECT * FROM fallback_snapshots
+        )
+        SELECT
+          item_name,
+          json_agg(
+            json_build_object(
+              'price', price,
+              'numListings', num_listings,
+              'date', date
+            ) ORDER BY date ASC
+          ) as price_data
+        FROM combined_snapshots
+        GROUP BY item_name
+        ORDER BY item_name
+      `;
+    }
+
+    const { rows } = await this.pool.query(query, params);
+    return rows.map((row) => ({
+      item_name: row.item_name,
+      price_data: row.price_data || [],
+    }));
+  }
+
+  public async getItemDetail(itemName: string, season?: number, limit: number = 100): Promise<any> {
+    let query: string;
+    let params: unknown[];
+
+    // Get raw listings for the table
+    if (season !== undefined) {
+      query = `
+        SELECT id, bumped_ts, item_name, username, price_str, numerical_price,
+               quantity, data_date, ingestion_date, season
+        FROM listings
+        WHERE item_name = $1 AND season = $2
+        ORDER BY bumped_ts DESC
+        LIMIT $3
+      `;
+      params = [itemName, season, limit];
+    } else {
+      query = `
+        SELECT id, bumped_ts, item_name, username, price_str, numerical_price,
+               quantity, data_date, ingestion_date, season
+        FROM listings
+        WHERE item_name = $1
+        ORDER BY bumped_ts DESC
+        LIMIT $2
+      `;
+      params = [itemName, limit];
+    }
+
+    const { rows: allListings } = await this.pool.query(query, params);
+
+    // Get pre-calculated price snapshots for the chart
+    let chartQuery: string;
+    let chartParams: unknown[];
+
+    if (season !== undefined) {
+      chartQuery = `
+        SELECT
+          ingestion_date as "trueDate",
+          calculated_price as price,
+          num_listings as "numListings"
+        FROM price_snapshots
+        WHERE item_name = $1 AND season = $2
+        ORDER BY ingestion_date ASC
+      `;
+      chartParams = [itemName, season];
+    } else {
+      chartQuery = `
+        SELECT
+          ingestion_date as "trueDate",
+          calculated_price as price,
+          num_listings as "numListings"
+        FROM price_snapshots
+        WHERE item_name = $1
+        ORDER BY ingestion_date ASC
+      `;
+      chartParams = [itemName];
+    }
+
+    const { rows: dataByIngestionDate } = await this.pool.query(chartQuery, chartParams);
+
+    return {
+      allListings: allListings.map((row) => ({
+        id: row.id,
+        bumpedTs: parseInt(row.bumped_ts, 10),
+        itemName: row.item_name,
+        username: row.username,
+        priceStr: row.price_str,
+        numericalPrice: row.numerical_price,
+        quantity: row.quantity,
+        dataDate: row.data_date,
+        ingestionDate: row.ingestion_date,
+        season: row.season,
+      })),
+      dataByIngestionDate: dataByIngestionDate.map((row) => ({
+        trueDate: row.trueDate,
+        price: parseFloat(row.price),
+        numListings: parseInt(row.numListings, 10),
+      })),
+    };
+  }
+
+  public async savePriceSnapshot(
+    itemName: string,
+    calculatedPrice: number,
+    numListings: number,
+    season: number
+  ): Promise<void> {
+    const ingestionDate = format(new Date(), "yyyy-MM-dd");
+
+    const query = `
+      INSERT INTO price_snapshots (item_name, ingestion_date, calculated_price, num_listings, season)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (item_name, ingestion_date, season)
+      DO UPDATE SET
+        calculated_price = EXCLUDED.calculated_price,
+        num_listings = EXCLUDED.num_listings
+    `;
+
+    await this.pool.query(query, [
+      itemName,
+      ingestionDate,
+      calculatedPrice,
+      numListings,
+      season,
+    ]);
+  }
+
   public async close(): Promise<void> {
     await this.pool.end();
   }
 }
+

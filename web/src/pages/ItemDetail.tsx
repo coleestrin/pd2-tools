@@ -44,7 +44,11 @@ export default function ItemDetail() {
 
   const { isPending, data } = useQuery({
     queryKey: [itemNameURL],
-    queryFn: () => economyAPI.getItem(itemNameURL || ""),
+    queryFn: () => {
+      const itemData = itemNameURL ? ECONOMY_ITEMS_DATA[itemNameURL] : null;
+      if (!itemData) return Promise.reject(new Error("Item not found"));
+      return economyAPI.getItem(itemData.itemNameInternal);
+    },
     enabled: !!itemNameURL,
   });
 
@@ -313,3 +317,4 @@ export default function ItemDetail() {
     </>
   );
 }
+

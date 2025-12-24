@@ -128,16 +128,16 @@ export const ECONOMY_ITEMS_DATA: EconomyItemsMap = {
     iconUrl: "/economy_icons/Zod_Rune.png",
     wikiLink: "https://wiki.projectdiablo2.com/wiki/Runes",
   },
-  "ber-rune": {
-    itemNameInternal: "Ber Rune",
-    displayName: "Ber Rune",
+    "cham-rune": {
+    itemNameInternal: "Cham Rune",
+    displayName: "Cham Rune",
     category: "Runes",
     categoryValue: "runes",
     categoryPath: "/economy/runes",
-    iconUrl: "/economy_icons/Ber_Rune.png",
+    iconUrl: "/economy_icons/Cham_Rune.png",
     wikiLink: "https://wiki.projectdiablo2.com/wiki/Runes",
   },
-  "jah-rune": {
+    "jah-rune": {
     itemNameInternal: "Jah Rune",
     displayName: "Jah Rune",
     category: "Runes",
@@ -146,13 +146,13 @@ export const ECONOMY_ITEMS_DATA: EconomyItemsMap = {
     iconUrl: "/economy_icons/Jah_Rune.png",
     wikiLink: "https://wiki.projectdiablo2.com/wiki/Runes",
   },
-  "cham-rune": {
-    itemNameInternal: "Cham Rune",
-    displayName: "Cham Rune",
+  "ber-rune": {
+    itemNameInternal: "Ber Rune",
+    displayName: "Ber Rune",
     category: "Runes",
     categoryValue: "runes",
     categoryPath: "/economy/runes",
-    iconUrl: "/economy_icons/Cham_Rune.png",
+    iconUrl: "/economy_icons/Ber_Rune.png",
     wikiLink: "https://wiki.projectdiablo2.com/wiki/Runes",
   },
   "sur-rune": {
@@ -164,15 +164,6 @@ export const ECONOMY_ITEMS_DATA: EconomyItemsMap = {
     iconUrl: "/economy_icons/Sur_Rune.png",
     wikiLink: "https://wiki.projectdiablo2.com/wiki/Runes",
   },
-  "ohm-rune": {
-    itemNameInternal: "Ohm Rune",
-    displayName: "Ohm Rune",
-    category: "Runes",
-    categoryValue: "runes",
-    categoryPath: "/economy/runes",
-    iconUrl: "/economy_icons/Ohm_Rune.png",
-    wikiLink: "https://wiki.projectdiablo2.com/wiki/Runes",
-  },
   "lo-rune": {
     itemNameInternal: "Lo Rune",
     displayName: "Lo Rune",
@@ -180,6 +171,15 @@ export const ECONOMY_ITEMS_DATA: EconomyItemsMap = {
     categoryValue: "runes",
     categoryPath: "/economy/runes",
     iconUrl: "/economy_icons/Lo_Rune.png",
+    wikiLink: "https://wiki.projectdiablo2.com/wiki/Runes",
+  },
+    "ohm-rune": {
+    itemNameInternal: "Ohm Rune",
+    displayName: "Ohm Rune",
+    category: "Runes",
+    categoryValue: "runes",
+    categoryPath: "/economy/runes",
+    iconUrl: "/economy_icons/Ohm_Rune.png",
     wikiLink: "https://wiki.projectdiablo2.com/wiki/Runes",
   },
   "tainted-worldstone-shard": {
@@ -363,3 +363,4 @@ export const ECONOMY_ITEMS_DATA: EconomyItemsMap = {
     wikiLink: "",
   },
 };
+

@@ -75,30 +75,40 @@ export default function Economy() {
     ? currentCategoryInfo.path
     : "/";
 
+  // Create reverse lookup map from itemNameInternal to item data
+  const itemDataByInternalName = useMemo(() => {
+    const map: Record<string, typeof ECONOMY_ITEMS_DATA[string] & { order: number }> = {};
+    Object.values(ECONOMY_ITEMS_DATA).forEach((itemData, index) => {
+      map[itemData.itemNameInternal] = { ...itemData, order: index };
+    });
+    return map;
+  }, []);
+
   const filteredItems = useMemo(() => {
-    if (!data || !currentCategoryInfo?.label) {
+    if (!data?.items || !currentCategoryInfo?.label) {
       return [];
     }
 
-    return data
-      .filter(
-        (item: { category: string; item_name: string }) =>
-          item.category === currentCategoryInfo.label &&
-          ECONOMY_ITEMS_DATA[item.item_name]
-      )
-      .map((item: { item_name: string; price_data: unknown[] }) => {
-        const itemData = ECONOMY_ITEMS_DATA[item.item_name];
+    return data.items
+      .filter((item) => {
+        const itemData = itemDataByInternalName[item.item_name];
+        return itemData && itemData.category === currentCategoryInfo.label;
+      })
+      .map((item) => {
+        const itemData = itemDataByInternalName[item.item_name];
+        if (!itemData) return null;
         return {
           item_name: itemData.displayName,
-          price_data: item.price_data?.filter(
-            (pData: { price?: number }) => pData?.price
-          ),
+          price_data: item.price_data.filter((pData) => pData?.price),
           category: itemData.category,
-          wiki_link: itemData.wikiLink,
+          wiki_link: itemData.wikiLink || "",
           icon_url: itemData.iconUrl,
+          order: itemData.order,
         };
-      });
-  }, [data, currentCategoryInfo]);
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null)
+      .sort((a, b) => a.order - b.order);
+  }, [data, currentCategoryInfo, itemDataByInternalName]);
 
   return (
     <>
@@ -205,3 +215,4 @@ export default function Economy() {
     </>
   );
 }
+

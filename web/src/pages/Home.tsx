@@ -97,8 +97,9 @@ export default function Home() {
 
         const totalEconomyItems =
           economyItems.status === "fulfilled" &&
-          Array.isArray(economyItems.value)
-            ? economyItems.value.length
+          economyItems.value?.items &&
+          Array.isArray(economyItems.value.items)
+            ? economyItems.value.items.length
             : 0;
 
         const totalListings =
@@ -391,3 +392,4 @@ export default function Home() {
     </>
   );
 }
+
