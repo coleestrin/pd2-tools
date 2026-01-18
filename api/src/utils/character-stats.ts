@@ -26,22 +26,40 @@ export default class CharacterStatParser {
       vitality: character.character.attributes.vitality,
       energy: character.character.attributes.energy,
 
-      fcr: 0,
-      ias: 0, //wont include barb passives or any else that inc ias that isn't on items
-      mf: 0,
-      gf: 0,
-      frw: 0,
-      pdr: 0,
-      fhr: 0,
+      fasterCastRate: 0,
+      increasedAttackSpeed: 0, //wont include barb passives or any else that inc ias that isn't on items
+      magicFind: 0,
+      goldFind: 0,
+      fasterRunWalk: 0,
+      physicalDamageReduction: 0,
+      fasterHitRecovery: 0,
+
+      crushingBlow: 0,
+      deadlyStrike: 0,
+      lifeLeech: 0,
+      manaLeech: 0,
+      openWounds: 0,
+      openWoundsDPS: 0,
+      hpPerKill: 0,
+      mpPerKill: 0,
 
       lAbsorbPct: 0,
       lAbsorbFlat: 0,
-
       cAbsorbPct: 0,
       cAbsorbFlat: 0,
-
       fAbsorbPct: 0,
       fAbsorbFlat: 0,
+      mAbsorbFlat: 0,
+
+      fireSkillDamage: 0,
+      coldSkillDamage: 0,
+      lightningSkillDamage: 0,
+      poisonSkillDamage: 0,
+
+      firePierce: 0,
+      coldPierce: 0,
+      lightningPierce: 0,
+      poisonPierce: 0,
     };
   }
 
@@ -166,19 +184,19 @@ export default class CharacterStatParser {
         // Speed Stats
         const ias = this.matchInt(/(\d+)% Increased Attack Speed/, property);
         if (ias) {
-          this.characterStats.ias += ias;
+          this.characterStats.increasedAttackSpeed += ias;
           continue;
         }
 
         const fcr = this.matchInt(/(\d+)% Faster Cast Rate/, property);
         if (fcr) {
-          this.characterStats.fcr += fcr;
+          this.characterStats.fasterCastRate += fcr;
           continue;
         }
 
         const frw = this.matchInt(/(\d+)% Faster Run\/Walk/, property);
         if (frw) {
-          this.characterStats.frw += frw;
+          this.characterStats.fasterRunWalk += frw;
           continue;
         }
 
@@ -188,7 +206,7 @@ export default class CharacterStatParser {
           property
         );
         if (pdr) {
-          this.characterStats.pdr += pdr;
+          this.characterStats.physicalDamageReduction += pdr;
           continue;
         }
 
@@ -231,6 +249,13 @@ export default class CharacterStatParser {
         if (lightAbsFlat) {
           this.characterStats.lAbsorbFlat += lightAbsFlat;
           continue;
+
+        }
+
+        const magicAbsFlat = this.matchInt(/\+(\d+) Magic Absorb/, property);
+        if (magicAbsFlat) {
+          this.characterStats.mAbsorbFlat += magicAbsFlat;
+          continue;
         }
 
         // Gold and Magic Find
@@ -239,7 +264,7 @@ export default class CharacterStatParser {
           property
         );
         if (goldFind) {
-          this.characterStats.gf += goldFind;
+          this.characterStats.goldFind += goldFind;
           continue;
         }
 
@@ -249,13 +274,110 @@ export default class CharacterStatParser {
         );
         if (magicFind) {
           if (item.name === "Enigma") continue;
-          this.characterStats.mf += magicFind;
+          this.characterStats.magicFind += magicFind;
           continue;
         }
 
-        const fhr = this.matchInt(/(\d+)% Faster Hit Recovery/, property);
-        if (fhr) {
-          this.characterStats.fhr += fhr;
+        const fasterHitRecovery = this.matchInt(/(\d+)% Faster Hit Recovery/, property);
+        if (fasterHitRecovery) {
+          this.characterStats.fasterHitRecovery += fasterHitRecovery;
+          continue;
+        }
+
+        const crushingBlow = this.matchInt(/(\d+)% Chance of Crushing Blow/, property);
+        if (crushingBlow) {
+          this.characterStats.crushingBlow += crushingBlow;
+          continue;
+        }
+
+        const deadlyStrike = this.matchInt(/(\d+)% Deadly Strike/, property);
+        if (deadlyStrike) {
+          this.characterStats.deadlyStrike += deadlyStrike;
+          continue;
+        }
+
+        const lifeLeech = this.matchInt(/(\d+)% Life stolen per hit/, property);
+        if (lifeLeech) {
+          this.characterStats.lifeLeech += lifeLeech;
+          continue;
+        }
+
+        const manaLeech = this.matchInt(/(\d+)% Mana stolen per hit/, property);
+        if (manaLeech) {
+          this.characterStats.manaLeech += manaLeech;
+          continue;
+        }
+
+        const openWounds = this.matchInt(/(\d+)% Chance of Open Wounds/, property);
+        if (openWounds) {
+          this.characterStats.openWounds += openWounds;
+          continue;
+        }
+
+        const openWoundsDPS = this.matchInt(/(\d+) Open Wounds Damage Per Second/, property);
+        if (openWoundsDPS) {
+          this.characterStats.openWoundsDPS += openWoundsDPS;
+          continue;
+        }
+
+        const hpPerKill = this.matchInt(/(\d+) Life after each Kill/, property);
+        if (hpPerKill) {
+          this.characterStats.hpPerKill += hpPerKill;
+          continue;
+        }
+
+        const mpPerKill = this.matchInt(/(\d+) to Mana after each Kill/, property);
+        if (mpPerKill) {
+          this.characterStats.mpPerKill += mpPerKill;
+          continue;
+        }
+
+        const fireSkillDamage = this.matchInt(/(\d+)% to Fire Skill Damage/, property);
+        if (fireSkillDamage) {
+          this.characterStats.fireSkillDamage += fireSkillDamage;
+          continue;
+        }
+
+        const coldSkillDamage = this.matchInt(/(\d+)% to Cold Skill Damage/, property);
+        if (coldSkillDamage) {
+          this.characterStats.coldSkillDamage += coldSkillDamage;
+          continue;
+        }
+
+        const lightningSkillDamage = this.matchInt(/(\d+)% to Lightning Skill Damage/, property);
+        if (lightningSkillDamage) {
+          this.characterStats.lightningSkillDamage += lightningSkillDamage;
+          continue;
+        }
+
+        const poisonSkillDamage = this.matchInt(/(\d+)% to Poison Skill Damage/, property);
+        if (poisonSkillDamage) {
+          this.characterStats.poisonSkillDamage += poisonSkillDamage;
+          continue;
+        }
+
+        //Elemental Pierce currently does not take into account skills like Cold Mastery
+        const firePierce = this.matchInt(/(\d+)% to Enemy Fire Resistance/, property);
+        if (firePierce) {
+          this.characterStats.firePierce -= firePierce;
+          continue;
+        }
+
+        const coldPierce = this.matchInt(/(\d+)% to Enemy Cold Resistance/, property);
+        if (coldPierce) {
+          this.characterStats.coldPierce -= coldPierce;
+          continue;
+        }
+
+        const lightningPierce = this.matchInt(/(\d+)% to Enemy Lightning Resistance/, property);
+        if (lightningPierce) {
+          this.characterStats.lightningPierce -= lightningPierce;
+          continue;
+        }
+
+        const poisonPierce = this.matchInt(/(\d+)% to Enemy Poison Resistance/, property);
+        if (poisonPierce) {
+          this.characterStats.poisonPierce -= poisonPierce;
           continue;
         }
 
