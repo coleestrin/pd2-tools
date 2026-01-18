@@ -15,31 +15,43 @@ export interface CharStats {
   vitality: number;
   energy: number;
 
-  //Misc
-  fcr: number;
-  ias: number;
-  mf: number;
-  gf: number;
-  frw: number;
-  pdr: number;
-  fhr: number;
+  //Speed
+  fasterCastRate: number;
+  increasedAttackSpeed: number;
+  fasterHitRecovery: number;
+  fasterRunWalk: number;
 
-  cb: number;
-  ds: number;
-  ll: number;
-  ml: number;
-  pp: number;
-  ow: number;
-  cs: number;
-  hppk: number;
-  mppk: number;
+  //Damage Procs
+  crushingBlow: number;
+  deadlyStrike: number;
+  openWounds: number;
+  criticalStrike: number;
 
+  //Defensive
+  physicalDamageReduction: number;
+
+  //Rewards
+  magicFind: number;
+  goldFind: number;
+
+  //Leech
+  lifeLeech: number;
+  manaLeech: number;
+  hpPerKill: number;
+  mpPerKill: number;
+
+  //Absorb
   lAbsorbPct: number;
   lAbsorbFlat: number;
-
   cAbsorbPct: number;
   cAbsorbFlat: number;
-
   fAbsorbPct: number;
   fAbsorbFlat: number;
+  mAbsorbFlat: number;
+
+  //Elemental Pierce  
+  firePierce: number;
+  coldPierce: number;
+  lightningPierce: number;
+  poisonPierce: number;
 }
