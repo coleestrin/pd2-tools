@@ -21,7 +21,6 @@ const COLORS = {
   increasedAttackSpeed: "rgb(80, 120, 255)",
   crushingBlow: "rgb(255, 140, 0)",
   deadlyStrike: "rgb(255, 220, 0)",
-  criticalStrike: "rgb(255, 60, 160)",
   openWounds: "rgb(255, 60, 60)",
   lifeLeech: "rgb(255, 80, 80)",
   manaLeech: "rgb(60, 140, 255)",
@@ -292,8 +291,8 @@ export function StatsSection({
         <StatGroup title="Damage Procs">
           <StatRow label="Crushing Blow" value={`${realStats.crushingBlow}%`} color={COLORS.crushingBlow} />
           <StatRow label="Deadly Strike" value={`${realStats.deadlyStrike}%`} color={COLORS.deadlyStrike} />
-          <StatRow label="Critical Strike" value={`${realStats.criticalStrike}%`} color={COLORS.criticalStrike} />
-          <StatRow label="Open Wounds" value={`${realStats.openWounds}%`} color={COLORS.openWounds} isLast />
+          <StatRow label="Open Wounds" value={`${realStats.openWounds}%`} color={COLORS.openWounds} />
+          <StatRow label="+ Open Wounds DPS" value={`${realStats.openWoundsDPS}`} color={COLORS.openWounds} isLast />
         </StatGroup>
 
         {/* Leech */}
@@ -302,6 +301,14 @@ export function StatsSection({
           <StatRow label="Mana Leech" value={`${realStats.manaLeech}%`} color={COLORS.manaLeech} />
           <StatRow label="Life after each Kill" value={`${realStats.hpPerKill}`} color={COLORS.life} />
           <StatRow label="Mana after each Kill" value={`${realStats.mpPerKill}`} color={COLORS.mana} isLast />
+        </StatGroup>
+
+        {/* Elemental Skill Damage */}
+        <StatGroup tooltip="% from Gear" title="Elemental Skill Damage">
+          <StatRow label="Fire" value={`${realStats.fireSkillDamage}%`} color={COLORS.fire} />
+          <StatRow label="Cold" value={`${realStats.coldSkillDamage}%`} color={COLORS.cold} />
+          <StatRow label="Lightning" value={`${realStats.lightningSkillDamage}%`} color={COLORS.lightning} />
+          <StatRow label="Poison" value={`${realStats.poisonSkillDamage}%`} color={COLORS.poison} isLast />
         </StatGroup>
 
         {/* Elemental Pierce */}

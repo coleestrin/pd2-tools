@@ -25,7 +25,7 @@ export interface CharStats {
   crushingBlow: number;
   deadlyStrike: number;
   openWounds: number;
-  criticalStrike: number;
+  openWoundsDPS: number;
 
   //Defensive
   physicalDamageReduction: number;
@@ -48,6 +48,12 @@ export interface CharStats {
   fAbsorbPct: number;
   fAbsorbFlat: number;
   mAbsorbFlat: number;
+
+  //Elemental Skill Damage
+  fireSkillDamage: number;
+  coldSkillDamage: number;
+  lightningSkillDamage: number;
+  poisonSkillDamage: number;
 
   //Elemental Pierce  
   firePierce: number;
