@@ -110,6 +110,15 @@ export function StatsSection({
     fhr: 0,
     frw: 0,
     ias: 0,
+    cb: 0,
+    ds: 0,
+    ll: 0,
+    ml: 0,
+    pp: 0, 
+    ow: 0,
+    cs: 0,
+    hppk: 0,
+    mppk: 0,
     mf: 0,
     gf: 0,
     pdr: 0,
@@ -250,6 +259,14 @@ export function StatsSection({
           <StatRow label="Faster Hit Recovery" value={`${realStats.fhr}%`} />
           <StatRow label="Faster Run/Walk" value={`${realStats.frw}%`} />
           <StatRow label="Increased Attack Speed" value={`${realStats.ias}%`} />
+          <StatRow label="Crushing Blow" value={`${realStats.cb}%`} />
+          <StatRow label="Deadly Strike" value={`${realStats.ds}%`} />
+          <StatRow label="Life Leech" value={`${realStats.ll}%`} />
+          <StatRow label="Mana Leech" value={`${realStats.ml}%`} />
+          <StatRow label="Open Wounds" value={`${realStats.ow}%`} />
+          <StatRow label="Critical Strike" value={`${realStats.cs}%`} />
+          <StatRow label="Life after each Kill" value={`${realStats.hppk}`} />
+          <StatRow label="Mana after each Kill" value={`${realStats.mppk}`} />
           <StatRow label="Magic Find" value={`${realStats.mf}%`} />
           <StatRow label="Gold Find" value={`${realStats.gf}%`} />
           <StatRow

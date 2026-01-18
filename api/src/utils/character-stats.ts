@@ -34,6 +34,16 @@ export default class CharacterStatParser {
       pdr: 0,
       fhr: 0,
 
+      cb: 0,
+      ds: 0,
+      ll: 0,
+      ml: 0,
+      pp: 0, 
+      ow: 0,
+      cs: 0,
+      hppk: 0,
+      mppk: 0,
+
       lAbsorbPct: 0,
       lAbsorbFlat: 0,
 
@@ -256,6 +266,53 @@ export default class CharacterStatParser {
         const fhr = this.matchInt(/(\d+)% Faster Hit Recovery/, property);
         if (fhr) {
           this.characterStats.fhr += fhr;
+          continue;
+        }
+
+        const cb = this.matchInt(/(\d+)% Chance of Crushing Blow/, property);
+        if (cb) {
+          this.characterStats.cb += cb;
+          continue;
+        }
+
+        const ds = this.matchInt(/(\d+)% Deadly Strike/, property);
+        if (ds) {
+          this.characterStats.ds += ds;
+          continue;
+        }
+
+        const ll = this.matchInt(/(\d+)% Life stolen per hit/, property);
+        if (ll) {
+          this.characterStats.ll += ll;
+          continue;
+        }
+
+        const ml = this.matchInt(/(\d+)% Mana stolen per hit/, property);
+        if (ml) {
+          this.characterStats.ml += ml;
+          continue;
+        }
+
+        const ow = this.matchInt(/(\d+)% Chance of Open Wounds/, property);
+        if (ow) {
+          this.characterStats.ow += ow;
+          continue;
+        } 
+        const cs = this.matchInt(/(\d+)% Chance of Critical Strike/, property);
+        if (cs) {
+          this.characterStats.cs += cs;
+          continue;
+        }
+
+        const hppk = this.matchInt(/(\d+) to Life after each Kill/, property);
+        if (hppk) {
+          this.characterStats.hppk += hppk;
+          continue;
+        }
+
+        const mppk = this.matchInt(/(\d+) to Mana after each Kill/, property);
+        if (mppk) {
+          this.characterStats.mppk += mppk;
           continue;
         }
 
