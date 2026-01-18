@@ -146,6 +146,14 @@ export interface RealStats {
   fcr: number;
   fhr: number;
   frw: number;
+  cb: number;
+  ds: number;
+  ll: number;
+  ml: number;
+  ow: number;
+  cs: number;
+  hppk: number;
+  mppk: number;
   gf: number;
   ias: number;
   mf: number;

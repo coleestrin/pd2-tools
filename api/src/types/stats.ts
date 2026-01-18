@@ -24,6 +24,16 @@ export interface CharStats {
   pdr: number;
   fhr: number;
 
+  cb: number;
+  ds: number;
+  ll: number;
+  ml: number;
+  pp: number;
+  ow: number;
+  cs: number;
+  hppk: number;
+  mppk: number;
+
   lAbsorbPct: number;
   lAbsorbFlat: number;
 
