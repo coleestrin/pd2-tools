@@ -14,6 +14,21 @@ const COLORS = {
   cold: "rgb(54, 99, 145)",
   lightning: "rgb(255, 217, 0)",
   poison: "#00991c",
+  magic: "rgb(255, 140, 0)",
+  fasterCastRate: "rgb(0, 200, 255)",
+  fasterHitRecovery: "rgb(190, 80, 255)",
+  fasterRunWalk: "rgb(80, 255, 80)",
+  increasedAttackSpeed: "rgb(80, 120, 255)",
+  crushingBlow: "rgb(255, 140, 0)",
+  deadlyStrike: "rgb(255, 220, 0)",
+  criticalStrike: "rgb(255, 60, 160)",
+  openWounds: "rgb(255, 60, 60)",
+  lifeLeech: "rgb(255, 80, 80)",
+  manaLeech: "rgb(60, 140, 255)",
+  magicFind: "rgb(200, 90, 255)",
+  goldFind: "rgb(255, 230, 80)",
+  physicalDamageReduction: "rgb(185, 195, 210)",
+  zeroValue: "rgb(107, 114, 128)"
 } as const;
 
 interface StatRowProps {
@@ -106,6 +121,7 @@ export function StatsSection({
     cAbsorbPct: 0,
     lAbsorbFlat: 0,
     lAbsorbPct: 0,
+    mAbsorbFlat: 0,
     fcr: 0,
     fhr: 0,
     frw: 0,
@@ -114,7 +130,7 @@ export function StatsSection({
     ds: 0,
     ll: 0,
     ml: 0,
-    pp: 0, 
+    pp: 0,
     ow: 0,
     cs: 0,
     hppk: 0,
@@ -122,6 +138,11 @@ export function StatsSection({
     mf: 0,
     gf: 0,
     pdr: 0,
+    firePierce: 0,
+    coldPierce: 0,
+    lightningPierce: 0,
+    poisonPierce: 0,
+    magicPierce: 0
   };
   return (
     <Card radius="md" shadow="md" padding="md">
@@ -166,7 +187,8 @@ export function StatsSection({
         {/* Defensive Stats */}
         <StatGroup title="Defensive">
           <StatRow label="Life" value={stats.life} color={COLORS.life} />
-          <StatRow label="Mana" value={stats.mana} color={COLORS.mana} isLast />
+          <StatRow label="Mana" value={stats.mana} color={COLORS.mana} />
+          <StatRow label="Physical Damage Reduction" value={`${realStats.physicalDamageReduction}%`} color={COLORS.physicalDamageReduction} isLast />
         </StatGroup>
 
         {/* Attributes */}
@@ -249,31 +271,51 @@ export function StatsSection({
             value={realStats.lAbsorbFlat}
             secondValue={`${realStats.lAbsorbPct}%`}
             color={COLORS.lightning}
+          />
+          <StatRow
+            label="Magic"
+            value={realStats.mAbsorbFlat}
+            color={COLORS.magic}
             isLast
           />
         </StatGroup>
 
-        {/* Miscellaneous */}
-        <StatGroup title="Miscellaneous">
-          <StatRow label="Faster Cast Rate" value={`${realStats.fcr}%`} />
-          <StatRow label="Faster Hit Recovery" value={`${realStats.fhr}%`} />
-          <StatRow label="Faster Run/Walk" value={`${realStats.frw}%`} />
-          <StatRow label="Increased Attack Speed" value={`${realStats.ias}%`} />
-          <StatRow label="Crushing Blow" value={`${realStats.cb}%`} />
-          <StatRow label="Deadly Strike" value={`${realStats.ds}%`} />
-          <StatRow label="Life Leech" value={`${realStats.ll}%`} />
-          <StatRow label="Mana Leech" value={`${realStats.ml}%`} />
-          <StatRow label="Open Wounds" value={`${realStats.ow}%`} />
-          <StatRow label="Critical Strike" value={`${realStats.cs}%`} />
-          <StatRow label="Life after each Kill" value={`${realStats.hppk}`} />
-          <StatRow label="Mana after each Kill" value={`${realStats.mppk}`} />
-          <StatRow label="Magic Find" value={`${realStats.mf}%`} />
-          <StatRow label="Gold Find" value={`${realStats.gf}%`} />
-          <StatRow
-            label="Physical Damage Reduction"
-            value={`${realStats.pdr}%`}
-            isLast
-          />
+        {/* Speed */}
+        <StatGroup title="Speed" tooltip="Does not take into account non-item modifiers">
+          <StatRow label="Faster Cast Rate" value={`${realStats.fasterCastRate}%`} color={COLORS.fasterCastRate} />
+          <StatRow label="Faster Hit Recovery" value={`${realStats.fasterHitRecovery}%`} color={COLORS.fasterHitRecovery} />
+          <StatRow label="Faster Run/Walk" value={`${realStats.fasterRunWalk}%`} color={COLORS.fasterRunWalk} />
+          <StatRow label="Increased Attack Speed" value={`${realStats.increasedAttackSpeed}%`} color={COLORS.increasedAttackSpeed} isLast />
+        </StatGroup>
+
+        {/* Damage Procs */}
+        <StatGroup title="Damage Procs">
+          <StatRow label="Crushing Blow" value={`${realStats.crushingBlow}%`} color={COLORS.crushingBlow} />
+          <StatRow label="Deadly Strike" value={`${realStats.deadlyStrike}%`} color={COLORS.deadlyStrike} />
+          <StatRow label="Critical Strike" value={`${realStats.criticalStrike}%`} color={COLORS.criticalStrike} />
+          <StatRow label="Open Wounds" value={`${realStats.openWounds}%`} color={COLORS.openWounds} isLast />
+        </StatGroup>
+
+        {/* Leech */}
+        <StatGroup title="Leech">
+          <StatRow label="Life Leech" value={`${realStats.lifeLeech}%`} color={COLORS.lifeLeech} />
+          <StatRow label="Mana Leech" value={`${realStats.manaLeech}%`} color={COLORS.manaLeech} />
+          <StatRow label="Life after each Kill" value={`${realStats.hpPerKill}`} color={COLORS.life} />
+          <StatRow label="Mana after each Kill" value={`${realStats.mpPerKill}`} color={COLORS.mana} isLast />
+        </StatGroup>
+
+        {/* Elemental Pierce */}
+        <StatGroup tooltip="% from Gear" title="Elemental Pierce">
+          <StatRow label="Fire" value={`${realStats.firePierce}%`} color={COLORS.fire} />
+          <StatRow label="Cold" value={`${realStats.coldPierce}%`} color={COLORS.cold} />
+          <StatRow label="Lightning" value={`${realStats.lightningPierce}%`} color={COLORS.lightning} />
+          <StatRow label="Poison" value={`${realStats.poisonPierce}%`} color={COLORS.poison} isLast />
+        </StatGroup>
+
+        {/* Rewards */}
+        <StatGroup title="Rewards">
+          <StatRow label="Magic Find" value={`${realStats.magicFind}%`} color={COLORS.magicFind} />
+          <StatRow label="Gold Find" value={`${realStats.goldFind}%`} color={COLORS.goldFind} isLast />
         </StatGroup>
       </div>
     </Card>

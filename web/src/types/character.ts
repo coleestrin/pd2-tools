@@ -143,21 +143,26 @@ export interface RealStats {
   cAbsorbPct: number;
   lAbsorbFlat: number;
   lAbsorbPct: number;
-  fcr: number;
-  fhr: number;
-  frw: number;
-  cb: number;
-  ds: number;
-  ll: number;
-  ml: number;
-  ow: number;
-  cs: number;
-  hppk: number;
-  mppk: number;
-  gf: number;
-  ias: number;
-  mf: number;
-  pdr: number;
+  mAbsorbFlat: number;
+  fasterCastRate: number;
+  fasterHitRecovery: number;
+  fasterRunWalk: number;
+  crushingBlow: number;
+  deadlyStrike: number;
+  lifeLeech: number;
+  manaLeech: number;
+  openWounds: number;
+  criticalStrike: number;
+  hpPerKill: number;
+  mpPerKill: number;
+  goldFind: number;
+  increasedAttackSpeed: number;
+  magicFind: number;
+  physicalDamageReduction: number;
+  firePierce: number;
+  coldPierce: number;
+  lightningPierce: number;
+  poisonPierce: number;
 }
 
 // Skill representation
