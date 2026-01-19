@@ -280,7 +280,7 @@ export function StatsSection({
         </StatGroup>
 
         {/* Speed */}
-        <StatGroup title="Speed" tooltip="Does not take into account non-item modifiers">
+        <StatGroup title="Speed" tooltip="Item Bonuses Only">
           <StatRow label="Faster Cast Rate" value={`${realStats.fasterCastRate}%`} color={COLORS.fasterCastRate} />
           <StatRow label="Faster Hit Recovery" value={`${realStats.fasterHitRecovery}%`} color={COLORS.fasterHitRecovery} />
           <StatRow label="Faster Run/Walk" value={`${realStats.fasterRunWalk}%`} color={COLORS.fasterRunWalk} />
@@ -304,7 +304,7 @@ export function StatsSection({
         </StatGroup>
 
         {/* Elemental Skill Damage */}
-        <StatGroup tooltip="% from Gear" title="Elemental Skill Damage">
+        <StatGroup title="Elemental Skill Damage" tooltip="Item Bonuses Only">
           <StatRow label="Fire" value={`${realStats.fireSkillDamage}%`} color={COLORS.fire} />
           <StatRow label="Cold" value={`${realStats.coldSkillDamage}%`} color={COLORS.cold} />
           <StatRow label="Lightning" value={`${realStats.lightningSkillDamage}%`} color={COLORS.lightning} />
@@ -312,7 +312,7 @@ export function StatsSection({
         </StatGroup>
 
         {/* Elemental Pierce */}
-        <StatGroup tooltip="% from Gear" title="Elemental Pierce">
+        <StatGroup title="Elemental Pierce" tooltip="Item Bonuses Only">
           <StatRow label="Fire" value={`${realStats.firePierce}%`} color={COLORS.fire} />
           <StatRow label="Cold" value={`${realStats.coldPierce}%`} color={COLORS.cold} />
           <StatRow label="Lightning" value={`${realStats.lightningPierce}%`} color={COLORS.lightning} />
