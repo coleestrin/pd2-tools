@@ -40,3 +40,11 @@ Contributions are welcome. For coordination or questions join the [pd2.tools dis
 2. Create a feature branch.
 3. Make your changes.
 4. Submit a PR.
+
+## 👥 Contributors
+<a href="https://github.com/coleestrin/pd2-tools/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=coleestrin/pd2-tools" />
+</a>
+
+## ⭐ Star History
+[![Star History Chart](https://api.star-history.com/svg?repos=coleestrin/pd2-tools&type=date&legend=top-left)](https://www.star-history.com/#coleestrin/pd2-tools&type=date&legend=top-left)
