@@ -26,7 +26,7 @@ const COLORS = {
   manaLeech: "rgb(60, 140, 255)",
   magicFind: "rgb(200, 90, 255)",
   goldFind: "rgb(255, 230, 80)",
-  physicalDamageReduction: "rgb(185, 195, 210)",
+  physicalDamageReduction: "#bdbc99",
   zeroValue: "rgb(107, 114, 128)"
 } as const;
 
