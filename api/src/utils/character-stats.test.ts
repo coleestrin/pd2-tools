@@ -80,13 +80,13 @@ describe("StatParser", () => {
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
-      expect(stats.fcr).toBe(0);
-      expect(stats.ias).toBe(0);
-      expect(stats.mf).toBe(0);
-      expect(stats.gf).toBe(0);
-      expect(stats.frw).toBe(0);
-      expect(stats.pdr).toBe(0);
-      expect(stats.fhr).toBe(0);
+      expect(stats.fasterCastRate).toBe(0);
+      expect(stats.increasedAttackSpeed).toBe(0);
+      expect(stats.magicFind).toBe(0);
+      expect(stats.goldFind).toBe(0);
+      expect(stats.fasterRunWalk).toBe(0);
+      expect(stats.physicalDamageReduction).toBe(0);
+      expect(stats.fasterHitRecovery).toBe(0);
     });
   });
 
@@ -230,7 +230,7 @@ describe("StatParser", () => {
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
-      expect(stats.fcr).toBe(20);
+      expect(stats.fasterCastRate).toBe(20);
     });
 
     it("should parse increased attack speed", () => {
@@ -239,7 +239,7 @@ describe("StatParser", () => {
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
-      expect(stats.ias).toBe(30);
+      expect(stats.increasedAttackSpeed).toBe(30);
     });
 
     it("should parse faster run/walk", () => {
@@ -248,7 +248,7 @@ describe("StatParser", () => {
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
-      expect(stats.frw).toBe(25);
+      expect(stats.fasterRunWalk).toBe(25);
     });
 
     it("should parse faster hit recovery", () => {
@@ -257,7 +257,7 @@ describe("StatParser", () => {
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
-      expect(stats.fhr).toBe(15);
+      expect(stats.fasterHitRecovery).toBe(15);
     });
 
     it("should stack speed bonuses", () => {
@@ -275,8 +275,8 @@ describe("StatParser", () => {
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
-      expect(stats.fcr).toBe(30);
-      expect(stats.frw).toBe(25);
+      expect(stats.fasterCastRate).toBe(30);
+      expect(stats.fasterRunWalk).toBe(25);
     });
   });
 
@@ -403,7 +403,7 @@ describe("StatParser", () => {
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
-      expect(stats.mf).toBe(50);
+      expect(stats.magicFind).toBe(50);
     });
 
     it("should parse gold find", () => {
@@ -412,7 +412,7 @@ describe("StatParser", () => {
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
-      expect(stats.gf).toBe(30);
+      expect(stats.goldFind).toBe(30);
     });
 
     it("should ignore MF from Enigma", () => {
@@ -426,7 +426,7 @@ describe("StatParser", () => {
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
-      expect(stats.mf).toBe(25); // Only from Other Item
+      expect(stats.magicFind).toBe(25); // Only from Other Item
     });
 
     it("should stack MF from multiple items", () => {
@@ -438,7 +438,7 @@ describe("StatParser", () => {
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
-      expect(stats.mf).toBe(90);
+      expect(stats.magicFind).toBe(90);
     });
   });
 
@@ -562,7 +562,7 @@ describe("StatParser", () => {
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
-      expect(stats.pdr).toBe(15);
+      expect(stats.physicalDamageReduction).toBe(15);
     });
 
     it("should stack PDR from multiple items", () => {
@@ -574,7 +574,7 @@ describe("StatParser", () => {
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
-      expect(stats.pdr).toBe(15);
+      expect(stats.physicalDamageReduction).toBe(15);
     });
   });
 
@@ -629,8 +629,8 @@ describe("StatParser", () => {
 
       expect(stats.fireRes).toBe(-55);
       expect(stats.strength).toBe(125);
-      expect(stats.fcr).toBe(20);
-      expect(stats.mf).toBe(50);
+      expect(stats.fasterCastRate).toBe(20);
+      expect(stats.magicFind).toBe(50);
       expect(stats.energy).toBe(160);
     });
 
@@ -654,11 +654,11 @@ describe("StatParser", () => {
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
-      expect(stats.fcr).toBe(40); // 20 + 20
-      expect(stats.frw).toBe(30);
+      expect(stats.fasterCastRate).toBe(40); // 20 + 20
+      expect(stats.fasterRunWalk).toBe(30);
       expect(stats.fireRes).toBe(-35); // -70 + 20 + 15
-      expect(stats.mf).toBe(50);
-      expect(stats.gf).toBe(50);
+      expect(stats.magicFind).toBe(50);
+      expect(stats.goldFind).toBe(50);
     });
   });
 
@@ -678,7 +678,7 @@ describe("StatParser", () => {
       const stats = parser.parseAndGetCharStats();
 
       expect(stats.strength).toBe(100);
-      expect(stats.fcr).toBe(0);
+      expect(stats.fasterCastRate).toBe(0);
     });
 
     it("should handle properties with no numeric values", () => {
@@ -702,7 +702,7 @@ describe("StatParser", () => {
       const stats = parser.parseAndGetCharStats();
 
       expect(stats.strength).toBe(1099);
-      expect(stats.fcr).toBe(999);
+      expect(stats.fasterCastRate).toBe(999);
     });
   });
 });
