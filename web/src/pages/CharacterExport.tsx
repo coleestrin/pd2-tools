@@ -1,5 +1,4 @@
 import { Helmet } from "react-helmet";
-import { useMutation } from "@tanstack/react-query";
 import {
   Card,
   Text,
@@ -172,18 +171,18 @@ export default function CharacterExport() {
         <Center>
           <Alert
             icon={<IconAlertTriangle size="1rem" />}
-            title="Having trouble exporting?"
+            title="Use the maintained community exporter"
             color="blue"
             variant="light"
-            mb={"md"}
+            mb="md"
             maw={rem(600)}
-            w={"100%"}
+            w="100%"
           >
             <Text size="sm">
-              If you are having trouble exporting your character, we recommend
-              you use Dominis's character exporter at{" "}
+              The original pd2.tools exporter has been archived. For working
+              exports, use Dominis&apos;s maintained character exporter at{" "}
               <Anchor
-                href="https://exiledagain.github.io/bug-free-eureka/export.html"
+                href={MAINTAINED_EXPORTER_URL}
                 target="_blank"
                 rel="noopener noreferrer"
               >

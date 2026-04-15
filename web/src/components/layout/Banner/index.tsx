@@ -10,9 +10,10 @@ import {
 } from "@mantine/core";
 import { IconStar } from "@tabler/icons-react";
 import { GitHubIcon } from "../../icons";
+import { SEASON_STORAGE_KEY_SUFFIX } from "../../../types";
 
-const PAGEVIEW_KEY = "pd2tools_pageviews_s12";
-const DISMISSED_KEY = "pd2tools_banner_dismissed_at_s12";
+const PAGEVIEW_KEY = `pd2tools_pageviews_${SEASON_STORAGE_KEY_SUFFIX}`;
+const DISMISSED_KEY = `pd2tools_banner_dismissed_at_${SEASON_STORAGE_KEY_SUFFIX}`;
 const PAGEVIEW_THRESHOLD = 7;
 const REAPPEAR_DAYS = 90;
 

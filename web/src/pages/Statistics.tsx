@@ -30,11 +30,12 @@ import type {
   LevelDistributionData,
   GameMode,
 } from "../types";
+import { CURRENT_SEASON, SEASON_OPTIONS } from "../types";
 
 export default function StatisticsPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>("1d");
   const [levelTab, setLevelTab] = useState<GameMode>("softcore");
-  const [season, setSeason] = useState<number>(12);
+  const [season, setSeason] = useState<number>(CURRENT_SEASON);
 
   const theme = useMantineTheme();
 
@@ -271,11 +272,10 @@ export default function StatisticsPage() {
                   />
                   <Select
                     value={season.toString()}
-                    onChange={(value) => setSeason(parseInt(value || "12"))}
-                    data={[
-                      { label: "Season 12", value: "12" },
-                      { label: "Season 11", value: "11" },
-                    ]}
+                    onChange={(value) =>
+                      setSeason(parseInt(value || CURRENT_SEASON.toString(), 10))
+                    }
+                    data={SEASON_OPTIONS}
                     w={120}
                   />
                   {/* {levelData && (

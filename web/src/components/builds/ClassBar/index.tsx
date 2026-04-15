@@ -24,6 +24,7 @@ import Cookies from "js-cookie";
 import debounce from "lodash/debounce";
 import { accountsAPI } from "../../../api";
 import type { BuildsComponentProps } from "../types";
+import { SEASON_OPTIONS } from "../../../types";
 
 interface SettingsModalProps {
   opened: boolean;
@@ -250,7 +251,7 @@ export default function ClassBar({
 
   const handleSeasonChange = (value: string | null) => {
     if (value) {
-      updateFilters({ season: parseInt(value) });
+      updateFilters({ season: parseInt(value, 10) });
     }
   };
 
@@ -316,10 +317,7 @@ export default function ClassBar({
             </Text>
             <Select
               placeholder="Select Season"
-              data={[
-                { value: "12", label: "Season 12" },
-                { value: "11", label: "Season 11" },
-              ]}
+              data={SEASON_OPTIONS}
               value={filters.season.toString()}
               onChange={handleSeasonChange}
               style={{ width: "100%" }}

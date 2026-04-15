@@ -28,6 +28,7 @@ import type { HomeStats } from "../types";
 
 const CACHE_KEY = "pd2tools_home_stats";
 const CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const FIXED_EXPORT_COUNT = 39846;
 
 interface CachedHomeStats extends HomeStats {
   timestamp: number;
@@ -117,7 +118,7 @@ export default function Home() {
     cached
       ? {
           totalCharacters: cached.totalCharacters,
-          totalExports: cached.totalExports,
+          totalExports: FIXED_EXPORT_COUNT,
           totalEconomyItems: cached.totalEconomyItems,
           totalListings: cached.totalListings,
         }
@@ -134,7 +135,7 @@ export default function Home() {
       if (cached && now - cached.timestamp < CACHE_DURATION_MS) {
         setStats({
           totalCharacters: cached.totalCharacters,
-          totalExports: cached.totalExports,
+          totalExports: FIXED_EXPORT_COUNT,
           totalEconomyItems: cached.totalEconomyItems,
           totalListings: cached.totalListings,
         });
@@ -143,10 +144,9 @@ export default function Home() {
       }
 
       try {
-        const [charactersData, exportCount, economyItems, listingsCount] =
+        const [charactersData, economyItems, listingsCount] =
           await Promise.allSettled([
             charactersAPI.getCharacterCounts(),
-            charactersAPI.getExportCount(),
             economyAPI.getItems(),
             economyAPI.getListingsCount(),
           ]);
@@ -156,9 +156,6 @@ export default function Home() {
             ? (charactersData.value.hardcore || 0) +
               (charactersData.value.softcore || 0)
             : 0;
-
-        const totalExports =
-          exportCount.status === "fulfilled" ? exportCount.value.count || 0 : 0;
 
         const totalEconomyItems =
           economyItems.status === "fulfilled" &&
@@ -174,7 +171,7 @@ export default function Home() {
 
         const newStats = {
           totalCharacters,
-          totalExports,
+          totalExports: FIXED_EXPORT_COUNT,
           totalEconomyItems,
           totalListings,
         };
@@ -206,9 +203,9 @@ export default function Home() {
           Project Diablo 2 Tools & Stats
         </Title>
         <Text ta="center" c="dimmed" mb="lg">
-          Discover builds, track item prices, export multiplayer characters, and
-          more. All data is refreshed regularly using live data from the Project
-          Diablo 2 API.
+          Discover builds, track item prices, find character export resources,
+          and more. All data is refreshed regularly using live data from the
+          Project Diablo 2 API.
         </Text>
 
         <SimpleGrid cols={{ base: 1, sm: 2, md: 5 }} spacing="lg" mb="xl">
