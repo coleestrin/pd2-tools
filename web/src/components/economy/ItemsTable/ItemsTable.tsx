@@ -27,6 +27,7 @@ export function ItemsTable({
   items: initialItems,
   isPending,
   category,
+  search: searchSuffix = "",
 }: ItemsTableProps) {
   const [sortBy, setSortBy] = useState<SortField | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
@@ -184,7 +185,7 @@ export function ItemsTable({
                   <Table.Td>
                     <Group justify="space-between" wrap="nowrap">
                       <a //@ts-expect-error - missing required props for anchor tag
-                        href={`/economy/item/${item.item_name.toLowerCase().replaceAll(" ", "-").replaceAll("'", "")}`}
+                        href={`/economy/item/${item.item_name.toLowerCase().replaceAll(" ", "-").replaceAll("'", "")}${searchSuffix}`}
                         style={{
                           textDecoration: "none",
                           color: "inherit",

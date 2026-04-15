@@ -17,6 +17,7 @@ interface NavigationProps {
   navItems: NavigationSection[];
   closeDrawer?: () => void;
   currentItemCategoryValue?: string;
+  search?: string;
 }
 
 export function Navigation({
@@ -24,6 +25,7 @@ export function Navigation({
   navItems,
   closeDrawer,
   currentItemCategoryValue,
+  search = "",
 }: NavigationProps) {
   return (
     <Tabs
@@ -71,7 +73,7 @@ export function Navigation({
                   />
                 }
                 component="a"
-                href={item.path}
+                href={`${item.path}${search}`}
                 onClick={closeDrawer}
               >
                 {item.label}
