@@ -24,7 +24,7 @@ import Cookies from "js-cookie";
 import debounce from "lodash/debounce";
 import { accountsAPI } from "../../../api";
 import type { BuildsComponentProps } from "../types";
-import { SEASON_OPTIONS } from "../../../types";
+import { LEVEL_RANGE_COOKIE_KEY, SEASON_OPTIONS } from "../../../types";
 
 interface SettingsModalProps {
   opened: boolean;
@@ -45,7 +45,7 @@ function SettingsModal({
     debounce((value: [number, number]) => {
       onLevelChange(value[0], value[1]);
       Cookies.set(
-        "levelRange",
+        LEVEL_RANGE_COOKIE_KEY,
         JSON.stringify({ min: value[0], max: value[1] }),
         { expires: 365 }
       );
@@ -76,7 +76,7 @@ function SettingsModal({
             Character Level Range
           </Text>
           <Tooltip
-            label="Inclusive level range (from-to) (default 94-99)"
+            label="Inclusive level range (from-to) (default 80-99)"
             position="right"
           >
             <div

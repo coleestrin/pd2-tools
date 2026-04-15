@@ -22,6 +22,7 @@ export const SHORT_SEASON_OPTIONS = SUPPORTED_SEASONS.map((season) => ({
   label: `S${season}`,
 }));
 export const SEASON_STORAGE_KEY_SUFFIX = `s${CURRENT_SEASON}`;
+export const LEVEL_RANGE_COOKIE_KEY = `levelRange_${CURRENT_SEASON}`;
 
 // Time ranges for statistics
 export type TimeRange = "1d" | "7d" | "14d" | "1mo" | "3mo" | "all";

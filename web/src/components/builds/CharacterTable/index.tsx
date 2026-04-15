@@ -9,7 +9,7 @@ import { IconGrave } from "@tabler/icons-react";
 import { Tooltip } from "@mantine/core";
 import Cookies from "js-cookie";
 import { charactersAPI } from "../../../api";
-import { CURRENT_SEASON } from "../../../types";
+import { CURRENT_SEASON, LEVEL_RANGE_COOKIE_KEY } from "../../../types";
 import type { FullCharacterResponse } from "../../../types";
 import type { CharacterFilters } from "../../../hooks";
 
@@ -99,10 +99,10 @@ export default function PlayerTable({
             queryParams.append("query", filters.searchQuery);
           }
 
-          const levelRangeCookie = Cookies.get("levelRange");
+          const levelRangeCookie = Cookies.get(LEVEL_RANGE_COOKIE_KEY);
           const levelRange = levelRangeCookie
             ? JSON.parse(levelRangeCookie)
-            : { min: 94, max: 99 };
+            : { min: 80, max: 99 };
 
           const jsonResponse = await charactersAPI.getCharacters(
             filters.gameMode,
