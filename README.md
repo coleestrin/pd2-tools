@@ -8,8 +8,6 @@
 
 A suite of tools for **[Project Diablo 2](https://www.projectdiablo2.com/)** designed to track builds, monitor the meta, explore characters, and provide insights into the PD2 economy and playerbase. Live at [pd2.tools](https://pd2.tools/).
 
-This repository includes everything except the [character exporter](https://pd2.tools/tools/character-export) which can be found at [coleestrin/pd2-character-downloader](https://github.com/coleestrin/pd2-character-downloader).
-
 
 ## 🔧 Setup
 

@@ -295,7 +295,7 @@ export default function CharacterExport() {
               </Text>
               <Text size="xs" c="dimmed" mb="md">
                 Interested in the original exporter code? The archived
-                pd2.tools exporter source is still{" "}
+                pd2.tools exporter source is{" "}
                 <Anchor
                   href={ARCHIVED_EXPORTER_REPO_URL}
                   target="_blank"
