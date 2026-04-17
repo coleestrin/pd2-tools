@@ -20,6 +20,8 @@ import { charactersAPI } from "../api";
 
 const MAINTAINED_EXPORTER_URL =
   "https://exiledagain.github.io/bug-free-eureka/export.html";
+const ARCHIVED_EXPORTER_REPO_URL =
+  "https://github.com/coleestrin/pd2-character-downloader";
 
 const faq = [
   {
@@ -290,6 +292,18 @@ export default function CharacterExport() {
                 The pd2.tools character exporter is no longer maintained. For
                 working character downloads, use Dominis&apos;s character
                 exporter.
+              </Text>
+              <Text size="xs" c="dimmed" mb="md">
+                Interested in the original exporter code? The archived
+                pd2.tools exporter source is still{" "}
+                <Anchor
+                  href={ARCHIVED_EXPORTER_REPO_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  available on GitHub
+                </Anchor>
+                .
               </Text>
               <Button
                 component="a"
