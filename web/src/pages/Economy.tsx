@@ -33,9 +33,15 @@ export default function Economy() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const theme = useMantineTheme();
-  const [season, setSeason] = useState<number>(
-    parseInt(searchParams.get("season") || CURRENT_SEASON.toString(), 10)
+  const economySeasonOptions = SEASON_OPTIONS.filter(
+    (option) => option.value !== "11"
   );
+  const rawSeason = searchParams.get("season");
+  const season = rawSeason
+    ? economySeasonOptions.some((option) => option.value === rawSeason)
+      ? parseInt(rawSeason, 10)
+      : CURRENT_SEASON
+    : CURRENT_SEASON;
 
   const { isPending, data } = useQuery({
     queryKey: ["economyItems", season],
@@ -49,34 +55,6 @@ export default function Economy() {
     return foundItem ? paramCategory : DEFAULT_CATEGORY;
   });
   const [drawerOpened, setDrawerOpened] = useState(false);
-
-  useEffect(() => {
-    const seasonFromUrl = parseInt(
-      searchParams.get("season") || CURRENT_SEASON.toString(),
-      10
-    );
-    if (seasonFromUrl !== season) {
-      setSeason(seasonFromUrl);
-    }
-  }, [searchParams, season]);
-
-  useEffect(() => {
-    const currentSeasonParam = searchParams.get("season");
-    const nextSeasonParam =
-      season !== CURRENT_SEASON ? season.toString() : null;
-
-    if (currentSeasonParam === nextSeasonParam) {
-      return;
-    }
-
-    const nextParams = new URLSearchParams(searchParams);
-    if (nextSeasonParam) {
-      nextParams.set("season", nextSeasonParam);
-    } else {
-      nextParams.delete("season");
-    }
-    setSearchParams(nextParams, { replace: true });
-  }, [season, searchParams, setSearchParams]);
 
   useEffect(() => {
     const targetItem = flatNavItems.find((i) => i.value === paramCategory);
@@ -240,10 +218,22 @@ export default function Economy() {
                 </CustomBreadcrumbs>
                 <Select
                   value={season.toString()}
-                  onChange={(value) =>
-                    setSeason(parseInt(value || CURRENT_SEASON.toString(), 10))
-                  }
-                  data={SEASON_OPTIONS}
+                  onChange={(value) => {
+                    const nextParams = new URLSearchParams(searchParams);
+                    const nextSeason = parseInt(
+                      value || CURRENT_SEASON.toString(),
+                      10
+                    );
+
+                    if (nextSeason !== CURRENT_SEASON) {
+                      nextParams.set("season", nextSeason.toString());
+                    } else {
+                      nextParams.delete("season");
+                    }
+
+                    setSearchParams(nextParams, { replace: true });
+                  }}
+                  data={economySeasonOptions}
                   w={120}
                 />
               </Group>
