@@ -48,6 +48,8 @@ export default function EconomyDisclaimer() {
               PD2 Trader
             </Anchor>
             .
+            <br />
+            <br />
           </Text>
           <Text size="sm">
             Prices may be inaccurate, especially for items with a low amount of

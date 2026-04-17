@@ -5,7 +5,6 @@ import {
   Text,
   TextInput,
   Button,
-  Alert,
   Container,
   rem,
   Anchor,
@@ -173,31 +172,6 @@ export default function CharacterExport() {
       </Helmet>
 
       <Container size={rem(900)} px={isMobile ? rem(20) : rem(40)} mb={rem(20)}>
-        <Center>
-          <Alert
-            icon={<IconAlertTriangle size="1rem" />}
-            title="Use the maintained community exporter"
-            color="blue"
-            variant="light"
-            mb="md"
-            maw={rem(600)}
-            w="100%"
-          >
-            <Text size="sm">
-              The original pd2.tools exporter has been archived. For working
-              exports, use Dominis&apos;s maintained character exporter at{" "}
-              <Anchor
-                href={MAINTAINED_EXPORTER_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                exiledagain.github.io/bug-free-eureka/export.html
-              </Anchor>
-              .
-            </Text>
-          </Alert>
-        </Center>
-
         <Box pos="relative">
           <Box
             style={{
@@ -302,20 +276,31 @@ export default function CharacterExport() {
               padding: rem(24),
             }}
           >
-            <Alert
-              icon={<IconAlertTriangle size="1rem" />}
-              title="Exporter archived"
-              color="blue"
-              variant="filled"
+            <Card
+              withBorder
+              shadow="md"
+              padding="lg"
               maw={rem(520)}
               w="100%"
             >
-              <Text size="sm">
-                The built-in pd2.tools exporter is no longer maintained. Use the
-                exporter linked in the banner above for working character
-                exports.
+              <Text fw={700} size="lg" mb="xs">
+                Character Exporter Archived
               </Text>
-            </Alert>
+              <Text size="sm" mb="md">
+                The pd2.tools character exporter is no longer maintained. For
+                working character downloads, use Dominis&apos;s character
+                exporter.
+              </Text>
+              <Button
+                component="a"
+                href={MAINTAINED_EXPORTER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                leftSection={<IconDownload size="1rem" />}
+              >
+                Open Dominis&apos;s Exporter
+              </Button>
+            </Card>
           </Center>
         </Box>
       </Container>

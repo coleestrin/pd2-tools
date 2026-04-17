@@ -223,24 +223,21 @@ export default function Economy() {
           </Box>
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Stack>
-              <CustomBreadcrumbs separator=">">
-                <a
-                  href={`/economy/${DEFAULT_CATEGORY}${seasonSearch}`}
-                  style={{ textDecoration: "none", color: "#4dabf7" }}
-                >
-                  <Text size="sm">Economy</Text>
-                </a>
-                <a
-                  href={`${currentCategoryPath}${seasonSearch}`}
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
-                  <Text size="sm">{currentCategoryLabel}</Text>
-                </a>
-              </CustomBreadcrumbs>
               <Group justify="space-between" align="flex-start" wrap="wrap">
-                <Title order={2} style={{ marginTop: "-8px" }}>
-                  {currentCategoryLabel}
-                </Title>
+                <CustomBreadcrumbs separator=">">
+                  <a
+                    href={`/economy/${DEFAULT_CATEGORY}${seasonSearch}`}
+                    style={{ textDecoration: "none", color: "#4dabf7" }}
+                  >
+                    <Text size="sm">Economy</Text>
+                  </a>
+                  <a
+                    href={`${currentCategoryPath}${seasonSearch}`}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <Text size="sm">{currentCategoryLabel}</Text>
+                  </a>
+                </CustomBreadcrumbs>
                 <Select
                   value={season.toString()}
                   onChange={(value) =>
@@ -250,6 +247,9 @@ export default function Economy() {
                   w={120}
                 />
               </Group>
+              <Title order={2} style={{ marginTop: "-8px" }}>
+                {currentCategoryLabel}
+              </Title>
               <Skeleton
                 visible={isPending}
                 animate={true}
