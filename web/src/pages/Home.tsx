@@ -22,17 +22,18 @@ import {
 import CountUp from "react-countup";
 import { apiClient, charactersAPI, economyAPI } from "../api";
 import {
-  ItemTooltip,
-  type ItemData,
   getBrightBorderColor,
   getDarkBackgroundColor,
+} from "../components/builds/shared/item-colors";
+import {
+  ItemTooltip,
+  type ItemData,
 } from "../components/builds/shared/ItemHelpers";
 import { API_ENDPOINTS } from "../config/api";
 import { ECONOMY_ITEMS_DATA } from "../data/economy-items";
 import {
   DEFAULT_VIEW_SEASON,
   type HomeStats,
-  type ItemUsageStats,
 } from "../types";
 import classes from "./Home.module.css";
 
@@ -90,36 +91,10 @@ interface ToolCard {
   icon: React.ElementType;
 }
 
-interface RecentCharacterActivity {
-  name: string;
-  className: string;
-  level: number;
-  mode: "Softcore" | "Hardcore";
-  lastUpdated: number;
-  href: string;
-}
-
 interface ClassMetaItem {
   className: string;
   count: number;
   share: number;
-}
-
-interface MarketItemSnapshot {
-  itemName: string;
-  price: number;
-  listings: number;
-  iconUrl: string;
-  href: string;
-}
-
-interface TopItemSnapshot {
-  itemName: string;
-  itemType: ItemUsageStats["itemType"];
-  pct: number;
-  numOccurrences: number;
-  href: string;
-  itemData?: ItemData;
 }
 
 interface HomeSliderResponse {

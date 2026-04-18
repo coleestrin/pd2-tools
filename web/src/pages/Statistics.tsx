@@ -31,10 +31,12 @@ import {
 } from "recharts";
 import { charactersAPI, statisticsAPI } from "../api";
 import {
-  ItemTooltip,
-  type ItemData,
   getBrightBorderColor,
   getDarkBackgroundColor,
+} from "../components/builds/shared/item-colors";
+import {
+  ItemTooltip,
+  type ItemData,
 } from "../components/builds/shared/ItemHelpers";
 import type {
   CharacterListResponse,
@@ -565,7 +567,10 @@ export default function StatisticsPage() {
     };
   }, [historyWindow]);
 
-  const levelDistribution = levelDistributionQuery.data?.[gameMode] || [];
+  const levelDistribution = useMemo(
+    () => levelDistributionQuery.data?.[gameMode] ?? [],
+    [levelDistributionQuery.data, gameMode]
+  );
 
   const levelSummary = useMemo(() => {
     if (!levelDistribution.length) {
