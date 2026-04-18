@@ -7,7 +7,7 @@ import type {
   ItemUsageStats,
   SkillUsageStats,
   MercTypeStats,
-  LevelDistribution,
+  LevelDistributionData,
   CharacterCounts,
   CharacterSnapshotsResponse,
 } from "../types";
@@ -184,11 +184,14 @@ export const charactersAPI = {
   async getLevelDistribution(
     gameMode: string = "softcore",
     season?: number
-  ): Promise<LevelDistribution[]> {
-    return apiClient.get<LevelDistribution[]>(API_ENDPOINTS.levelDistribution, {
-      gameMode,
-      season,
-    });
+  ): Promise<LevelDistributionData> {
+    return apiClient.get<LevelDistributionData>(
+      API_ENDPOINTS.levelDistribution,
+      {
+        gameMode,
+        season,
+      }
+    );
   },
 
   /**

@@ -24,7 +24,12 @@ import Cookies from "js-cookie";
 import debounce from "lodash/debounce";
 import { accountsAPI } from "../../../api";
 import type { BuildsComponentProps } from "../types";
-import { LEVEL_RANGE_COOKIE_KEY, SEASON_OPTIONS } from "../../../types";
+import {
+  CURRENT_SEASON,
+  DEFAULT_VIEW_SEASON,
+  LEVEL_RANGE_COOKIE_KEY,
+  SEASON_OPTIONS,
+} from "../../../types";
 
 interface SettingsModalProps {
   opened: boolean;
@@ -114,6 +119,7 @@ interface AccountQueueModalProps {
 }
 
 function AccountQueueModal({ opened, onClose }: AccountQueueModalProps) {
+  const queueDisabled = CURRENT_SEASON !== DEFAULT_VIEW_SEASON;
   const [accountName, setAccountName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [queuedAccountName, setQueuedAccountName] = useState<string | null>(
@@ -185,7 +191,7 @@ function AccountQueueModal({ opened, onClose }: AccountQueueModalProps) {
           placeholder="Enter account name"
           value={accountName}
           onChange={(e) => setAccountName(e.target.value)}
-          disabled={isLoading}
+          disabled={isLoading || queueDisabled}
           mb="md"
         />
 
@@ -221,7 +227,7 @@ function AccountQueueModal({ opened, onClose }: AccountQueueModalProps) {
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!accountName.trim() || isLoading}
+            disabled={!accountName.trim() || isLoading || queueDisabled}
             loading={isLoading}
           >
             Add to Queue

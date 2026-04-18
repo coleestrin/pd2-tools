@@ -8,6 +8,7 @@ export type GameMode = (typeof GAME_MODES)[keyof typeof GAME_MODES];
 
 // Season configuration
 export const CURRENT_SEASON = 13;
+export const DEFAULT_VIEW_SEASON = 12;
 export const EARLIEST_SUPPORTED_SEASON = 11;
 export const SUPPORTED_SEASONS = Array.from(
   { length: CURRENT_SEASON - EARLIEST_SUPPORTED_SEASON + 1 },

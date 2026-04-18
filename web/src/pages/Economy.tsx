@@ -26,7 +26,7 @@ import {
 } from "../components/economy/shared";
 import { ItemsTable } from "../components/economy/ItemsTable";
 import EconomyDisclaimer from "../components/economy/disclaimer";
-import { CURRENT_SEASON, SEASON_OPTIONS } from "../types";
+import { DEFAULT_VIEW_SEASON, SEASON_OPTIONS } from "../types";
 
 export default function Economy() {
   const { category: paramCategory } = useParams<{ category: string }>();
@@ -40,8 +40,8 @@ export default function Economy() {
   const season = rawSeason
     ? economySeasonOptions.some((option) => option.value === rawSeason)
       ? parseInt(rawSeason, 10)
-      : CURRENT_SEASON
-    : CURRENT_SEASON;
+      : DEFAULT_VIEW_SEASON
+    : DEFAULT_VIEW_SEASON;
 
   const { isPending, data } = useQuery({
     queryKey: ["economyItems", season],
@@ -86,7 +86,8 @@ export default function Economy() {
   const currentCategoryPath = currentCategoryInfo
     ? currentCategoryInfo.path
     : "/";
-  const seasonSearch = season !== CURRENT_SEASON ? `?season=${season}` : "";
+  const seasonSearch =
+    season !== DEFAULT_VIEW_SEASON ? `?season=${season}` : "";
 
   // Create reverse lookup map from itemNameInternal to item data
   const itemDataByInternalName = useMemo(() => {
@@ -221,11 +222,11 @@ export default function Economy() {
                   onChange={(value) => {
                     const nextParams = new URLSearchParams(searchParams);
                     const nextSeason = parseInt(
-                      value || CURRENT_SEASON.toString(),
+                      value || DEFAULT_VIEW_SEASON.toString(),
                       10
                     );
 
-                    if (nextSeason !== CURRENT_SEASON) {
+                    if (nextSeason !== DEFAULT_VIEW_SEASON) {
                       nextParams.set("season", nextSeason.toString());
                     } else {
                       nextParams.delete("season");

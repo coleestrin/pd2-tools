@@ -28,7 +28,7 @@ import {
   NAV_ITEMS,
 } from "../components/economy/shared";
 import EconomyDisclaimer from "../components/economy/disclaimer";
-import { CURRENT_SEASON } from "../types";
+import { DEFAULT_VIEW_SEASON } from "../types";
 
 function formatItemNameFromUrl(urlName: string | undefined): string {
   if (!urlName) return "";
@@ -44,10 +44,11 @@ export default function ItemDetail() {
   const theme = useMantineTheme();
   const [drawerOpened, setDrawerOpened] = useState(false);
   const season = parseInt(
-    searchParams.get("season") || CURRENT_SEASON.toString(),
+    searchParams.get("season") || DEFAULT_VIEW_SEASON.toString(),
     10
   );
-  const seasonSearch = season !== CURRENT_SEASON ? `?season=${season}` : "";
+  const seasonSearch =
+    season !== DEFAULT_VIEW_SEASON ? `?season=${season}` : "";
 
   const { isPending, data } = useQuery({
     queryKey: [itemNameURL, season],

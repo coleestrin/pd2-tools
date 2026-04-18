@@ -14,8 +14,10 @@ export const statisticsAPI = {
     const history = await apiClient.get<OnlinePlayersData[]>(
       API_ENDPOINTS.onlinePlayers
     );
+    const latest = history[history.length - 1];
+
     return {
-      current: history[0]?.num_online_players || 0,
+      current: latest?.num_online_players || 0,
       history,
     };
   },

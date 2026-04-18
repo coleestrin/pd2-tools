@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import Cookies from "js-cookie";
 import debounce from "lodash/debounce";
-import { CURRENT_SEASON, LEVEL_RANGE_COOKIE_KEY } from "../types";
+import { DEFAULT_VIEW_SEASON, LEVEL_RANGE_COOKIE_KEY } from "../types";
 
 export interface SkillRequirement {
   name: string;
@@ -41,7 +41,7 @@ const updateUrlWithoutRerender = debounce((filters: CharacterFilters) => {
   if (filters.mercItemFilter.length)
     params.set("mercItems", filters.mercItemFilter.join(","));
   if (filters.searchQuery) params.set("query", filters.searchQuery);
-  if (filters.season !== CURRENT_SEASON)
+  if (filters.season !== DEFAULT_VIEW_SEASON)
     params.set("season", filters.season.toString());
 
   const newUrl = params.toString()
@@ -86,7 +86,7 @@ export function useCharacterFilters(): UseCharacterFiltersReturn {
         searchParams.get("maxLevel") || levelRange.max.toString()
       ),
       season: parseInt(
-        searchParams.get("season") || CURRENT_SEASON.toString(),
+        searchParams.get("season") || DEFAULT_VIEW_SEASON.toString(),
         10
       ),
     };

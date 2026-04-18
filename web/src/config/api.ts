@@ -24,6 +24,9 @@ export const API_ENDPOINTS = {
   onlinePlayersLast: "/statistics/online-players-last",
   characterCounts: "/statistics/character-counts",
 
+  // Home
+  homeSlider: "/home/slider",
+
   // Health
   health: "/health",
 

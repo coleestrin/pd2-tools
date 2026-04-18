@@ -24,7 +24,7 @@ import type {
   AccountLevel99Entry,
   MirroredItemEntry,
 } from "../api/leaderboard";
-import { CURRENT_SEASON, SHORT_SEASON_OPTIONS } from "../types";
+import { DEFAULT_VIEW_SEASON, SHORT_SEASON_OPTIONS } from "../types";
 
 const getRarityColor = (item: any): string | null => {
   if (!item) return null;
@@ -549,7 +549,7 @@ export default function LeaderboardPage() {
     (searchParams.get("mode") as any) || "softcore"
   );
   const [season, setSeason] = useState<number>(
-    parseInt(searchParams.get("season") || CURRENT_SEASON.toString(), 10)
+    parseInt(searchParams.get("season") || DEFAULT_VIEW_SEASON.toString(), 10)
   );
   const [activeLeaderboardTab, setActiveLeaderboardTab] = useState<
     string | null
@@ -558,7 +558,7 @@ export default function LeaderboardPage() {
   useEffect(() => {
     const params = new URLSearchParams();
     if (gameMode !== "softcore") params.set("mode", gameMode);
-    if (season !== CURRENT_SEASON) params.set("season", season.toString());
+    if (season !== DEFAULT_VIEW_SEASON) params.set("season", season.toString());
     if (activeLeaderboardTab !== "mirrored")
       params.set("tab", activeLeaderboardTab || "mirrored");
     setSearchParams(params, { replace: true });

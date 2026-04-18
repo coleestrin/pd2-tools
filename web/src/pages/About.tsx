@@ -108,6 +108,51 @@ export default function AboutPage() {
               more—all powered by live data from the PD2 API. Our goal is to
               make your PD2 experience easier and more fun.
             </Text>
+            <Title
+              order={3}
+              style={{ marginBottom: rem(8), fontSize: rem(18) }}
+            >
+              Credits
+            </Title>
+            <Text size="md" style={{ lineHeight: 1.8, marginBottom: rem(24) }}>
+              pd2.tools takes inspiration from{" "}
+              <Anchor
+                href="https://poe.ninja/"
+                target="_blank"
+                rel="noopener noreferrer"
+                fw={600}
+              >
+                poe.ninja
+              </Anchor>
+              ,{" "}
+              <Anchor
+                href="https://garmoth.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                fw={600}
+              >
+                Garmoth
+              </Anchor>
+              , and{" "}
+              <Anchor
+                href="https://www.lastepochtools.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                fw={600}
+              >
+                Last Epoch Tools
+              </Anchor>
+              . We’re also grateful to the{" "}
+              <Anchor
+                href="https://www.projectdiablo2.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                fw={600}
+              >
+                Project Diablo 2 team
+              </Anchor>
+              {" "}for making the data that powers the site accessible.
+            </Text>
             <Text size="md" style={{ lineHeight: 1.8, marginBottom: rem(24) }}>
               Need to contact us? The best way is via our{" "}
               <Anchor

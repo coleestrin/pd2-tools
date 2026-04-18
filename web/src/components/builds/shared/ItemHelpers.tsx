@@ -64,7 +64,15 @@ export const ItemTooltip = ({
   itemName: string;
 }) => {
   const [show, setShow] = useState(false);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const [pos, setPos] = useState<{
+    top: number;
+    left: number;
+    side: "left" | "right";
+  }>({
+    top: 0,
+    left: 0,
+    side: "right",
+  });
   const triggerRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
@@ -74,9 +82,32 @@ export const ItemTooltip = ({
     timeoutRef.current = setTimeout(() => {
       if (triggerRef.current) {
         const rect = triggerRef.current.getBoundingClientRect();
+        const viewportMargin = 24;
+        const estimatedHalfTooltipHeight = 170;
+        const estimatedTooltipWidth = 320;
+        const gap = 12;
+        const preferredTop = rect.top + rect.height / 2;
+        const clampedTop = Math.max(
+          viewportMargin + estimatedHalfTooltipHeight,
+          Math.min(
+            window.innerHeight - viewportMargin - estimatedHalfTooltipHeight,
+            preferredTop
+          )
+        );
+        const placeLeft =
+          rect.right + gap + estimatedTooltipWidth >
+          window.innerWidth - viewportMargin;
+        const left = placeLeft
+          ? Math.max(viewportMargin, rect.left - gap - estimatedTooltipWidth)
+          : Math.min(
+              rect.right + gap,
+              window.innerWidth - viewportMargin - estimatedTooltipWidth
+            );
+
         setPos({
-          top: rect.top + rect.height / 2,
-          left: rect.right + 12,
+          top: clampedTop,
+          left,
+          side: placeLeft ? "left" : "right",
         });
         setShow(true);
       }
@@ -132,14 +163,18 @@ export const ItemTooltip = ({
             <div
               style={{
                 position: "absolute",
-                left: "-5px",
+                left: pos.side === "right" ? "-5px" : "auto",
+                right: pos.side === "left" ? "-5px" : "auto",
                 top: "50%",
                 transform: "translateY(-50%)",
                 width: 0,
                 height: 0,
                 borderTop: "5px solid transparent",
                 borderBottom: "5px solid transparent",
-                borderRight: `5px solid ${borderColor}`,
+                borderRight:
+                  pos.side === "right" ? `5px solid ${borderColor}` : "none",
+                borderLeft:
+                  pos.side === "left" ? `5px solid ${borderColor}` : "none",
               }}
             />
 
