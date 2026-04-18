@@ -74,7 +74,7 @@ const HERO_SLIDES = [
   },
   {
     eyebrow: "Leaderboard · SC",
-    title: "Level 99 accounts",
+    title: "Level 99 Accounts",
     copy: `Softcore account leaderboard for Season ${LEADERBOARD_SEASON}.`,
   },
 ] as const;
