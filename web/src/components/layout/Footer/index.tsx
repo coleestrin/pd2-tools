@@ -1,6 +1,11 @@
 import React from "react";
 import { Anchor, Container, Text } from "@mantine/core";
-import { IconCoffee, IconHeartFilled, IconStar } from "@tabler/icons-react";
+import {
+  IconCoffee,
+  IconHeart,
+  IconHeartFilled,
+  IconStar,
+} from "@tabler/icons-react";
 import { DiscordIcon, GitHubIcon } from "../../icons";
 import classes from "./Footer.module.css";
 
@@ -10,6 +15,12 @@ const supportLinks = [
     href: "https://ko-fi.com/zatdev",
     external: true,
     icon: <IconCoffee size={14} />,
+  },
+  {
+    label: "Sponsor on GitHub",
+    href: "https://github.com/sponsors/coleestrin",
+    external: true,
+    icon: <IconHeart size={14} />,
   },
   {
     label: "Star on GitHub",
