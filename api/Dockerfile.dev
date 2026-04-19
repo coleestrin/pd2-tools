@@ -1,0 +1,14 @@
+FROM node:22-alpine
+
+ARG TSX_VERSION=4.21.0
+
+RUN npm install -g tsx@${TSX_VERSION}
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+EXPOSE 3000
+
+CMD ["tsx", "watch", "src/index.ts"]

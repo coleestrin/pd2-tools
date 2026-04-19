@@ -83,7 +83,7 @@ export function SupportBanner() {
               Enjoying pd2.tools?
             </Title>
             <Text size="sm" c="black">
-              If you wanted to show your support, starring the{" "}
+              A{" "}
               <Anchor
                 href="https://github.com/coleestrin/pd2-tools"
                 target="_blank"
@@ -92,9 +92,10 @@ export function SupportBanner() {
                 fw={600}
                 underline="always"
               >
-                pd2.tools GitHub repository
+                GitHub star
               </Anchor>{" "}
-              would really help us out!
+              is the simplest free way to support pd2.tools and help drive its
+              continued development.
             </Text>
           </Box>
         </Group>
