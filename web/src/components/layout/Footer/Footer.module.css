@@ -81,6 +81,16 @@ body {
   gap: 0.5rem;
 }
 
+.linkLabel {
+  text-decoration: none;
+}
+
+.footerLink:hover .linkLabel {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.14em;
+}
+
 .linkIcon {
   display: inline-flex;
   color: var(--mantine-color-gray-4);

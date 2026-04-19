@@ -83,7 +83,7 @@ export function Footer() {
                     {link.icon ? (
                       <span className={classes.linkIcon}>{link.icon}</span>
                     ) : null}
-                    {link.label}
+                    <span className={classes.linkLabel}>{link.label}</span>
                   </span>
                 </Anchor>
               ))}
@@ -105,7 +105,7 @@ export function Footer() {
                     {link.icon ? (
                       <span className={classes.linkIcon}>{link.icon}</span>
                     ) : null}
-                    {link.label}
+                    <span className={classes.linkLabel}>{link.label}</span>
                   </span>
                 </Anchor>
               ))}
@@ -121,7 +121,7 @@ export function Footer() {
                   className={classes.footerLink}
                   href={link.href}
                 >
-                  {link.label}
+                  <span className={classes.linkLabel}>{link.label}</span>
                 </Anchor>
               ))}
             </div>
@@ -136,7 +136,7 @@ export function Footer() {
                   className={classes.footerLink}
                   href={link.href}
                 >
-                  {link.label}
+                  <span className={classes.linkLabel}>{link.label}</span>
                 </Anchor>
               ))}
             </div>

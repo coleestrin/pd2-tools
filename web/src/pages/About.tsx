@@ -207,6 +207,22 @@ export default function AboutPage() {
               >
                 pd2-character-downloader
               </Button>
+              <Button
+                component="a"
+                href="https://github.com/coleestrin/pd2-cz-tracker"
+                target="_blank"
+                leftSection={<GitHubIcon size={18} />}
+                size="md"
+                variant="default"
+                style={{
+                  backgroundColor: "#fff",
+                  color: "#24292f",
+                  borderColor: "#d0d7de",
+                  fontWeight: 600,
+                }}
+              >
+                pd2-cz-tracker
+              </Button>
 
               <Button
                 component="a"
