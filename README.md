@@ -22,15 +22,15 @@ git clone https://github.com/coleestrin/pd2-tools
 cd pd2-tools
 ```
 
-Optional: copy `.env.example` to `.env` to override the Docker defaults.
+**Optional**: copy `.env.example` to `.env` to override the Docker defaults.
 
-Production:
+**Production**:
 
 ```bash
 docker compose up --build
 ```
 
-Dev:
+**Dev**:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile jobs up --build
