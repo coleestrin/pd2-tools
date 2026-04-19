@@ -19,22 +19,9 @@
 ## 🔧 Setup
 
 1. `git clone https://github.com/coleestrin/pd2-tools`
-
-**API:**
-
-1. `cd api`
-2. `npm i`
-3. Fill out the `.env`, example given in `.env.example`
-4. `npm run build`
-5. `npm start` to start the API
-6. `npm run jobs` to run background jobs (player count tracking and character scraper)
-
-**Frontend:**
-
-1. `cd web`
-2. `npm i`
-3. Fill out the `.env`, example given in `.env.example`
-4. `npm run dev` or: `npm run build` and then `npm run preview`
+2. Optional: copy `.env.example` to `.env` if you want to override the Docker defaults.
+3. Run `docker compose up --build`
+4. Open `http://localhost:4173`
 
 ## 🤝 Contributing
 

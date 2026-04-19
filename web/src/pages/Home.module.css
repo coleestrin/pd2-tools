@@ -211,18 +211,32 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 0.65rem;
   align-items: center;
-  padding: 0.54rem 0;
+  margin: 0 -0.45rem;
+  padding: 0.54rem 0.45rem;
+  border-radius: 0.55rem;
+  color: inherit;
   text-decoration: none;
-  transition: color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .activityFeedRow + .activityFeedRow {
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.activityFeedRow:hover .activityFeedName,
-.activityFeedRow:hover .activityFeedTime {
-  color: var(--mantine-color-blue-3);
+.activityFeedRow:hover,
+.activityFeedRow:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.activityFeedRow:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.activityFeedRow:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.38);
 }
 
 .activityFeedClassImage {
@@ -293,8 +307,13 @@
 
 .marketRow {
   color: inherit;
-  padding: 0.58rem 0;
+  margin: 0 -0.45rem;
+  padding: 0.58rem 0.45rem;
+  border-radius: 0.55rem;
   text-decoration: none;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .marketRow + .marketRow,
@@ -306,8 +325,20 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
-.marketRow:hover .marketItemName,
-.marketRow:hover .marketPrice,
+.marketRow:hover,
+.marketRow:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.marketRow:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.marketRow:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.38);
+}
+
 .leaderboardLink:hover .leaderboardName {
   color: var(--mantine-color-blue-3);
 }

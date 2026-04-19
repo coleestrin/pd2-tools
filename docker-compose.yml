@@ -1,0 +1,96 @@
+x-api-service: &api-service
+  build:
+    context: ./api
+    dockerfile: Dockerfile
+  image: pd2-tools-api:local
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  environment: &api-environment
+    NODE_ENV: production
+    PORT: 3000
+    API_VERSION: ${API_VERSION:-v1}
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: 5432
+    POSTGRES_DB: ${POSTGRES_DB:-pd2_tools}
+    POSTGRES_USER: ${POSTGRES_USER:-pd2_user}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    CURRENT_SEASON: ${CURRENT_SEASON:-12}
+    CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:4173}
+    RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW:-15}
+    RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+    LOG_LEVEL: ${LOG_LEVEL:-info}
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pd2_tools}
+      POSTGRES_USER: ${POSTGRES_USER:-pd2_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-pd2_user} -d ${POSTGRES_DB:-pd2_tools}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      ["redis-server", "--appendonly", "yes", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  api:
+    <<: *api-service
+    ports:
+      - "127.0.0.1:${API_PORT:-3000}:3000"
+    volumes:
+      - app_data:/app/data
+
+  jobs:
+    <<: *api-service
+    command: ["npm", "run", "jobs"]
+    environment:
+      <<: *api-environment
+    volumes:
+      - app_data:/app/data
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000/api/v1}
+    image: pd2-tools-web:local
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "127.0.0.1:${WEB_PORT:-4173}:4173"
+
+volumes:
+  postgres_data:
+  redis_data:
+  app_data:
