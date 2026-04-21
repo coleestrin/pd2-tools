@@ -1,5 +1,6 @@
 import { apiClient } from "./client";
 import { API_ENDPOINTS } from "../config/api";
+import { DEFAULT_VIEW_SEASON } from "../types";
 
 export interface AccountLevel99Entry {
   account_name: string;
@@ -41,7 +42,7 @@ export const leaderboardAPI = {
    */
   async getLevel99Leaderboard(
     gameMode: string = "softcore",
-    season: number = 12
+    season: number = DEFAULT_VIEW_SEASON
   ): Promise<AccountLevel99Response> {
     return apiClient.get<AccountLevel99Response>(
       API_ENDPOINTS.leaderboardLevel99,
@@ -57,7 +58,7 @@ export const leaderboardAPI = {
    */
   async getMirroredLeaderboard(
     gameMode: string = "softcore",
-    season: number = 12
+    season: number = DEFAULT_VIEW_SEASON
   ): Promise<MirroredItemResponse> {
     return apiClient.get<MirroredItemResponse>(
       API_ENDPOINTS.leaderboardMirrored,

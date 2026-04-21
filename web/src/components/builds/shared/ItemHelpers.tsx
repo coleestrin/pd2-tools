@@ -1,5 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import {
+  getBrightBorderColor,
+  getDarkBackgroundColor,
+  getItemTypeBaseColor,
+} from "./item-colors";
 
 export interface ItemData {
   gearId: { name: string };
@@ -11,45 +16,12 @@ export interface ItemData {
   newAttributes: string;
 }
 
-// Get base rarity color (hex)
-export const getItemTypeBaseColor = (type: string): string => {
-  switch (type) {
-    case "Unique":
-      return "#c17d3a"; // brown
-    case "Set":
-      return "#1eed0e"; // green
-    case "Runeword":
-      return "#FACC15"; // yellow
-    default:
-      return "#6b7280"; // gray
-  }
-};
-
 // Convert hex to RGB
 const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return { r, g, b };
-};
-
-export const getBrightBorderColor = (type: string): string => {
-  const baseColor = getItemTypeBaseColor(type);
-  const { r, g, b } = hexToRgb(baseColor);
-
-  if (type === "Runeword") {
-    const darken = (val: number) => Math.floor(val * 0.85);
-    return `rgb(${darken(r)}, ${darken(g)}, ${darken(b)})`;
-  }
-
-  const brighten = (val: number) => Math.min(255, Math.floor(val * 1.3));
-  return `rgb(${brighten(r)}, ${brighten(g)}, ${brighten(b)})`;
-};
-
-export const getDarkBackgroundColor = (type: string): string => {
-  const baseColor = getItemTypeBaseColor(type);
-  const { r, g, b } = hexToRgb(baseColor);
-  return `rgba(${r}, ${g}, ${b}, 0.18)`;
 };
 
 export const ItemTooltip = ({
@@ -64,7 +36,15 @@ export const ItemTooltip = ({
   itemName: string;
 }) => {
   const [show, setShow] = useState(false);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const [pos, setPos] = useState<{
+    top: number;
+    left: number;
+    side: "left" | "right";
+  }>({
+    top: 0,
+    left: 0,
+    side: "right",
+  });
   const triggerRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
@@ -74,9 +54,32 @@ export const ItemTooltip = ({
     timeoutRef.current = setTimeout(() => {
       if (triggerRef.current) {
         const rect = triggerRef.current.getBoundingClientRect();
+        const viewportMargin = 24;
+        const estimatedHalfTooltipHeight = 170;
+        const estimatedTooltipWidth = 320;
+        const gap = 12;
+        const preferredTop = rect.top + rect.height / 2;
+        const clampedTop = Math.max(
+          viewportMargin + estimatedHalfTooltipHeight,
+          Math.min(
+            window.innerHeight - viewportMargin - estimatedHalfTooltipHeight,
+            preferredTop
+          )
+        );
+        const placeLeft =
+          rect.right + gap + estimatedTooltipWidth >
+          window.innerWidth - viewportMargin;
+        const left = placeLeft
+          ? Math.max(viewportMargin, rect.left - gap - estimatedTooltipWidth)
+          : Math.min(
+              rect.right + gap,
+              window.innerWidth - viewportMargin - estimatedTooltipWidth
+            );
+
         setPos({
-          top: rect.top + rect.height / 2,
-          left: rect.right + 12,
+          top: clampedTop,
+          left,
+          side: placeLeft ? "left" : "right",
         });
         setShow(true);
       }
@@ -132,14 +135,18 @@ export const ItemTooltip = ({
             <div
               style={{
                 position: "absolute",
-                left: "-5px",
+                left: pos.side === "right" ? "-5px" : "auto",
+                right: pos.side === "left" ? "-5px" : "auto",
                 top: "50%",
                 transform: "translateY(-50%)",
                 width: 0,
                 height: 0,
                 borderTop: "5px solid transparent",
                 borderBottom: "5px solid transparent",
-                borderRight: `5px solid ${borderColor}`,
+                borderRight:
+                  pos.side === "right" ? `5px solid ${borderColor}` : "none",
+                borderLeft:
+                  pos.side === "left" ? `5px solid ${borderColor}` : "none",
               }}
             />
 

@@ -5,18 +5,23 @@ import {
   Text,
   TextInput,
   Button,
-  Alert,
   Container,
   rem,
   Anchor,
   Accordion,
   Image,
   Center,
+  Box,
 } from "@mantine/core";
 import { IconAlertTriangle, IconDownload } from "@tabler/icons-react";
 import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
 import { charactersAPI } from "../api";
+
+const MAINTAINED_EXPORTER_URL =
+  "https://exiledagain.github.io/bug-free-eureka/export.html";
+const ARCHIVED_EXPORTER_REPO_URL =
+  "https://github.com/coleestrin/pd2-character-downloader";
 
 const faq = [
   {
@@ -169,165 +174,149 @@ export default function CharacterExport() {
       </Helmet>
 
       <Container size={rem(900)} px={isMobile ? rem(20) : rem(40)} mb={rem(20)}>
-        <Center>
-          <Alert
-            icon={<IconAlertTriangle size="1rem" />}
-            title="Having trouble exporting?"
-            color="blue"
-            variant="light"
-            mb={"md"}
-            maw={rem(600)}
-            w={"100%"}
+        <Box pos="relative">
+          <Box
+            style={{
+              filter: "blur(4px)",
+              opacity: 0.45,
+              pointerEvents: "none",
+            }}
           >
-            <Text size="sm">
-              If you are having trouble exporting your character, we recommend
-              you use Dominis's character exporter at{" "}
-              <Anchor
-                href="https://exiledagain.github.io/bug-free-eureka/export.html"
+            <Center>
+              <Accordion variant="contained" mb={"md"} maw={rem(600)} w={"100%"}>
+                <Accordion.Item value="disclaimer">
+                  <Accordion.Control
+                    icon={<IconAlertTriangle size="1rem" color="orange" />}
+                    styles={(theme) => ({
+                      control: {
+                        backgroundColor:
+                          theme.colorScheme === "dark"
+                            ? theme.colors.dark[5]
+                            : theme.colors.gray[1],
+                        "&:hover": {
+                          backgroundColor:
+                            theme.colorScheme === "dark"
+                              ? theme.colors.dark[5]
+                              : theme.colors.gray[1],
+                        },
+                      },
+                      chevron: {},
+                    })}
+                  >
+                    <Text fw={500}>Disclaimer</Text>
+                  </Accordion.Control>
+                  <Accordion.Panel />
+                </Accordion.Item>
+              </Accordion>
+            </Center>
+
+            <Card
+              shadow="sm"
+              padding="md"
+              mx="auto"
+              maw={rem(600)}
+              withBorder
+              mb={"md"}
+            >
+              <Text size="lg" fw={600} align="center" mb={rem(4)}>
+                Character Export Instructions
+              </Text>
+              <Text size="sm" c="dimmed" align="center" mb="md">
+                1. Enter your character name below
+                <br />
+                2. Click export button
+                <br />
+                3. Move file to your Diablo II save folder (Ex. C:/Program Files
+                (x86)/Diablo II/Save)
+              </Text>
+
+              <form onSubmit={handleSubmit}>
+                <TextInput
+                  value={characterName}
+                  onChange={(e) => setCharacterName(e.currentTarget.value)}
+                  placeholder="Enter a PD2 character name"
+                  label="Character name"
+                  required
+                  mb="md"
+                  error={error}
+                />
+
+                <Button
+                  fullWidth
+                  type="submit"
+                  leftSection={<IconDownload size="1rem" />}
+                  variant="light"
+                  loading={isPending}
+                  disabled={isPending}
+                >
+                  Export .d2s File
+                </Button>
+              </form>
+            </Card>
+
+            <Card shadow="sm" padding="md" mx="auto" maw={rem(600)} withBorder>
+              <Text size="lg" fw={600} align="center" mb={rem(12)}>
+                Frequently Asked Questions
+              </Text>
+              <Accordion variant="separated">
+                {faq.map((item) => (
+                  <Accordion.Item key={item.value} value={item.value}>
+                    <Accordion.Control style={{ border: `1px solid #373a40` }}>
+                      {item.value}
+                    </Accordion.Control>
+                    <Accordion.Panel>{item.description}</Accordion.Panel>
+                  </Accordion.Item>
+                ))}
+              </Accordion>
+            </Card>
+          </Box>
+
+          <Center
+            style={{
+              position: "absolute",
+              inset: 0,
+              padding: rem(24),
+            }}
+          >
+            <Card
+              withBorder
+              shadow="md"
+              padding="lg"
+              maw={rem(520)}
+              w="100%"
+            >
+              <Text fw={700} size="lg" mb="xs">
+                Character Exporter Archived
+              </Text>
+              <Text size="sm" mb="md">
+                The pd2.tools character exporter is no longer maintained. For
+                working character downloads, use Dominis&apos;s character
+                exporter.
+              </Text>
+              <Text size="xs" c="dimmed" mb="md">
+                Interested in the original exporter code? The archived
+                pd2.tools exporter source is{" "}
+                <Anchor
+                  href={ARCHIVED_EXPORTER_REPO_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  available on GitHub
+                </Anchor>
+                .
+              </Text>
+              <Button
+                component="a"
+                href={MAINTAINED_EXPORTER_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                leftSection={<IconDownload size="1rem" />}
               >
-                exiledagain.github.io/bug-free-eureka/export.html
-              </Anchor>
-              .
-            </Text>
-          </Alert>
-        </Center>
-        <Center>
-          <Accordion variant="contained" mb={"md"} maw={rem(600)} w={"100%"}>
-            <Accordion.Item value="disclaimer">
-              <Accordion.Control
-                icon={<IconAlertTriangle size="1rem" color="orange" />}
-                styles={(theme) => ({
-                  control: {
-                    backgroundColor:
-                      theme.colorScheme === "dark"
-                        ? theme.colors.dark[5]
-                        : theme.colors.gray[1],
-                    "&:hover": {
-                      backgroundColor:
-                        theme.colorScheme === "dark"
-                          ? theme.colors.dark[5]
-                          : theme.colors.gray[1],
-                    },
-                  },
-                  chevron: {},
-                })}
-              >
-                <Text fw={500}>Disclaimer</Text>
-              </Accordion.Control>
-              <Accordion.Panel>
-                <Alert
-                  icon={<IconAlertTriangle size="1rem" />}
-                  title="This tool is a work in progress, below are the current known issues:"
-                  color="yellow"
-                  variant="light"
-                >
-                  <Text size="sm" component="div">
-                    <ul>
-                      <li>
-                        Runewords are normal rarity and missing their names, but
-                        they all have the correct mods.
-                      </li>
-                      <li>
-                        Items with many shael runes socketed may have the
-                        incorrect attack speed.
-                      </li>
-                      <li>
-                        Set items have the correct mods but not the correct
-                        name.
-                      </li>
-                      <li>
-                        There are no jewel sockets on any of the copied items.
-                        All the modifiers from socketed jewels are still on the
-                        item though.
-                      </li>
-                      <li>Ethereal items are missing the ethereal mod.</li>
-                      <li>
-                        Certain skills new to PD2 such as blood warp may not be
-                        allocated and will require manual allocation.
-                      </li>
-                    </ul>
-                    <Text size="sm" mt="md">
-                      {" "}
-                      If you encounter any other bugs that aren't listed here,
-                      or are unable to load a character file, it would be
-                      helpful if you posted it in the #bug-report channel on the{" "}
-                      <Anchor
-                        href="https://discord.com/invite/TVTExqWRhK"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Discord
-                      </Anchor>
-                      .
-                    </Text>
-                  </Text>
-                </Alert>
-              </Accordion.Panel>
-            </Accordion.Item>
-          </Accordion>
-        </Center>
-
-        <Card
-          shadow="sm"
-          padding="md"
-          mx="auto"
-          maw={rem(600)}
-          withBorder
-          mb={"md"}
-        >
-          <Text size="lg" fw={600} align="center" mb={rem(4)}>
-            Character Export Instructions
-          </Text>
-          <Text size="sm" c="dimmed" align="center" mb="md">
-            1. Enter your character name below
-            <br />
-            2. Click export button
-            <br />
-            3. Move file to your Diablo II save folder (Ex. C:/Program Files
-            (x86)/Diablo II/Save)
-          </Text>
-
-          <form onSubmit={handleSubmit}>
-            <TextInput
-              value={characterName}
-              onChange={(e) => setCharacterName(e.currentTarget.value)}
-              placeholder="Enter a PD2 character name"
-              label="Character name"
-              required
-              mb="md"
-              error={error}
-            />
-
-            <Button
-              fullWidth
-              type="submit"
-              leftSection={<IconDownload size="1rem" />}
-              variant="light"
-              loading={isPending}
-              disabled={isPending}
-            >
-              Export .d2s File
-            </Button>
-          </form>
-        </Card>
-
-        <Card shadow="sm" padding="md" mx="auto" maw={rem(600)} withBorder>
-          <Text size="lg" fw={600} align="center" mb={rem(12)}>
-            Frequently Asked Questions
-          </Text>
-          <Accordion variant="separated">
-            {faq.map((item) => (
-              <Accordion.Item key={item.value} value={item.value}>
-                <Accordion.Control style={{ border: `1px solid #373a40` }}>
-                  {item.value}
-                </Accordion.Control>
-                <Accordion.Panel>{item.description}</Accordion.Panel>
-              </Accordion.Item>
-            ))}
-          </Accordion>
-        </Card>
+                Open Dominis&apos;s Exporter
+              </Button>
+            </Card>
+          </Center>
+        </Box>
       </Container>
     </>
   );

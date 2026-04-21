@@ -14,7 +14,6 @@ import {
   Anchor,
   Tooltip,
   Box,
-  Alert,
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -25,6 +24,7 @@ import type {
   AccountLevel99Entry,
   MirroredItemEntry,
 } from "../api/leaderboard";
+import { DEFAULT_VIEW_SEASON, SHORT_SEASON_OPTIONS } from "../types";
 
 const getRarityColor = (item: any): string | null => {
   if (!item) return null;
@@ -549,7 +549,7 @@ export default function LeaderboardPage() {
     (searchParams.get("mode") as any) || "softcore"
   );
   const [season, setSeason] = useState<number>(
-    parseInt(searchParams.get("season") || "12")
+    parseInt(searchParams.get("season") || DEFAULT_VIEW_SEASON.toString(), 10)
   );
   const [activeLeaderboardTab, setActiveLeaderboardTab] = useState<
     string | null
@@ -558,7 +558,7 @@ export default function LeaderboardPage() {
   useEffect(() => {
     const params = new URLSearchParams();
     if (gameMode !== "softcore") params.set("mode", gameMode);
-    if (season !== 12) params.set("season", season.toString());
+    if (season !== DEFAULT_VIEW_SEASON) params.set("season", season.toString());
     if (activeLeaderboardTab !== "mirrored")
       params.set("tab", activeLeaderboardTab || "mirrored");
     setSearchParams(params, { replace: true });
@@ -599,27 +599,12 @@ export default function LeaderboardPage() {
         />
       </Helmet>
 
-      <Box style={{ ...cardWidthStyles, marginTop: theme.spacing.md }}>
-        <Alert color="red" title="Data Accuracy Notice">
-          <Stack gap="xs">
-            <Text size="sm">
-              Leaderboard data may be incomplete or incorrect, particularly for
-              Level 99 Accounts as we only recently started collecting this
-              data. The number of mirror copies does not include the original or any copies that are not equipped (e.g. in stash or inventory) or on a character not listed on pd2.tools.
-              <br />
-              <br />
-              All leaderboards update every 12 hours.
-            </Text>
-          </Stack>
-        </Alert>
-      </Box>
-
       <Card
         withBorder
         styles={{
           root: {
             ...cardWidthStyles,
-            marginTop: theme.spacing.sm,
+            marginTop: theme.spacing.md,
             marginBottom: theme.spacing.md,
             padding: theme.spacing.sm,
             [`@media (min-width: ${theme.breakpoints.sm})`]: {
@@ -638,12 +623,9 @@ export default function LeaderboardPage() {
             <Title order={2}>Leaderboard</Title>
             <Group gap="sm">
               <Select
-                data={[
-                  { value: "12", label: "S12" },
-                  { value: "11", label: "S11" },
-                ]}
+                data={SHORT_SEASON_OPTIONS}
                 value={season.toString()}
-                onChange={(value) => value && setSeason(parseInt(value))}
+                onChange={(value) => value && setSeason(parseInt(value, 10))}
                 style={{ width: "80px" }}
                 size="sm"
               />

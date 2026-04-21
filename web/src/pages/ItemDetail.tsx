@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import {
   Box,
@@ -28,6 +28,7 @@ import {
   NAV_ITEMS,
 } from "../components/economy/shared";
 import EconomyDisclaimer from "../components/economy/disclaimer";
+import { DEFAULT_VIEW_SEASON } from "../types";
 
 function formatItemNameFromUrl(urlName: string | undefined): string {
   if (!urlName) return "";
@@ -39,15 +40,22 @@ function formatItemNameFromUrl(urlName: string | undefined): string {
 
 export default function ItemDetail() {
   const { itemNameURL } = useParams<{ itemNameURL: string }>();
+  const [searchParams] = useSearchParams();
   const theme = useMantineTheme();
   const [drawerOpened, setDrawerOpened] = useState(false);
+  const season = parseInt(
+    searchParams.get("season") || DEFAULT_VIEW_SEASON.toString(),
+    10
+  );
+  const seasonSearch =
+    season !== DEFAULT_VIEW_SEASON ? `?season=${season}` : "";
 
   const { isPending, data } = useQuery({
-    queryKey: [itemNameURL],
+    queryKey: [itemNameURL, season],
     queryFn: () => {
       const itemData = itemNameURL ? ECONOMY_ITEMS_DATA[itemNameURL] : null;
       if (!itemData) return Promise.reject(new Error("Item not found"));
-      return economyAPI.getItem(itemData.itemNameInternal);
+      return economyAPI.getItem(itemData.itemNameInternal, season);
     },
     enabled: !!itemNameURL,
   });
@@ -198,6 +206,7 @@ export default function ItemDetail() {
             navItems={NAV_ITEMS}
             closeDrawer={() => setDrawerOpened(false)}
             currentItemCategoryValue={currentItemData.categoryValue}
+            search={seasonSearch}
           />
         </Drawer>
 
@@ -207,6 +216,7 @@ export default function ItemDetail() {
               activeCategory={activeCategory}
               navItems={NAV_ITEMS}
               currentItemCategoryValue={currentItemData.categoryValue}
+              search={seasonSearch}
             />
           </Box>
 
@@ -214,13 +224,13 @@ export default function ItemDetail() {
             <Stack gap="lg">
               <CustomBreadcrumbs separator=">">
                 <a
-                  href="/economy/currency"
+                  href={`/economy/currency${seasonSearch}`}
                   style={{ textDecoration: "none", color: "#4dabf7" }}
                 >
                   <Text size="sm">Economy</Text>
                 </a>
                 <a
-                  href={currentItemData.categoryPath}
+                  href={`${currentItemData.categoryPath}${seasonSearch}`}
                   style={{ textDecoration: "none", color: "#4dabf7" }}
                 >
                   <Text size="sm">{currentItemData.category}</Text>

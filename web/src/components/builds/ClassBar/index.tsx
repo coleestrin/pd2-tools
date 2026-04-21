@@ -24,6 +24,12 @@ import Cookies from "js-cookie";
 import debounce from "lodash/debounce";
 import { accountsAPI } from "../../../api";
 import type { BuildsComponentProps } from "../types";
+import {
+  CURRENT_SEASON,
+  DEFAULT_VIEW_SEASON,
+  LEVEL_RANGE_COOKIE_KEY,
+  SEASON_OPTIONS,
+} from "../../../types";
 
 interface SettingsModalProps {
   opened: boolean;
@@ -44,7 +50,7 @@ function SettingsModal({
     debounce((value: [number, number]) => {
       onLevelChange(value[0], value[1]);
       Cookies.set(
-        "levelRange",
+        LEVEL_RANGE_COOKIE_KEY,
         JSON.stringify({ min: value[0], max: value[1] }),
         { expires: 365 }
       );
@@ -75,7 +81,7 @@ function SettingsModal({
             Character Level Range
           </Text>
           <Tooltip
-            label="Inclusive level range (from-to) (default 94-99)"
+            label="Inclusive level range (from-to) (default 80-99)"
             position="right"
           >
             <div
@@ -113,6 +119,7 @@ interface AccountQueueModalProps {
 }
 
 function AccountQueueModal({ opened, onClose }: AccountQueueModalProps) {
+  const queueDisabled = CURRENT_SEASON !== DEFAULT_VIEW_SEASON;
   const [accountName, setAccountName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [queuedAccountName, setQueuedAccountName] = useState<string | null>(
@@ -184,7 +191,7 @@ function AccountQueueModal({ opened, onClose }: AccountQueueModalProps) {
           placeholder="Enter account name"
           value={accountName}
           onChange={(e) => setAccountName(e.target.value)}
-          disabled={isLoading}
+          disabled={isLoading || queueDisabled}
           mb="md"
         />
 
@@ -220,7 +227,7 @@ function AccountQueueModal({ opened, onClose }: AccountQueueModalProps) {
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!accountName.trim() || isLoading}
+            disabled={!accountName.trim() || isLoading || queueDisabled}
             loading={isLoading}
           >
             Add to Queue
@@ -250,7 +257,7 @@ export default function ClassBar({
 
   const handleSeasonChange = (value: string | null) => {
     if (value) {
-      updateFilters({ season: parseInt(value) });
+      updateFilters({ season: parseInt(value, 10) });
     }
   };
 
@@ -316,10 +323,7 @@ export default function ClassBar({
             </Text>
             <Select
               placeholder="Select Season"
-              data={[
-                { value: "12", label: "Season 12" },
-                { value: "11", label: "Season 11" },
-              ]}
+              data={SEASON_OPTIONS}
               value={filters.season.toString()}
               onChange={handleSeasonChange}
               style={{ width: "100%" }}

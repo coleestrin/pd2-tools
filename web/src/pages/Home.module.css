@@ -1,0 +1,815 @@
+.page {
+  position: relative;
+  overflow: hidden;
+  margin-top: -10px;
+  padding-top: 10px;
+  background: var(--mantine-color-body);
+}
+
+.page::before {
+  content: none;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+}
+
+.heroSection {
+  padding: clamp(1.25rem, 3vw, 2.5rem) 0 1.85rem;
+}
+
+.heroGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1rem, 2vw, 1.75rem);
+  align-items: center;
+}
+
+.heroCopy {
+  flex: 1 1 0;
+  min-width: min(100%, 20rem);
+}
+
+.eyebrow,
+.sectionEyebrow,
+.snapshotEyebrow,
+.cardEyebrow,
+.activityLabel {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.eyebrow,
+.sectionEyebrow,
+.snapshotEyebrow,
+.cardEyebrow {
+  color: var(--mantine-color-blue-4);
+}
+
+.heroTitle {
+  margin-top: 0.35rem;
+  margin-bottom: 0.75rem;
+  max-width: 12ch;
+  color: var(--mantine-color-gray-0);
+  font-family:
+    "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia,
+    serif;
+  font-size: clamp(2.25rem, 5vw, 4rem);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+}
+
+.heroDescription {
+  max-width: 38rem;
+  margin-bottom: 1.1rem;
+  color: var(--mantine-color-gray-4);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.primaryButton,
+.secondaryButton {
+  min-width: 10.5rem;
+  height: 2.6rem;
+  border-radius: 0.75rem;
+}
+
+.primaryButton {
+  border: 1px solid rgba(116, 192, 252, 0.3);
+  background: var(--mantine-color-blue-6);
+  color: var(--mantine-color-white);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+}
+
+.primaryButton:hover {
+  background: var(--mantine-color-blue-5);
+}
+
+.secondaryButton {
+  border: 1px solid var(--mantine-color-dark-4);
+  background: rgba(37, 38, 43, 0.78);
+  color: var(--mantine-color-gray-0);
+}
+
+.secondaryButton:hover {
+  background: rgba(44, 46, 51, 0.9);
+}
+
+.utilityLink:hover {
+  color: var(--mantine-color-blue-3);
+}
+
+.heroVisual {
+  flex: 0 1 24rem;
+  height: 25rem;
+  width: min(100%, 24rem);
+  min-width: min(100%, 21.5rem);
+  margin-left: auto;
+}
+
+.activityPanel {
+  display: flex;
+  flex-direction: column;
+  height: 25rem;
+  padding: 0.95rem 0.95rem 0.85rem;
+  border: 1px solid var(--mantine-color-dark-4);
+  border-radius: 0.95rem;
+  background: rgba(37, 38, 43, 0.92);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.activityPanelTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.activityEyebrow {
+  display: inline-block;
+  color: var(--mantine-color-blue-4);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.activitySlideIndicators {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.activitySlideIndicator {
+  width: 1.55rem;
+  height: 0.2rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+}
+
+.activitySlideIndicatorActive {
+  background: var(--mantine-color-blue-4);
+}
+
+.activityPanelTitle {
+  margin-top: 0.42rem;
+  color: var(--mantine-color-gray-0);
+  font-size: clamp(1.2rem, 2.5vw, 1.55rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.activityPanelCopy {
+  max-width: 21rem;
+  margin-top: 0.3rem;
+  color: var(--mantine-color-gray-4);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.activitySlidesViewport {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.activitySlideBody {
+  height: 100%;
+  margin-top: 0.7rem;
+  animation: panelFade 220ms ease;
+}
+
+.activitySlideBodyTight {
+  margin-top: 0.42rem;
+}
+
+.activitySlideBodyCompact {
+  margin-top: 0.58rem;
+}
+
+.activityFeed {
+  display: grid;
+  gap: 0;
+}
+
+.activityFeedRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: center;
+  margin: 0 -0.45rem;
+  padding: 0.54rem 0.45rem;
+  border-radius: 0.55rem;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.activityFeedRow + .activityFeedRow {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.activityFeedRow:hover,
+.activityFeedRow:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.activityFeedRow:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.activityFeedRow:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.38);
+}
+
+.activityFeedClassImage {
+  width: 1.9rem;
+  height: 1.7rem;
+  object-fit: contain;
+  opacity: 0.9;
+}
+
+.activityFeedMain {
+  min-width: 0;
+}
+
+.activityFeedName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mantine-color-gray-0);
+  font-weight: 600;
+  font-size: 0.96rem;
+}
+
+.activityFeedMeta {
+  margin-top: 0.02rem;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.82rem;
+}
+
+.activityFeedTime {
+  color: var(--mantine-color-dimmed);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.activityFeedSkeleton {
+  opacity: 0.62;
+  margin: 0.25rem 0;
+}
+
+.activityFeedEmpty {
+  padding: 0.9rem 0;
+}
+
+.activityFeedEmptyTitle {
+  color: var(--mantine-color-gray-1);
+  font-weight: 600;
+}
+
+.activityFeedEmptyCopy {
+  margin-top: 0.45rem;
+  color: var(--mantine-color-dimmed);
+}
+
+.marketList,
+.leaderboardList {
+  display: grid;
+  gap: 0;
+  margin-top: 0.45rem;
+}
+
+.marketRow,
+.leaderboardRow {
+  display: grid;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.marketRow {
+  color: inherit;
+  margin: 0 -0.45rem;
+  padding: 0.58rem 0.45rem;
+  border-radius: 0.55rem;
+  text-decoration: none;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.marketRow + .marketRow,
+.leaderboardRow + .leaderboardRow {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.marketRow {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.marketRow:hover,
+.marketRow:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.marketRow:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.marketRow:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.38);
+}
+
+.leaderboardLink:hover .leaderboardName {
+  color: var(--mantine-color-blue-3);
+}
+
+.marketItemImage {
+  width: 1.9rem;
+  height: 1.9rem;
+  object-fit: contain;
+}
+
+.homeItemIconFrame {
+  display: flex;
+  width: 1.9rem;
+  height: 1.9rem;
+  align-items: center;
+  justify-content: center;
+  border: 0.5px solid transparent;
+  border-radius: 0.25rem;
+}
+
+.marketRowMain {
+  min-width: 0;
+}
+
+.marketItemName,
+.leaderboardName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mantine-color-gray-0);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.marketItemMeta {
+  margin-top: 0.06rem;
+  color: var(--mantine-color-dimmed);
+  font-size: 0.78rem;
+}
+
+.marketPrice,
+.leaderboardValue {
+  color: var(--mantine-color-gray-1);
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.leaderboardValueLevel {
+  color: var(--mantine-color-green-5);
+}
+
+.leaderboardLink {
+  display: block;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.classMetaList {
+  display: grid;
+  gap: 0;
+}
+
+.classMetaRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.45rem 0;
+}
+
+.classMetaRow + .classMetaRow {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.classMetaImage {
+  width: 1.75rem;
+  height: 1.6rem;
+  object-fit: contain;
+  opacity: 0.92;
+}
+
+.classMetaMain {
+  min-width: 0;
+}
+
+.classMetaHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.classMetaName {
+  color: var(--mantine-color-gray-0);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.classMetaShare {
+  color: var(--mantine-color-gray-3);
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.classMetaBar {
+  height: 0.18rem;
+  margin-top: 0.24rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.classMetaBarFill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--mantine-color-blue-4);
+}
+
+.leaderboardRow {
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  padding: 0.48rem 0;
+}
+
+.leaderboardRank {
+  color: var(--mantine-color-dimmed);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.activitySection,
+.section {
+  margin-bottom: 2.2rem;
+}
+
+.activityStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--mantine-color-dark-4);
+  border-radius: 0.95rem;
+  overflow: hidden;
+  background: rgba(37, 38, 43, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.activityItem {
+  padding: 0.9rem 1rem 0.95rem;
+}
+
+.activityItem + .activityItem {
+  border-left: 1px solid var(--mantine-color-dark-4);
+}
+
+.activityLabel {
+  color: var(--mantine-color-dimmed);
+}
+
+.activityValue {
+  margin-top: 0.2rem;
+  color: var(--mantine-color-gray-0);
+  font-size: clamp(1.55rem, 3vw, 2.1rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.activitySkeleton {
+  opacity: 0.65;
+}
+
+.sectionIntro {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.sectionTitle {
+  margin-top: 0.2rem;
+  color: var(--mantine-color-gray-0);
+  font-size: clamp(1.55rem, 3vw, 2.15rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.sectionCopy {
+  max-width: 32rem;
+  color: var(--mantine-color-gray-4);
+  line-height: 1.7;
+  text-align: right;
+}
+
+.featuredGrid,
+.utilityGrid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.featuredGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.utilityGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.featuredCard,
+.utilityCard {
+  position: relative;
+  border: 1px solid var(--mantine-color-dark-4);
+  overflow: hidden;
+}
+
+.featuredCard {
+  min-height: 16rem;
+  padding: 1.1rem;
+  border-radius: 1rem;
+  background: rgba(37, 38, 43, 0.82);
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+
+.featuredCard:hover {
+  transform: translateY(-3px);
+  border-color: rgba(116, 192, 252, 0.24);
+}
+
+.featuredCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.featuredEmber::before {
+  background: none;
+}
+
+.featuredSteel::before {
+  background: none;
+}
+
+.featuredCardTop {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.7rem;
+}
+
+.featuredIcon,
+.utilityIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+}
+
+.featuredIcon {
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1px solid rgba(77, 171, 247, 0.2);
+  background: rgba(26, 27, 30, 0.6);
+  color: var(--mantine-color-blue-4);
+}
+
+.featuredSteel .featuredIcon {
+  color: var(--mantine-color-blue-3);
+}
+
+.cardTitle,
+.utilityTitle {
+  position: relative;
+  z-index: 1;
+  color: var(--mantine-color-gray-0);
+  letter-spacing: -0.03em;
+}
+
+.cardTitle {
+  font-size: 1.45rem;
+}
+
+.cardDescription,
+.cardNote,
+.utilityDescription {
+  position: relative;
+  z-index: 1;
+  line-height: 1.75;
+}
+
+.cardDescription,
+.utilityDescription {
+  color: var(--mantine-color-gray-3);
+}
+
+.cardDescription {
+  max-width: 34rem;
+  margin-top: 0.55rem;
+  line-height: 1.6;
+}
+
+.cardNote {
+  margin-top: 0.55rem;
+  margin-bottom: 1rem;
+  color: var(--mantine-color-dimmed);
+}
+
+.cardButton {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  margin-top: auto;
+  border-radius: 0.75rem;
+  background: rgba(37, 38, 43, 0.84);
+  color: var(--mantine-color-gray-0);
+  border: 1px solid var(--mantine-color-dark-4);
+}
+
+.cardButton:hover {
+  background: rgba(44, 46, 51, 0.92);
+}
+
+.utilityCard {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border-radius: 0.95rem;
+  background: rgba(37, 38, 43, 0.78);
+}
+
+.utilityHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.utilityIcon {
+  width: 1.95rem;
+  height: 1.95rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(77, 171, 247, 0.18);
+  background: rgba(77, 171, 247, 0.08);
+  color: var(--mantine-color-blue-4);
+}
+
+.utilityTitle {
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.utilityDescription {
+  margin-top: 0.7rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+.utilityLink {
+  margin-top: auto;
+  color: var(--mantine-color-blue-4);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+@media (max-width: 75rem) {
+  .heroTitle {
+    max-width: 10ch;
+    font-size: clamp(2rem, 4.2vw, 3.3rem);
+  }
+
+  .heroDescription {
+    max-width: 32rem;
+    font-size: 0.97rem;
+  }
+
+  .heroVisual {
+    width: min(100%, 23rem);
+    min-width: min(100%, 20.5rem);
+  }
+
+  .utilityGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 62rem) {
+  .activityStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .activityItem:nth-child(3),
+  .activityItem:nth-child(4) {
+    border-top: 1px solid var(--mantine-color-dark-4);
+  }
+
+  .activityItem:nth-child(3) {
+    border-left: none;
+  }
+
+  .featuredGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionIntro {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sectionCopy {
+    text-align: left;
+  }
+
+}
+
+@media (max-width: 48rem) {
+  .heroGrid {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .heroTitle {
+    max-width: 100%;
+  }
+
+  .heroCopy,
+  .heroVisual {
+    flex: none;
+    height: auto;
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+  }
+
+  .utilityGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .activityPanel {
+    min-height: auto;
+    height: auto;
+  }
+
+  .activityFeedRow {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .activityFeedTime {
+    grid-column: 2;
+    text-align: left;
+  }
+
+  .activityStrip,
+  .utilityGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .activityItem + .activityItem {
+    border-left: none;
+    border-top: 1px solid var(--mantine-color-dark-4);
+  }
+}
+
+@keyframes panelFade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

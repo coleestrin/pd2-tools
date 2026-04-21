@@ -2,11 +2,6 @@
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://api.pd2.tools/api/v1";
 
-// External Services (for now just export api)
-export const EXTERNAL_SERVICES = {
-  characterExport: "https://character-export.pd2.tools",
-} as const;
-
 // API Endpoints
 export const API_ENDPOINTS = {
   // Characters
@@ -28,6 +23,9 @@ export const API_ENDPOINTS = {
   onlinePlayers: "/statistics/online-players",
   onlinePlayersLast: "/statistics/online-players-last",
   characterCounts: "/statistics/character-counts",
+
+  // Home
+  homeSlider: "/home/slider",
 
   // Health
   health: "/health",

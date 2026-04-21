@@ -61,5 +61,5 @@ export interface ICharacter {
   experience: number;
   level: number;
   skills: ISkill[];
-  season: number; // Season tracking (e.g., 11 for S11, 12 for S12)
+  season: number; // Season number (e.g., 13 for S13)
 }

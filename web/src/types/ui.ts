@@ -52,6 +52,7 @@ export interface ItemsTableProps {
   items: EconomyItem[];
   isPending: boolean;
   category: string;
+  search?: string;
 }
 
 export interface SortableTableHeaderProps {

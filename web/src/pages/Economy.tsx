@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import {
   Box,
@@ -13,6 +13,7 @@ import {
   Group,
   Title,
   Skeleton,
+  Select,
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { economyAPI } from "../api";
@@ -25,15 +26,26 @@ import {
 } from "../components/economy/shared";
 import { ItemsTable } from "../components/economy/ItemsTable";
 import EconomyDisclaimer from "../components/economy/disclaimer";
+import { DEFAULT_VIEW_SEASON, SEASON_OPTIONS } from "../types";
 
 export default function Economy() {
   const { category: paramCategory } = useParams<{ category: string }>();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const theme = useMantineTheme();
+  const economySeasonOptions = SEASON_OPTIONS.filter(
+    (option) => option.value !== "11"
+  );
+  const rawSeason = searchParams.get("season");
+  const season = rawSeason
+    ? economySeasonOptions.some((option) => option.value === rawSeason)
+      ? parseInt(rawSeason, 10)
+      : DEFAULT_VIEW_SEASON
+    : DEFAULT_VIEW_SEASON;
 
   const { isPending, data } = useQuery({
-    queryKey: ["items", "items", "items"],
-    queryFn: () => economyAPI.getItems(),
+    queryKey: ["economyItems", season],
+    queryFn: () => economyAPI.getItems(season),
   });
 
   const flatNavItems = useMemo(() => NAV_ITEMS.flatMap((s) => s.items), []);
@@ -74,6 +86,8 @@ export default function Economy() {
   const currentCategoryPath = currentCategoryInfo
     ? currentCategoryInfo.path
     : "/";
+  const seasonSearch =
+    season !== DEFAULT_VIEW_SEASON ? `?season=${season}` : "";
 
   // Create reverse lookup map from itemNameInternal to item data
   const itemDataByInternalName = useMemo(() => {
@@ -174,29 +188,56 @@ export default function Economy() {
             activeCategory={activeCategory}
             navItems={NAV_ITEMS}
             closeDrawer={() => setDrawerOpened(false)}
+            search={seasonSearch}
           />
         </Drawer>
 
         <Group align="stretch" gap="lg" wrap="nowrap">
           <Box visibleFrom="sm" style={{ width: "220px", minWidth: "200px" }}>
-            <Navigation activeCategory={activeCategory} navItems={NAV_ITEMS} />
+            <Navigation
+              activeCategory={activeCategory}
+              navItems={NAV_ITEMS}
+              search={seasonSearch}
+            />
           </Box>
           <Box style={{ flex: 1, minWidth: 0 }}>
             <Stack>
-              <CustomBreadcrumbs separator=">">
-                <a
-                  href={`/economy/${DEFAULT_CATEGORY}`}
-                  style={{ textDecoration: "none", color: "#4dabf7" }}
-                >
-                  <Text size="sm">Economy</Text>
-                </a>
-                <a
-                  href={currentCategoryPath}
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
-                  <Text size="sm">{currentCategoryLabel}</Text>
-                </a>
-              </CustomBreadcrumbs>
+              <Group justify="space-between" align="flex-start" wrap="wrap">
+                <CustomBreadcrumbs separator=">">
+                  <a
+                    href={`/economy/${DEFAULT_CATEGORY}${seasonSearch}`}
+                    style={{ textDecoration: "none", color: "#4dabf7" }}
+                  >
+                    <Text size="sm">Economy</Text>
+                  </a>
+                  <a
+                    href={`${currentCategoryPath}${seasonSearch}`}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <Text size="sm">{currentCategoryLabel}</Text>
+                  </a>
+                </CustomBreadcrumbs>
+                <Select
+                  value={season.toString()}
+                  onChange={(value) => {
+                    const nextParams = new URLSearchParams(searchParams);
+                    const nextSeason = parseInt(
+                      value || DEFAULT_VIEW_SEASON.toString(),
+                      10
+                    );
+
+                    if (nextSeason !== DEFAULT_VIEW_SEASON) {
+                      nextParams.set("season", nextSeason.toString());
+                    } else {
+                      nextParams.delete("season");
+                    }
+
+                    setSearchParams(nextParams, { replace: true });
+                  }}
+                  data={economySeasonOptions}
+                  w={120}
+                />
+              </Group>
               <Title order={2} style={{ marginTop: "-8px" }}>
                 {currentCategoryLabel}
               </Title>
@@ -209,6 +250,7 @@ export default function Economy() {
                   items={filteredItems}
                   isPending={isPending}
                   category={currentCategoryLabel}
+                  search={seasonSearch}
                 />
               </Skeleton>
             </Stack>

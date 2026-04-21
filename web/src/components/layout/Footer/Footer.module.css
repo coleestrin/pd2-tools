@@ -12,24 +12,127 @@ body {
 
 .footer {
   margin-top: auto;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
   background-color: var(--mantine-color-body);
-  border-top: 1px solid
-    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  border-top: 1px solid var(--mantine-color-dark-4);
 }
 
-.main {
-  flex-grow: 1;
+.shell {
+  padding-top: 1.5rem;
+  padding-bottom: 0.9rem;
 }
 
-.footerContent {
+.primaryRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(9rem, max-content));
+  justify-content: center;
+  column-gap: clamp(3rem, 6.5vw, 7rem);
+  row-gap: 1.25rem;
+  align-items: start;
+}
+
+.section {
+  min-width: 0;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
 }
 
-.footerContent span {
-  flex-grow: 1;
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  color: var(--mantine-color-gray-0);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.sectionTitle svg {
+  color: currentColor;
+}
+
+.heartIcon {
+  display: inline-flex;
+  color: var(--mantine-color-red-5);
+}
+
+.linkList {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.footerLink {
+  width: fit-content;
+  color: var(--mantine-color-gray-2);
+  font-size: 0.92rem;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.footerLink:hover {
+  color: var(--mantine-color-gray-0);
+}
+
+.linkInner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.linkLabel {
+  text-decoration: none;
+}
+
+.footerLink:hover .linkLabel {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.14em;
+}
+
+.linkIcon {
+  display: inline-flex;
+  color: var(--mantine-color-gray-4);
+}
+
+.bottomBar {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.4rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--mantine-color-dark-4);
+}
+
+.disclaimer {
+  max-width: 48rem;
+  color: var(--mantine-color-gray-5);
+  font-size: 0.82rem;
+  text-align: center;
+  line-height: 1.5;
+}
+
+@media (max-width: 56rem) {
+  .primaryRow {
+    grid-template-columns: repeat(2, minmax(10rem, max-content));
+    justify-content: center;
+    column-gap: clamp(2.5rem, 9.5vw, 5.25rem);
+    row-gap: 1.25rem;
+  }
+}
+
+@media (max-width: 40rem) {
+  .shell {
+    padding-top: 1.4rem;
+  }
+
+  .primaryRow {
+    grid-template-columns: minmax(13rem, 16rem);
+    justify-content: center;
+    gap: 1.15rem;
+  }
+
+  .bottomBar {
+    margin-top: 1.1rem;
+  }
 }

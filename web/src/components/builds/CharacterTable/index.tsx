@@ -9,6 +9,7 @@ import { IconGrave } from "@tabler/icons-react";
 import { Tooltip } from "@mantine/core";
 import Cookies from "js-cookie";
 import { charactersAPI } from "../../../api";
+import { DEFAULT_VIEW_SEASON, LEVEL_RANGE_COOKIE_KEY } from "../../../types";
 import type { FullCharacterResponse } from "../../../types";
 import type { CharacterFilters } from "../../../hooks";
 
@@ -98,10 +99,10 @@ export default function PlayerTable({
             queryParams.append("query", filters.searchQuery);
           }
 
-          const levelRangeCookie = Cookies.get("levelRange");
+          const levelRangeCookie = Cookies.get(LEVEL_RANGE_COOKIE_KEY);
           const levelRange = levelRangeCookie
             ? JSON.parse(levelRangeCookie)
-            : { min: 94, max: 99 };
+            : { min: 80, max: 99 };
 
           const jsonResponse = await charactersAPI.getCharacters(
             filters.gameMode,
@@ -326,7 +327,7 @@ export default function PlayerTable({
       if (filters.mercItemFilter.length)
         searchParams.set("mercItems", filters.mercItemFilter.join(","));
       if (filters.searchQuery) searchParams.set("query", filters.searchQuery);
-      if (filters.season !== 12)
+      if (filters.season !== DEFAULT_VIEW_SEASON)
         searchParams.set("season", filters.season.toString());
 
       const href = `/builds/character/${row.original.name}?${searchParams.toString()}`;

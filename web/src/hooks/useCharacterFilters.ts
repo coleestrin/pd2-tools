@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import Cookies from "js-cookie";
 import debounce from "lodash/debounce";
+import { DEFAULT_VIEW_SEASON, LEVEL_RANGE_COOKIE_KEY } from "../types";
 
 export interface SkillRequirement {
   name: string;
@@ -40,7 +41,8 @@ const updateUrlWithoutRerender = debounce((filters: CharacterFilters) => {
   if (filters.mercItemFilter.length)
     params.set("mercItems", filters.mercItemFilter.join(","));
   if (filters.searchQuery) params.set("query", filters.searchQuery);
-  if (filters.season !== 12) params.set("season", filters.season.toString());
+  if (filters.season !== DEFAULT_VIEW_SEASON)
+    params.set("season", filters.season.toString());
 
   const newUrl = params.toString()
     ? `?${params.toString()}`
@@ -52,10 +54,10 @@ export function useCharacterFilters(): UseCharacterFiltersReturn {
   const [searchParams] = useSearchParams();
 
   const [filters, setFilters] = useState<CharacterFilters>(() => {
-    const levelRangeCookie = Cookies.get("levelRange");
+    const levelRangeCookie = Cookies.get(LEVEL_RANGE_COOKIE_KEY);
     const levelRange = levelRangeCookie
       ? JSON.parse(levelRangeCookie)
-      : { min: 94, max: 99 };
+      : { min: 80, max: 99 };
 
     return {
       gameMode: searchParams.get("gameMode") || "softcore",
@@ -83,7 +85,10 @@ export function useCharacterFilters(): UseCharacterFiltersReturn {
       maxLevel: parseInt(
         searchParams.get("maxLevel") || levelRange.max.toString()
       ),
-      season: parseInt(searchParams.get("season") || "12"),
+      season: parseInt(
+        searchParams.get("season") || DEFAULT_VIEW_SEASON.toString(),
+        10
+      ),
     };
   });
 

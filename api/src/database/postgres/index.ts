@@ -970,6 +970,32 @@ export default class CharacterDB_Postgres {
     };
   }
 
+  public async getRecentCharacters(
+    gameModeName: string,
+    season: number,
+    limit: number = 10
+  ): Promise<FullCharacterResponse[]> {
+    const gameModeId = await this.getOrInsertLookupId(
+      "GameModes",
+      "name",
+      gameModeName.toLowerCase()
+    );
+    if (gameModeId === null) return [];
+
+    const { rows } = await this.pool.query(
+      `SELECT full_response_json
+       FROM Characters
+       WHERE game_mode_id = $1
+         AND season = $2
+         AND last_updated IS NOT NULL
+       ORDER BY last_updated DESC, character_db_id DESC
+       LIMIT $3`,
+      [gameModeId, season, limit]
+    );
+
+    return rows.map((row) => row.full_response_json as FullCharacterResponse);
+  }
+
   public async getCharacterByName(
     gameModeName: string,
     characterName: string,

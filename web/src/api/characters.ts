@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { API_ENDPOINTS, EXTERNAL_SERVICES } from "../config/api";
+import { API_ENDPOINTS } from "../config/api";
 import type {
   FullCharacterResponse,
   CharacterFilter,
@@ -7,7 +7,7 @@ import type {
   ItemUsageStats,
   SkillUsageStats,
   MercTypeStats,
-  LevelDistribution,
+  LevelDistributionData,
   CharacterCounts,
   CharacterSnapshotsResponse,
 } from "../types";
@@ -184,11 +184,14 @@ export const charactersAPI = {
   async getLevelDistribution(
     gameMode: string = "softcore",
     season?: number
-  ): Promise<LevelDistribution[]> {
-    return apiClient.get<LevelDistribution[]>(API_ENDPOINTS.levelDistribution, {
-      gameMode,
-      season,
-    });
+  ): Promise<LevelDistributionData> {
+    return apiClient.get<LevelDistributionData>(
+      API_ENDPOINTS.levelDistribution,
+      {
+        gameMode,
+        season,
+      }
+    );
   },
 
   /**
@@ -196,32 +199,6 @@ export const charactersAPI = {
    */
   async getCharacterCounts(): Promise<CharacterCounts> {
     return apiClient.get<CharacterCounts>(API_ENDPOINTS.characterCounts);
-  },
-
-  /**
-   * Export character data (from export api)
-   */
-  async exportCharacter(characterName: string): Promise<string> {
-    const response = await fetch(
-      `${EXTERNAL_SERVICES.characterExport}/data?username=${encodeURIComponent(characterName)}`
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    return await response.text();
-  },
-
-  /**
-   * Get export count (from export api)
-   */
-  async getExportCount(): Promise<{ count: number }> {
-    const response = await fetch(
-      `${EXTERNAL_SERVICES.characterExport}/export-count`
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    return await response.json();
   },
 
   /**

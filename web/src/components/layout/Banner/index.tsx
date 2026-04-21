@@ -10,9 +10,10 @@ import {
 } from "@mantine/core";
 import { IconStar } from "@tabler/icons-react";
 import { GitHubIcon } from "../../icons";
+import { SEASON_STORAGE_KEY_SUFFIX } from "../../../types";
 
-const PAGEVIEW_KEY = "pd2tools_pageviews_s12";
-const DISMISSED_KEY = "pd2tools_banner_dismissed_at_s12";
+const PAGEVIEW_KEY = `pd2tools_pageviews_${SEASON_STORAGE_KEY_SUFFIX}`;
+const DISMISSED_KEY = `pd2tools_banner_dismissed_at_${SEASON_STORAGE_KEY_SUFFIX}`;
 const PAGEVIEW_THRESHOLD = 7;
 const REAPPEAR_DAYS = 90;
 
@@ -82,7 +83,7 @@ export function SupportBanner() {
               Enjoying pd2.tools?
             </Title>
             <Text size="sm" c="black">
-              If you wanted to show your support, starring the{" "}
+              A{" "}
               <Anchor
                 href="https://github.com/coleestrin/pd2-tools"
                 target="_blank"
@@ -91,9 +92,10 @@ export function SupportBanner() {
                 fw={600}
                 underline="always"
               >
-                pd2.tools GitHub repository
+                GitHub star
               </Anchor>{" "}
-              would really help us out!
+              is the simplest free way to support pd2.tools and help drive its
+              continued development.
             </Text>
           </Box>
         </Group>

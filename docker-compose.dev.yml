@@ -1,0 +1,46 @@
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+      args:
+        TSX_VERSION: 4.21.0
+    environment:
+      NODE_ENV: development
+    command: ["tsx", "watch", "src/index.ts"]
+    volumes:
+      - ./api:/app
+      - api_node_modules:/app/node_modules
+      - app_data:/app/data
+
+  jobs:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+      args:
+        TSX_VERSION: 4.21.0
+    environment:
+      NODE_ENV: development
+    command: ["tsx", "watch", "src/jobs.ts"]
+    profiles: ["jobs"]
+    volumes:
+      - ./api:/app
+      - api_node_modules:/app/node_modules
+      - app_data:/app/data
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000/api/v1}
+      CHOKIDAR_USEPOLLING: "true"
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "4173"]
+    volumes:
+      - ./web:/app
+      - web_node_modules:/app/node_modules
+
+volumes:
+  api_node_modules:
+  web_node_modules:

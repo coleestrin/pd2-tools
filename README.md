@@ -1,35 +1,43 @@
-# pd2-tools
+<div align="center">
+  <h1>pd2.tools</h1>
+  <p>
+    <a href="https://discord.gg/TVTExqWRhK"><img alt="Discord" src="https://img.shields.io/discord/1311407302149931128?label=Discord&amp;logo=discord&amp;logoColor=white" /></a>
+    <a href="https://github.com/coleestrin/pd2-tools/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/coleestrin/pd2-tools?style=flat&amp;logo=github" /></a>
+    <a href="https://github.com/coleestrin/pd2-tools/network/members"><img alt="GitHub Forks" src="https://img.shields.io/github/forks/coleestrin/pd2-tools?style=flat&amp;logo=github" /></a>
+    <a href="https://github.com/coleestrin/pd2-tools/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/coleestrin/pd2-tools" /></a>
+    <a href="https://github.com/coleestrin/pd2-tools/graphs/contributors"><img alt="Contributors" src="https://img.shields.io/github/contributors/coleestrin/pd2-tools" /></a>
+  </p>
+  <p><a href="https://pd2.tools/">pd2.tools</a> is an open source <a href="https://www.projectdiablo2.com/">Project Diablo 2</a> toolkit for exploring builds, tracking the economy, browsing game data, and more.</p>
+  <p>
+    <img alt="pd2.tools demonstration" src="https://coleestrin.io/pd2-readme.png" />
+  </p>
+</div>
 
-[![Discord](https://img.shields.io/discord/1311407302149931128?label=Discord&logo=discord&logoColor=white)](https://discord.gg/TVTExqWRhK)
-[![GitHub Stars](https://img.shields.io/github/stars/coleestrin/pd2-tools?style=flat&logo=github)](https://github.com/coleestrin/pd2-tools/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/coleestrin/pd2-tools?style=flat&logo=github)](https://github.com/coleestrin/pd2-tools/network/members)
-[![License](https://img.shields.io/github/license/coleestrin/pd2-tools)](https://github.com/coleestrin/pd2-tools/blob/main/LICENSE)
-[![Contributors](https://img.shields.io/github/contributors/coleestrin/pd2-tools)](https://github.com/coleestrin/pd2-tools/graphs/contributors)
-
-A suite of tools for **[Project Diablo 2](https://www.projectdiablo2.com/)** designed to track builds, monitor the meta, explore characters, and provide insights into the PD2 economy and playerbase. Live at [pd2.tools](https://pd2.tools/).
-
-This repository includes everything except the [character exporter](https://pd2.tools/tools/character-export) which can be found at [coleestrin/pd2-character-downloader](https://github.com/coleestrin/pd2-character-downloader).
-
+<hr>
 
 ## 🔧 Setup
 
-1. `git clone https://github.com/coleestrin/pd2-tools`
+```bash
+git clone https://github.com/coleestrin/pd2-tools
+cd pd2-tools
+```
 
-**API:**
+**Optional**: copy `.env.example` to `.env` to override the Docker defaults.
 
-1. `cd api`
-2. `npm i`
-3. Fill out the `.env`, example given in `.env.example`
-4. `npm run build`
-5. `npm start` to start the API
-6. `npm run jobs` to run background jobs (player count tracking and character scraper)
+**Production**:
 
-**Frontend:**
+```bash
+docker compose up --build
+```
 
-1. `cd web`
-2. `npm i`
-3. Fill out the `.env`, example given in `.env.example`
-4. `npm run dev` or: `npm run build` and then `npm run preview`
+**Dev**:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile jobs up --build
+```
+
+Open `http://localhost:4173`
+
 
 ## 🤝 Contributing
 

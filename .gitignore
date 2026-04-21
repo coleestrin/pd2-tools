@@ -2,6 +2,9 @@
 # API
 # =============================================================================
 
+# Root docker env
+.env
+
 # Dependencies
 api/node_modules/
 

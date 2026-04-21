@@ -6,9 +6,11 @@ import type { CharacterFilters } from "../../../hooks";
 import type { ItemUsageStats } from "../../../types";
 import styles from "../VirtualList.module.css";
 import {
-  type ItemData,
   getBrightBorderColor,
   getDarkBackgroundColor,
+} from "../shared/item-colors";
+import {
+  type ItemData,
   ItemTooltip,
 } from "../shared/ItemHelpers";
 

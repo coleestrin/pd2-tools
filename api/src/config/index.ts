@@ -30,7 +30,7 @@ export const config = {
   //googleAiApiKey: process.env.GOOGLE_AI_API_KEY || "", (economy)
 
   // Season configuration
-  currentSeason: parseInt(process.env.CURRENT_SEASON || "12"),
+  currentSeason: parseInt(process.env.CURRENT_SEASON || "13", 10),
 
   // CORS
   corsOrigin: process.env.CORS_ORIGIN || "http://localhost:5173",
