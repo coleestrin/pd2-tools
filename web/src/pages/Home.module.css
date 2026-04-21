@@ -782,15 +782,6 @@
     height: auto;
   }
 
-  .activityFeedRow {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .activityFeedTime {
-    grid-column: 2;
-    text-align: left;
-  }
-
   .activityStrip,
   .utilityGrid {
     grid-template-columns: 1fr;
@@ -799,6 +790,17 @@
   .activityItem + .activityItem {
     border-left: none;
     border-top: 1px solid var(--mantine-color-dark-4);
+  }
+}
+
+@media (max-width: 22rem) {
+  .activityFeedRow {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .activityFeedTime {
+    grid-column: 2;
+    text-align: left;
   }
 }
 
