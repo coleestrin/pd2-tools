@@ -9,7 +9,7 @@
   </p>
   <p><a href="https://pd2.tools/">pd2.tools</a> is an open source <a href="https://www.projectdiablo2.com/">Project Diablo 2</a> toolkit for exploring builds, tracking the economy, browsing game data, and more.</p>
   <p>
-    <img alt="pd2.tools demonstration" src="https://private-user-images.githubusercontent.com/157080454/580272503-03ad8036-8b4a-4996-b6c6-650539744775.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NzY0OTE4MzIsIm5iZiI6MTc3NjQ5MTUzMiwicGF0aCI6Ii8xNTcwODA0NTQvNTgwMjcyNTAzLTAzYWQ4MDM2LThiNGEtNDk5Ni1iNmM2LTY1MDUzOTc0NDc3NS5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjYwNDE4JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI2MDQxOFQwNTUyMTJaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT00MWE1MzFiODgzYjllMjM0MzYyZWQzM2I1OWJlZTdlMzIxOTE3NmY0N2E3NWI0ODU5ZTZmOWYwNDdjMzBmM2Q4JlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCZyZXNwb25zZS1jb250ZW50LXR5cGU9aW1hZ2UlMkZwbmcifQ.kylp_8rTFZGBxXpN_bDkCu9ODo8chjUA3d2OIa_OVjc" />
+    <img alt="pd2.tools demonstration" src="https://coleestrin.io/pd2-readme.png" />
   </p>
 </div>
 
