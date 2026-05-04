@@ -117,10 +117,13 @@ describe("D2SkillParser", () => {
     it("should apply multiple direct skill bonuses", () => {
       const char = createMockCharacter(
         "Sorceress",
-        [{ name: "Fire Ball", level: 20 }],
         [
-          { name: "Item1", properties: ["+3 to Fire Ball"] },
-          { name: "Item2", properties: ["+2 to Fire Ball"] },
+          { name: "Fire Ball", level: 20 },
+          { name: "Blessed Hammer", level: 1 },
+        ],
+        [
+          { name: "Item1", properties: ["+3 to Blessed Hammer"] },
+          { name: "Item2", properties: ["+2 to Blessed Hammer"] },
         ]
       );
 
@@ -129,9 +132,9 @@ describe("D2SkillParser", () => {
       expect(result).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            skill: "Fire Ball",
-            level: 25,
-            baseLevel: 20,
+            skill: "Blessed Hammer",
+            level: 6,
+            baseLevel: 1,
           }),
         ])
       );
@@ -666,6 +669,87 @@ describe("D2SkillParser", () => {
           invalidChar as unknown as CharacterResponse
         );
       }).toThrow("Invalid character data");
+    });
+  });
+
+describe("Oskill Capping", () => {
+    it("should cap native class direct skill bonus at +3 when from item", () => {
+      const char = createMockCharacter(
+        "Sorceress",
+        [{ name: "Fire Ball", level: 20 }],
+        [{ name: "Item", properties: ["+30 to Fire Ball"] }]
+      );
+
+      const result = parser.calculateTotalSkills(char);
+
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            skill: "Fire Ball",
+            level: 23,
+            baseLevel: 20,
+          }),
+        ])
+      );
+    });
+
+    it("should not cap class-specific direct skill bonus", () => {
+      const char = createMockCharacter(
+        "Sorceress",
+        [{ name: "Fire Ball", level: 20 }],
+        [{ name: "Item", properties: ["+30 to Fire Ball (Sorceress Only)"] }]
+      );
+
+      const result = parser.calculateTotalSkills(char);
+
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            skill: "Fire Ball",
+            level: 50,
+            baseLevel: 20,
+          }),
+        ])
+      );
+    });
+
+    it("should not cap non-native skill bonuses", () => {
+      const char = createMockCharacter(
+        "Necromancer",
+        [
+          { name: "Raise Skeleton", level: 20 },
+          { name: "Fire Ball", level: 1 },
+        ],
+        [{ name: "Item", properties: ["+30 to Fire Ball"] }]
+      );
+
+      const result = parser.calculateTotalSkills(char);
+
+      const fireBall = result.find((s) => s.skill === "Fire Ball");
+      expect(fireBall?.level).toBe(31);
+    });
+
+    it("should cap total oskill bonus at +3 per character, not per item", () => {
+      const char = createMockCharacter(
+        "Sorceress",
+        [{ name: "Fire Ball", level: 20 }],
+        [
+          { name: "Item1", properties: ["+3 to Fire Ball"] },
+          { name: "Item2", properties: ["+3 to Fire Ball"] },
+        ]
+      );
+
+      const result = parser.calculateTotalSkills(char);
+
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            skill: "Fire Ball",
+            level: 23,
+            baseLevel: 20,
+          }),
+        ])
+      );
     });
   });
 });

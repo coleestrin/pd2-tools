@@ -1191,6 +1191,7 @@ class D2SkillParser {
     }
 
     const bonuses: SkillBonus[] = [];
+    const oskillBonuses = new Map<string, number>();
     const totalSkills = new Map<string, number>();
     const baseLevels = new Map<string, number>();
     const character = characterData.character;
@@ -1224,10 +1225,13 @@ class D2SkillParser {
 
     // Apply bonuses in correct order: direct -> tree -> class -> all
     this.log("Applying bonuses in order:");
-    this.applyBonusesByType(bonuses, "direct", characterClass, totalSkills);
+    this.applyBonusesByType(bonuses, "direct", characterClass, totalSkills, oskillBonuses);
     this.applyBonusesByType(bonuses, "tree", characterClass, totalSkills);
     this.applyBonusesByType(bonuses, "class", characterClass, totalSkills);
     this.applyBonusesByType(bonuses, "all", characterClass, totalSkills);
+
+    // Apply oskill bonuses with per-character cap
+    this.applyOskillBonuses(oskillBonuses, totalSkills);
 
     const baseSkills = new Set(character.skills.map((skill) => skill.name));
     for (const [skillName] of totalSkills.entries()) {
@@ -1246,6 +1250,31 @@ class D2SkillParser {
         baseLevel: baseLevels.get(skill),
       }));
     return sortedSkills;
+  }
+
+private isNativeToClass(skillName: string, characterClass: string): boolean {
+    const skill = this.skillDefinitions.find(
+      (s) => this.normalize(s.name) === this.normalize(skillName)
+    );
+    if (!skill) return false;
+    return skill.categories.some(
+      (cat) => this.normalize(cat) === `${characterClass} skills`
+    );
+  }
+
+  private applyOskillBonuses(
+    oskillBonuses: Map<string, number>,
+    totalSkills: Map<string, number>
+  ) {
+    oskillBonuses.forEach((amount, skillName) => {
+      const cappedAmount = Math.min(amount, 3);
+      const currentLevel = totalSkills.get(skillName) || 0;
+      const newLevel = currentLevel + cappedAmount;
+      totalSkills.set(skillName, newLevel);
+      this.log(
+        `Applied oskill bonus to ${skillName}: +${cappedAmount} (${currentLevel} -> ${newLevel})${cappedAmount !== amount ? ` [capped from +${amount}]` : ""}`
+      );
+    });
   }
 
   private parseProperty(prop: string, characterClass: string): SkillBonus[] {
@@ -1349,14 +1378,15 @@ class D2SkillParser {
     bonuses: SkillBonus[],
     type: SkillBonus["type"],
     characterClass: string,
-    totalSkills: Map<string, number>
+    totalSkills: Map<string, number>,
+    oskillBonuses?: Map<string, number>
   ) {
     bonuses
       .filter((bonus) => bonus.type === type)
       .forEach((bonus) => {
         switch (type) {
           case "direct":
-            this.applyDirectBonus(bonus, totalSkills);
+            this.applyDirectBonus(bonus, totalSkills, characterClass, oskillBonuses);
             break;
           case "tree":
             this.applyTreeBonus(bonus, characterClass, totalSkills);
@@ -1373,19 +1403,31 @@ class D2SkillParser {
 
   private applyDirectBonus(
     bonus: SkillBonus,
-    totalSkills: Map<string, number>
+    totalSkills: Map<string, number>,
+    characterClass: string,
+    oskillBonuses?: Map<string, number>
   ) {
     const skill = this.skillDefinitions.find(
       (s) => this.normalize(s.name) === this.normalize(bonus.target)
     );
 
     if (skill) {
-      const currentLevel = totalSkills.get(skill.name) || 0;
-      const newLevel = currentLevel + bonus.amount;
-      totalSkills.set(skill.name, newLevel);
-      this.log(
-        `Applied direct bonus to ${skill.name}: +${bonus.amount} (${currentLevel} -> ${newLevel})`
-      );
+      const isNative = this.isNativeToClass(skill.name, characterClass);
+      const isClassSpecific = bonus.source.toLowerCase().includes(" only");
+      if (isNative && oskillBonuses && !isClassSpecific) {
+        const currentOskill = oskillBonuses.get(skill.name) || 0;
+        oskillBonuses.set(skill.name, currentOskill + bonus.amount);
+        this.log(
+          `Accumulated oskill bonus for ${skill.name}: +${bonus.amount} (total: ${currentOskill + bonus.amount})`
+        );
+      } else {
+        const currentLevel = totalSkills.get(skill.name) || 0;
+        const newLevel = currentLevel + bonus.amount;
+        totalSkills.set(skill.name, newLevel);
+        this.log(
+          `Applied direct bonus to ${skill.name}: +${bonus.amount} (${currentLevel} -> ${newLevel})`
+        );
+      }
     }
   }
 
