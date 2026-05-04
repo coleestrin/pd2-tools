@@ -722,6 +722,7 @@ class D2SkillParser {
         "poison and bone skills",
         "necromancer skills",
         "corpse explosion",
+        "fire skills",
       ],
     },
     {
