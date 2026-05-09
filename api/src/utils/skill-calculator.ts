@@ -848,7 +848,7 @@ class D2SkillParser {
     // New Necromancer Skills
     {
       name: "Blood Warp",
-      categories: ["curses skills", "necromancer skills", "blood warp"],
+      categories: ["summoning skills", "necromancer skills", "blood warp"],
     },
     {
       name: "Dark Pact",
