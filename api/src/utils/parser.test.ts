@@ -140,7 +140,6 @@ describe("Parser Utility", () => {
           createMockItem("Shako"),
           createMockItem("Hellfire Torch"),
           createMockItem("Annihilus"),
-          createMockItem("Gheed's Fortune"),
         ]),
       ];
 
@@ -283,7 +282,6 @@ describe("Parser Utility", () => {
           createMockItem("Shako"),
           createMockItem("Hellfire Torch"),
           createMockItem("Annihilus"),
-          createMockItem("Gheed's Fortune"),
         ]),
         createMockCharacter("Char2", [
           createMockItem("Shako"),
