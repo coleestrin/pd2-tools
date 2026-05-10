@@ -4,7 +4,6 @@ import { IItem, CharacterData } from "../types";
 const IGNORED_UNIQUES = [
   "Hellfire Torch",
   "Annihilus",
-  "Gheed's Fortune",
   "Call to Arms",
   "Lidless Wall",
 ];

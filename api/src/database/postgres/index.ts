@@ -72,7 +72,6 @@ export interface MercTypeStats {
 const IGNORED_UNIQUES_ARRAY = [
   "Hellfire Torch",
   "Annihilus",
-  "Gheed's Fortune",
   "Call to Arms",
   "Lidless Wall",
 ];
