@@ -249,7 +249,7 @@ export default function UniqueCard({ data, filters, updateFilters }: Props) {
             <>
               <div>
                 Excludes uniques that nearly every build uses: Torch, Anni, CTA,
-                Lidless Wall, and Gheeds.
+                and Lidless Wall.
               </div>
               <div></div>
               <div>Brown = Unique Item</div>
