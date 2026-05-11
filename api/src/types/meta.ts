@@ -25,12 +25,25 @@ export interface IMetaQuery {
   skills: ISkillRequirement[];
 }
 
+export type ItemType =
+  | "Unique"
+  | "Set"
+  | "Runeword"
+  | "Rare"
+  | "Magic"
+  | "Crafted";
+
 export interface IItemUsageRow {
   item: string;
-  itemType: "Unique" | "Set" | "Runeword" | "Rare" | "Magic" | "Crafted" | string;
+  itemType: ItemType;
   numOccurrences: number;
   totalSample: number;
   pct: number;
+}
+
+export interface ILevelBucket {
+  level: number;
+  numOccurrences: number;
 }
 
 export interface ISkillUsageRow {
@@ -48,8 +61,8 @@ export interface IMercTypeUsageRow {
 }
 
 export interface ILevelDistribution {
-  hardcore: Array<{ level: number; count: number }>;
-  softcore: Array<{ level: number; count: number }>;
+  hardcore: ILevelBucket[];
+  softcore: ILevelBucket[];
 }
 
 export interface IMetaResponse {
