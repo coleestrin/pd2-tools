@@ -12,6 +12,13 @@ interface Props {
 export function DataFreshness({ cohortSize, fetchedAt }: Props) {
   const [now, setNow] = useState(() => Date.now());
 
+  // Reset `now` whenever new data arrives so the badge starts at "0s ago".
+  // Prevents the negative-time artefact caused by useState's lazy init
+  // capturing a timestamp BEFORE the parent's setFetchedAt fires.
+  useEffect(() => {
+    if (fetchedAt) setNow(Date.now());
+  }, [fetchedAt]);
+
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(id);
@@ -19,7 +26,8 @@ export function DataFreshness({ cohortSize, fetchedAt }: Props) {
 
   if (!fetchedAt) return null;
 
-  const ageSec = Math.floor((now - fetchedAt.getTime()) / 1000);
+  // Clamp to >= 0 — defensive against any residual clock drift.
+  const ageSec = Math.max(0, Math.floor((now - fetchedAt.getTime()) / 1000));
   const ageLabel =
     ageSec < 60 ? `${ageSec}s ago` : `${Math.floor(ageSec / 60)}m ago`;
 

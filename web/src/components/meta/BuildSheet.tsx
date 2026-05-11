@@ -18,8 +18,10 @@ import type { ILevelDistribution } from "../../types/meta";
 
 function LevelDistributionChart({ dist }: { dist: ILevelDistribution }) {
   // The cohort is always one game mode, so exactly one side is non-empty.
-  const buckets =
-    dist.softcore.length > 0 ? dist.softcore : dist.hardcore;
+  // Drop empty buckets so we only render levels that actually have data —
+  // gives every bar room to breathe regardless of how wide the level range is.
+  const buckets = (dist.softcore.length > 0 ? dist.softcore : dist.hardcore)
+    .filter((b) => b.numOccurrences > 0);
 
   if (buckets.length === 0) {
     return (
@@ -30,11 +32,19 @@ function LevelDistributionChart({ dist }: { dist: ILevelDistribution }) {
   }
 
   const maxCount = Math.max(...buckets.map((b) => b.numOccurrences));
+  // Reserve a fixed area for bars + labels so the chart's height is
+  // predictable and the page above doesn't reflow when the cohort changes.
+  const BAR_AREA_HEIGHT = 96;
 
   return (
-    <Group gap={2} align="flex-end" wrap="nowrap" style={{ overflowX: "auto" }}>
+    <Group
+      gap={6}
+      align="flex-end"
+      wrap="nowrap"
+      style={{ height: BAR_AREA_HEIGHT + 22 }}
+    >
       {buckets.map((b) => {
-        const heightPct = maxCount > 0 ? (b.numOccurrences / maxCount) * 48 : 0;
+        const barHeight = maxCount > 0 ? (b.numOccurrences / maxCount) * BAR_AREA_HEIGHT : 0;
         return (
           <Tooltip
             key={b.level}
@@ -42,20 +52,29 @@ function LevelDistributionChart({ dist }: { dist: ILevelDistribution }) {
             position="top"
             withArrow
           >
-            <Stack gap={2} align="center" style={{ cursor: "default" }}>
+            <Stack
+              gap={4}
+              align="center"
+              justify="flex-end"
+              style={{ cursor: "default", height: "100%", minWidth: 16, flex: 1 }}
+            >
               <Box
                 style={{
-                  width: 6,
-                  height: Math.max(2, heightPct),
+                  width: "100%",
+                  maxWidth: 28,
+                  height: Math.max(3, barHeight),
                   background: "var(--mantine-color-blue-6)",
-                  borderRadius: 2,
+                  borderRadius: 3,
                 }}
               />
-              {b.level % 10 === 0 && (
-                <Text size="xs" c="dimmed" lh={1} style={{ fontSize: 9 }}>
-                  {b.level}
-                </Text>
-              )}
+              <Text
+                size="xs"
+                c="dimmed"
+                lh={1}
+                style={{ fontSize: 11, fontVariantNumeric: "tabular-nums" }}
+              >
+                {b.level}
+              </Text>
             </Stack>
           </Tooltip>
         );

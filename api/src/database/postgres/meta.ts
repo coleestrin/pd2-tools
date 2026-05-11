@@ -83,11 +83,20 @@ function inferSlot(
  * Mirrors skillTabBucketKey in PD2/src/lib/aggregate/affixMods.ts.
  */
 const SKILL_TAB_MOD = "item_addskill_tab";
-const SKILL_TAB_MAGNITUDE_RE = /^\+?\d+(?:\.\d+)?\s+(?:to\s+)?/i;
+const SINGLE_SKILL_MOD = "item_singleskill";
+const CLASS_SKILLS_MOD = "item_addclassskills";
+// Strips the leading "+N to" magnitude AND the trailing "(<Class> Only)" suffix
+// so "+1 to Combat Skills (Paladin Only)" and "+3 to Combat Skills (Paladin Only)"
+// collapse to the same bucket label "Combat Skills".
+const MAGNITUDE_PREFIX_RE = /^\+?\d+(?:\.\d+)?\s+(?:to\s+)?/i;
+const CLASS_SUFFIX_RE = /\s*\([^)]*Only\)\s*$/i;
 
-function skillTabBucketKey(label: string): string {
-  const tabName = label.replace(SKILL_TAB_MAGNITUDE_RE, "").trim();
-  return `${SKILL_TAB_MOD}|${tabName}`;
+function bucketKeyFromLabel(modName: string, label: string): string {
+  const stripped = label
+    .replace(MAGNITUDE_PREFIX_RE, "")
+    .replace(CLASS_SUFFIX_RE, "")
+    .trim();
+  return `${modName}|${stripped}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -524,15 +533,25 @@ export class MetaDB_Postgres {
       const modifiers = Array.isArray(item.modifiers) ? item.modifiers : [];
       for (const mod of modifiers) {
         if (typeof mod.name !== "string") continue;
-        const val = Array.isArray(mod.values)
-          ? (mod.values[0] ?? 0)
+        // The magnitude is always the LAST element of `values`.
+        // Single-value mods (e.g. item_fastercastrate) → values = [magnitude].
+        // Two-value mods (item_singleskill / item_addskill_tab /
+        // item_addclassskills) → values = [id_or_tab, magnitude].
+        const val = Array.isArray(mod.values) && mod.values.length > 0
+          ? Number(mod.values[mod.values.length - 1]) || 0
           : Number(mod.values) || 0;
 
-        // For item_addskill_tab: bucket by "item_addskill_tab|Tab Name"
-        // so +1/+3 to the same tab land in the same bucket.
+        // For mods that target a specific skill / tab / class, bucket by the
+        // label content so different targets stay in separate rows but
+        // different magnitudes (+1 / +3) collapse together.
+        //   "item_addskill_tab|Combat Skills"     (was: collapsed to a single row)
+        //   "item_singleskill|Ice Blast"          (was: all single-skill bonuses merged)
+        //   "item_addclassskills|Sorceress Skills"
         const bucketKey =
-          mod.name === SKILL_TAB_MOD
-            ? skillTabBucketKey(mod.label ?? "")
+          mod.name === SKILL_TAB_MOD ||
+          mod.name === SINGLE_SKILL_MOD ||
+          mod.name === CLASS_SKILLS_MOD
+            ? bucketKeyFromLabel(mod.name, mod.label ?? "")
             : mod.name;
 
         let bySlot = grouped.get(slot);

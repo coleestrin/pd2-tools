@@ -32,15 +32,17 @@ const DICT = modDictionaryRaw as ModDictionary;
 /**
  * Resolve a human-readable label for a mod bucket key.
  *
- * For `item_addskill_tab|Tab Name` keys the tab name is used directly as the
- * display label (mirrors PD2 standalone behaviour for skill-tab entries).
- * For all other keys, the mod-dictionary `displayLabel` is used with
- * the raw modKey as fallback.
+ * Mod keys are one of:
+ *   - "item_fastercastrate" — single-value mod, looked up in mod-dictionary
+ *   - "item_addskill_tab|Combat Skills" — bucketed by tab; show the tab name
+ *   - "item_singleskill|Ice Blast"      — bucketed by skill; show the skill name
+ *   - "item_addclassskills|Sorceress Skills" — show the class-skills name
+ * For any "<name>|<label>" form the label after "|" is used directly.
  */
 function resolveLabel(modKey: string): string {
-  const SKILL_TAB_PREFIX = "item_addskill_tab|";
-  if (modKey.startsWith(SKILL_TAB_PREFIX)) {
-    return modKey.slice(SKILL_TAB_PREFIX.length);
+  const pipe = modKey.indexOf("|");
+  if (pipe !== -1) {
+    return modKey.slice(pipe + 1);
   }
   return DICT[modKey]?.displayLabel ?? modKey;
 }

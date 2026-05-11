@@ -50,13 +50,20 @@ function SkillIcon({ name, size = 32 }: { name: string; size?: number }) {
 }
 
 // Section label — uppercase tracking matches the PD2 standalone vibe.
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({
+  children,
+  ta,
+}: {
+  children: React.ReactNode;
+  ta?: "left" | "center" | "right";
+}) {
   return (
     <Text
       size="xs"
       fw={700}
       c="dimmed"
       tt="uppercase"
+      ta={ta}
       style={{ letterSpacing: "0.08em" }}
     >
       {children}
@@ -142,16 +149,25 @@ export function FilterForm({ initial, onSubmit }: Props) {
   }
 
   return (
-    <Box p="md" mb="lg" style={{ border: "1px solid var(--mantine-color-default-border)", borderRadius: "var(--mantine-radius-sm)" }}>
+    <Box
+      p="lg"
+      mb="lg"
+      mx="auto"
+      maw={900}
+      style={{
+        border: "1px solid var(--mantine-color-default-border)",
+        borderRadius: "var(--mantine-radius-sm)",
+      }}
+    >
       <Stack gap="md">
         {/* Mode toggle */}
         <Tabs
           value={s.mode}
           onChange={(v) => v && setS({ ...s, mode: v as "guide" | "diff" })}
         >
-          <Tabs.List>
-            <Tabs.Tab value="guide" style={{ fontSize: 15, fontWeight: 600, padding: "10px 16px" }}>Build a guide</Tabs.Tab>
-            <Tabs.Tab value="diff" style={{ fontSize: 15, fontWeight: 600, padding: "10px 16px" }}>Diff my character</Tabs.Tab>
+          <Tabs.List justify="center">
+            <Tabs.Tab value="guide" style={{ fontSize: 15, fontWeight: 600, padding: "10px 20px" }}>Build a guide</Tabs.Tab>
+            <Tabs.Tab value="diff" style={{ fontSize: 15, fontWeight: 600, padding: "10px 20px" }}>Diff my character</Tabs.Tab>
           </Tabs.List>
         </Tabs>
 
@@ -167,13 +183,13 @@ export function FilterForm({ initial, onSubmit }: Props) {
 
         {/* Game mode pills */}
         <Stack gap={6}>
-          <SectionLabel>Game mode</SectionLabel>
-          <Group gap="xs" wrap="wrap">
+          <SectionLabel ta="center">Game mode</SectionLabel>
+          <Group gap="sm" wrap="wrap" justify="center">
             {(["hardcore", "softcore"] as const).map((gm) => (
               <Button
                 key={gm}
-                size="md"
-                fw={600}
+                size="lg"
+                fw={700}
                 variant={s.filter.gameMode === gm ? "filled" : "default"}
                 onClick={() =>
                   setS({ ...s, filter: { ...s.filter, gameMode: gm } })
@@ -187,13 +203,13 @@ export function FilterForm({ initial, onSubmit }: Props) {
 
         {/* Class selector */}
         <Stack gap={6}>
-          <SectionLabel>Class</SectionLabel>
-          <Group gap="xs" wrap="wrap">
+          <SectionLabel ta="center">Class</SectionLabel>
+          <Group gap="sm" wrap="wrap" justify="center">
             {CLASSES.map((c) => (
               <Button
                 key={c}
                 size="md"
-                fw={600}
+                fw={700}
                 variant={s.filter.className === c ? "filled" : "default"}
                 onClick={() =>
                   setS({
@@ -209,11 +225,13 @@ export function FilterForm({ initial, onSubmit }: Props) {
           </Group>
         </Stack>
 
-        {/* Build presets — conditional on class having presets */}
+        {/* Build presets — conditional on class having presets.
+            Intentionally smaller than class buttons (visual hierarchy:
+            class is the primary axis, presets are a shortcut on top). */}
         {s.filter.className && BUILD_PRESETS[s.filter.className] && (
           <Stack gap={6}>
-            <SectionLabel>Build preset</SectionLabel>
-            <Group gap="xs" wrap="wrap">
+            <SectionLabel ta="center">Build preset</SectionLabel>
+            <Group gap="xs" wrap="wrap" justify="center">
               {BUILD_PRESETS[s.filter.className].map((preset) => {
                 const active = isPresetActive(
                   s.skills.map((sk) => sk.name),
@@ -222,7 +240,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
                 return (
                   <Button
                     key={preset.name}
-                    size="sm"
+                    size="xs"
                     fw={600}
                     variant={active ? "filled" : "default"}
                     onClick={() =>
@@ -270,7 +288,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
 
         {/* Skill picker */}
         <Stack gap={6}>
-          <Group justify="space-between" align="center">
+          <Group justify="center" align="center" gap={6}>
             <SectionLabel>Skills</SectionLabel>
             <Tooltip label="% of end-game (lvl 80+) characters of this class with 20+ hard points in the skill (same threshold pd2.tools/builds uses).">
               <ActionIcon variant="subtle" color="gray" size="sm">
@@ -281,7 +299,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
 
           {/* Selected skill chips with level input */}
           {s.skills.length > 0 && (
-            <Group gap="sm" wrap="wrap">
+            <Group gap="sm" wrap="wrap" justify="center">
               {s.skills.map((sk) => (
                 <Group key={sk.name} gap={6} align="center">
                   <Pill
@@ -359,8 +377,8 @@ export function FilterForm({ initial, onSubmit }: Props) {
                         align="center"
                         style={{ position: "relative", zIndex: 1 }}
                       >
-                        <Flex align="center" gap={12} style={{ minWidth: 0 }}>
-                          <SkillIcon name={sk.name} size={32} />
+                        <Flex align="center" gap={14} style={{ minWidth: 0 }}>
+                          <SkillIcon name={sk.name} size={36} />
                           <Text size="md" fw={500} lineClamp={1}>
                             {sk.name}
                           </Text>
@@ -407,7 +425,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
         </Stack>
 
         <Button onClick={() => onSubmit(s)} size="lg" fw={700} fullWidth>
-          Generate guide
+          Generate
         </Button>
       </Stack>
     </Box>
