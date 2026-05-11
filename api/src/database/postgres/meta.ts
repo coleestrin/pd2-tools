@@ -611,23 +611,10 @@ export class MetaDB_Postgres {
   }
 
   /**
-   * Cohort-averaged "stats page" values: the 4 core attributes plus life
-   * and mana, pulled from each character's precomputed totals.
-   *
-   * Why these and not gear-modifier sums? The values in `character.attributes`
-   * + `character.life` / `character.mana` are the same numbers pd2.tools'
-   * Stats panel displays — base + gear + charms + leveling already rolled in.
-   * Gear-modifier sums tell you avg gear bonus, which isn't what users
-   * actually compare across builds.
-   *
-   * Resistances / FCR / FHR / etc. aren't included: they're computed
-   * client-side on pd2.tools (no precomputed field), and replicating cap +
-   * difficulty-penalty logic isn't worth it for "everyone caps resists" —
-   * the frontend shows a static note instead.
-   *
-   * Returns 6 rows in fixed order: strength, dexterity, vitality, energy,
-   * life, mana. charsWithMod / pctOfChars stay equal to cohortSize / 100
-   * since every character has these stats.
+   * Cohort averages of the 6 core stat-panel values (str / dex / vit /
+   * energy / life / mana), read straight from character.attributes +
+   * character.life / mana. These are the same totals pd2.tools shows on
+   * the Stats panel, not gear-modifier sums.
    */
   public async aggregateAvgStats(cohortIds: number[]): Promise<IAvgStatRow[]> {
     if (cohortIds.length === 0) return [];

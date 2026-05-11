@@ -5,11 +5,8 @@ import modDictionaryRaw from "../../data/mod-dictionary.json";
 type ModDictEntry = { displayLabel?: string };
 const DICT = modDictionaryRaw as Record<string, ModDictEntry>;
 
-// Meta-flags appear as modKeys but aren't rollable mods. Skill / proc mods
-// don't aggregate meaningfully across the whole pool (their value scales by
-// which skill the magnitude applies to). Resistances are dropped because
-// every end-game build caps them at 75 — the avg roll isn't interesting.
-// All of these still appear in the per-slot Affix patterns tab.
+// Filtered out of the cross-slot average view. All still show in the
+// per-slot Affix patterns table.
 const META_FLAG_KEYS = new Set(["corrupted", "desecrated", "mirrored"]);
 const RESIST_MOD_KEYS = new Set([
   "fireresist",
@@ -40,11 +37,6 @@ function resolveLabel(modKey: string): string {
   return DICT[modKey]?.displayLabel ?? modKey;
 }
 
-/**
- * Aggregate affix rows across all slots: sum occurrences, weighted-avg the
- * roll magnitude. Same shape as the "All slots" tab in AffixFrequencyTable
- * but here we also keep the avg value, not just the count.
- */
 function aggregate(
   rows: IAffixModRow[],
 ): Array<{ modKey: string; count: number; avg: number }> {

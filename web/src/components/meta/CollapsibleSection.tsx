@@ -17,10 +17,6 @@ interface Props {
   children: ReactNode;
 }
 
-/**
- * Click-to-fold section: title bar with rotating chevron + bottom border.
- * Mirrors the pd2-aggregator Section component so the two tools feel the same.
- */
 export function CollapsibleSection({
   title,
   subtitle,

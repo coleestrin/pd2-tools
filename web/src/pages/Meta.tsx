@@ -14,7 +14,6 @@ import { Helmet } from "react-helmet";
 import { ItemFrequencyTable } from "../components/meta/ItemFrequencyTable";
 import { AffixFrequencyTable } from "../components/meta/AffixFrequencyTable";
 import { BuildSheet } from "../components/meta/BuildSheet";
-import { CharmPanel } from "../components/meta/CharmPanel";
 import { DataFreshness } from "../components/meta/DataFreshness";
 import { MatchBanner } from "../components/meta/MatchBanner";
 import { DiffView } from "../components/meta/DiffView";
@@ -167,11 +166,6 @@ export default function Meta() {
             <Stack gap="md">
               <AvgStatsPanel rows={data.avgStats} />
               <TopAffixAveragesPanel rows={data.affixMods} />
-              <Text size="xs" c="dimmed" fs="italic" ta="center">
-                Resistances aren't shown. Practically every end-game build
-                caps at 75 all-res, so an average wouldn't tell you anything
-                new.
-              </Text>
             </Stack>
           </CollapsibleSection>
           <BuildSheet
@@ -190,9 +184,6 @@ export default function Meta() {
             subtitle="Rare, Magic, and Crafted items only"
           >
             <AffixFrequencyTable rows={data.affixMods} />
-          </CollapsibleSection>
-          <CollapsibleSection title="Charms">
-            <CharmPanel />
           </CollapsibleSection>
         </Stack>
       ) : null}

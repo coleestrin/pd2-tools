@@ -1,9 +1,6 @@
 import { Paper, SimpleGrid, Stack, Text } from "@mantine/core";
 import type { IAvgStatRow } from "../../types/meta";
 
-// The backend returns 6 fixed stats pulled from character.attributes +
-// character.life / mana — these are the final "stats page" values, base +
-// gear + leveling already summed in.
 const CORE_STAT_LABELS: Record<string, string> = {
   strength: "Strength",
   dexterity: "Dexterity",

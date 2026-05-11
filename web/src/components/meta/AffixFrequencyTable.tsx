@@ -22,8 +22,7 @@ type Slot = (typeof SLOTS)[number];
 
 const ALL_SLOTS_TAB = "__all__";
 
-// Meta-flags in PD2 appear as modifier keys but aren't rollable mods. Filter
-// them out of the cross-slot view (kept in per-slot views for reference).
+// Filtered out of the cross-slot view; kept in per-slot views.
 const META_FLAG_KEYS = new Set(["corrupted", "desecrated", "mirrored"]);
 
 type CrossSlotRow = { modKey: string; count: number; pct: number };
@@ -31,7 +30,6 @@ type CrossSlotRow = { modKey: string; count: number; pct: number };
 function aggregateAcrossSlots(
   rows: IAffixModRow[],
 ): { totalItems: number; mods: CrossSlotRow[] } {
-  // Each row in a slot shares the same totalSample — record once per slot.
   const slotTotals = new Map<string, number>();
   const modCounts = new Map<string, number>();
   for (const r of rows) {

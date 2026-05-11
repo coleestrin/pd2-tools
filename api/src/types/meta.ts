@@ -119,27 +119,16 @@ export interface IAffixModRow {
 }
 
 /**
- * One row in the average-build-stats summary.
- *
- * Computed per-character (summing mod values across all equipped items +
- * non-unique charms), then averaged across the cohort with zeros included.
- * `avgValue` represents "what a typical char in the cohort has";
- * `pctOfChars` tells you how prevalent the mod is at all.
- *
- * Returned sorted by `charsWithMod` desc and capped to the most-prevalent
- * mods (top 8 by default).
- *
- * Mod-name based filters mirror PD2/src/lib/aggregate/avgStats.ts —
- * item_addskill_tab / item_singleskill / item_charged_skill / item_skillon*
- * are excluded because their aggregate average isn't meaningful.
+ * One row in the average-build-stats summary. Currently populated from
+ * character.attributes + character.life / mana (the same totals the Stats
+ * panel shows), so `modName` is one of: strength, dexterity, vitality,
+ * energy, life, mana. `charsWithMod` and `pctOfChars` are kept on the
+ * shape for forward-compat with a future per-mod variant.
  */
 export interface IAvgStatRow {
   modName: string;
-  /** Sum across all chars in cohort divided by cohortSize (zeros included). */
   avgValue: number;
-  /** Number of chars in cohort whose total for this mod is > 0. */
   charsWithMod: number;
-  /** charsWithMod / cohortSize * 100. */
   pctOfChars: number;
 }
 

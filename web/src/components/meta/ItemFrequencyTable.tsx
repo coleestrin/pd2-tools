@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { Tabs, Table, Text, Badge, ScrollArea } from "@mantine/core";
 import { shapeTopItemsBySlot } from "../../lib/shape/topItems";
 import type { TopItemsBySlot } from "../../lib/shape/topItems";
 import type { IItemUsageRow } from "../../types/meta";
+import { ItemTooltip, type ItemData } from "../builds/shared/ItemHelpers";
 
 const SLOTS: Array<keyof TopItemsBySlot> = [
   "weapon",
@@ -21,6 +23,21 @@ interface Props {
 
 export function ItemFrequencyTable({ rows }: Props) {
   const bySlot = shapeTopItemsBySlot(rows);
+  // Same items.json the /builds page loads. Lookup by item name powers
+  // the hover tooltip (image, required level, attribute lines).
+  const [itemsData, setItemsData] = useState<Map<string, ItemData>>(new Map());
+  useEffect(() => {
+    fetch("/items.json")
+      .then((r) => r.json())
+      .then((items: ItemData[]) => {
+        const m = new Map<string, ItemData>();
+        for (const it of items) m.set(it.gearId.name, it);
+        setItemsData(m);
+      })
+      .catch(() => {
+        // Tooltip is non-critical; rows stay clickable without it.
+      });
+  }, []);
 
   return (
     <Tabs defaultValue={SLOTS[0]}>
@@ -52,7 +69,15 @@ export function ItemFrequencyTable({ rows }: Props) {
                 <Table.Tbody>
                   {bySlot[slot].map((item) => (
                     <Table.Tr key={`${item.itemName}|${item.itemType}`}>
-                      <Table.Td>{item.itemName}</Table.Td>
+                      <Table.Td>
+                        <ItemTooltip
+                          itemData={itemsData.get(item.itemName)}
+                          itemType={item.itemType}
+                          itemName={item.itemName}
+                        >
+                          <span>{item.itemName}</span>
+                        </ItemTooltip>
+                      </Table.Td>
                       <Table.Td>
                         <Badge variant="light" color={rarityColor(item.itemType)}>
                           {item.itemType}

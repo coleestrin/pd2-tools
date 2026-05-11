@@ -23,10 +23,8 @@ import type { UiState } from "../../lib/url-state";
 import skillPrereqsRaw from "../../data/skill-prereqs.json";
 import { useMetaData } from "../../hooks/useMetaData";
 
-// PD2 wiki icon helper — same pattern as the PD2 FilterForm.
 function skillIconUrl(name: string): string {
-  const slug = name.replace(/ /g, "_");
-  return `https://wiki.projectdiablo2.com/wiki/Special:FilePath/${encodeURIComponent(slug)}.png`;
+  return `/icons/${name.replaceAll(" ", "_")}.png`;
 }
 
 function SkillIcon({ name, size = 32 }: { name: string; size?: number }) {
@@ -309,7 +307,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
             </Text>
           </Group>
           <Slider
-            min={1}
+            min={80}
             max={99}
             value={s.filter.minLevel ?? 80}
             onChange={(v) =>
@@ -317,8 +315,8 @@ export function FilterForm({ initial, onSubmit }: Props) {
             }
             label={(v) => `Level ${v}`}
             marks={[
-              { value: 1, label: "1" },
-              { value: 50, label: "50" },
+              { value: 80, label: "80" },
+              { value: 90, label: "90" },
               { value: 99, label: "99" },
             ]}
             mb="lg"
