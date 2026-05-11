@@ -211,16 +211,23 @@ describe("/api/v1/meta", () => {
         });
 
         // Test 3b: classified skill rows have the correct shape
-        it("skillUsage rows have classified shape (numAsBuild, numAsPrereq, pctBuild)", () => {
+        it("skillUsage rows have classified shape (numAsBuild, numAsPrereq, numAtTwenty, pctBuild, pctAtTwenty)", () => {
           for (const r of resp.skillUsage) {
             expect(typeof r.numAsBuild).toBe("number");
             expect(typeof r.numAsPrereq).toBe("number");
+            expect(typeof r.numAtTwenty).toBe("number");
             expect(typeof r.pctBuild).toBe("number");
+            expect(typeof r.pctAtTwenty).toBe("number");
             // Invariant: numAsBuild + numAsPrereq === numOccurrences
             expect(r.numAsBuild + r.numAsPrereq).toBe(r.numOccurrences);
-            // pctBuild must be in [0, 100]
+            // Invariant: numAtTwenty is a subset of numOccurrences
+            expect(r.numAtTwenty).toBeGreaterThanOrEqual(0);
+            expect(r.numAtTwenty).toBeLessThanOrEqual(r.numOccurrences);
+            // Percentages must be in [0, 100]
             expect(r.pctBuild).toBeGreaterThanOrEqual(0);
             expect(r.pctBuild).toBeLessThanOrEqual(100);
+            expect(r.pctAtTwenty).toBeGreaterThanOrEqual(0);
+            expect(r.pctAtTwenty).toBeLessThanOrEqual(100);
           }
         });
 

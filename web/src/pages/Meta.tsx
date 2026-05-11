@@ -49,10 +49,11 @@ export default function Meta() {
 
   const { data, isLoading, error, refetch } = useMetaData({
     gameMode: uiState.filter.gameMode,
-    className: uiState.filter.className ?? "Paladin",
+    className: uiState.filter.className ?? "",
     minLevel: uiState.filter.minLevel ?? 80,
     skills: uiState.skills,
   });
+  const noClass = !uiState.filter.className;
 
   // Record the fetch time whenever new data arrives.
   useEffect(() => {
@@ -91,7 +92,12 @@ export default function Meta() {
 
       <FilterForm initial={uiState} onSubmit={handleSubmit} />
 
-      {isLoading && (
+      {noClass && (
+        <Alert color="blue" variant="light" mt="md">
+          Pick a class above to see the meta build.
+        </Alert>
+      )}
+      {!noClass && isLoading && (
         <Stack mt="md">
           <Skeleton height={28} width={300} />
           <Skeleton height={20} width={200} />

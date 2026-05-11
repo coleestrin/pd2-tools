@@ -313,14 +313,24 @@ export class MetaDB_Postgres {
     }
 
     // Aggregate per skill
-    type Acc = { numWithAny: number; numAsBuild: number; numAsPrereq: number };
+    type Acc = {
+      numWithAny: number;
+      numAsBuild: number;
+      numAsPrereq: number;
+      numAtTwenty: number;
+    };
     const stats = new Map<string, Acc>();
 
     for (const [, charSkills] of byChar) {
       for (const [skillName, baseLevel] of charSkills) {
         let s = stats.get(skillName);
         if (!s) {
-          s = { numWithAny: 0, numAsBuild: 0, numAsPrereq: 0 };
+          s = {
+            numWithAny: 0,
+            numAsBuild: 0,
+            numAsPrereq: 0,
+            numAtTwenty: 0,
+          };
           stats.set(skillName, s);
         }
         s.numWithAny++;
@@ -329,6 +339,7 @@ export class MetaDB_Postgres {
         } else {
           s.numAsBuild++;
         }
+        if (baseLevel >= 20) s.numAtTwenty++;
       }
     }
 
@@ -340,12 +351,14 @@ export class MetaDB_Postgres {
         numOccurrences: s.numWithAny,
         numAsBuild: s.numAsBuild,
         numAsPrereq: s.numAsPrereq,
+        numAtTwenty: s.numAtTwenty,
         totalSample: total,
         pct: (s.numWithAny / total) * 100,
         pctBuild: (s.numAsBuild / total) * 100,
+        pctAtTwenty: (s.numAtTwenty / total) * 100,
       });
     }
-    out.sort((a, b) => b.pctBuild - a.pctBuild);
+    out.sort((a, b) => b.pctAtTwenty - a.pctAtTwenty);
     return out;
   }
 

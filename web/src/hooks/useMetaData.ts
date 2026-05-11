@@ -19,5 +19,7 @@ export function useMetaData(
   return useQuery({
     queryKey: ["meta", query],
     queryFn: () => metaAPI.fetchMeta(query),
+    // className is required by the backend; don't fire a 400 from the UI.
+    enabled: typeof query.className === "string" && query.className.length > 0,
   });
 }

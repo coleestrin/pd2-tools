@@ -52,15 +52,22 @@ export interface ISkillUsageRow {
 /**
  * Classified skill-usage row — mirrors api/src/types/meta.ts IClassifiedSkillRow.
  * numAsBuild + numAsPrereq === numOccurrences for every row.
+ * numAtTwenty <= numOccurrences (hard-points threshold subset).
  */
 export interface IClassifiedSkillRow {
   name: string;
   numOccurrences: number;
   numAsBuild: number;
   numAsPrereq: number;
+  /** Characters with base_level >= 20 hard points in the skill —
+   *  matches pd2.tools/builds' threshold. The cleanest "is this the
+   *  build's focus skill?" signal. */
+  numAtTwenty: number;
   totalSample: number;
   pct: number;
   pctBuild: number;
+  /** numAtTwenty / totalSample * 100 */
+  pctAtTwenty: number;
 }
 
 export interface IMercTypeUsageRow {

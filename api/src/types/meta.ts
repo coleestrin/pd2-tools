@@ -58,8 +58,10 @@ export interface ISkillUsageRow {
  * prereq/build breakdown. Returned by aggregateSkillUsageClassified.
  *
  * numAsBuild + numAsPrereq === numOccurrences for every row.
- * pctBuild  = numAsBuild  / totalSample * 100
- * pct       = numOccurrences / totalSample * 100
+ * numAtTwenty <= numOccurrences (hard-points threshold subset).
+ * pctBuild     = numAsBuild   / totalSample * 100
+ * pct          = numOccurrences / totalSample * 100
+ * pctAtTwenty  = numAtTwenty  / totalSample * 100
  */
 export interface IClassifiedSkillRow {
   name: string;
@@ -71,11 +73,17 @@ export interface IClassifiedSkillRow {
   /** Characters where the skill is 1pt and only present to
    *  unlock another skill they've actually invested in. */
   numAsPrereq: number;
+  /** Characters with base_level >= 20 hard points in the skill —
+   *  matches pd2.tools/builds' `analyzeSkillUsage` threshold and is the
+   *  cleanest "is this the build's focus skill?" signal. */
+  numAtTwenty: number;
   totalSample: number;
   /** numOccurrences / totalSample * 100 */
   pct: number;
   /** numAsBuild / totalSample * 100 */
   pctBuild: number;
+  /** numAtTwenty / totalSample * 100 */
+  pctAtTwenty: number;
 }
 
 export interface IMercTypeUsageRow {

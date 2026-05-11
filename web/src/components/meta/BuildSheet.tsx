@@ -76,11 +76,14 @@ interface Props {
 export function BuildSheet({ skillUsage, levelDistribution }: Props) {
   const [showPrereqs, setShowPrereqs] = useState(false);
 
-  // Build view: skills that are part of a build for at least one character.
-  const buildRows = skillUsage.filter((r) => r.numAsBuild > 0);
-  // Prereq-only view: skills that are never the build skill for anyone.
+  // Primary view: skills any cohort member actually built into
+  // (>= 20 hard points — matches pd2.tools/builds' threshold).
+  const buildRows = skillUsage
+    .filter((r) => r.numAtTwenty > 0)
+    .sort((a, b) => b.pctAtTwenty - a.pctAtTwenty);
+  // Prereq-only view: skills no one builds, but are commonly 1-pt prereqs.
   const prereqOnlyRows = skillUsage.filter(
-    (r) => r.numAsBuild === 0 && r.numAsPrereq > 0,
+    (r) => r.numAtTwenty === 0 && r.numAsPrereq > 0,
   );
 
   const display = showPrereqs ? [...buildRows, ...prereqOnlyRows] : buildRows;
@@ -112,14 +115,26 @@ export function BuildSheet({ skillUsage, levelDistribution }: Props) {
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Skill</Table.Th>
-              <Table.Th style={{ textAlign: "right" }}>Build chars</Table.Th>
-              <Table.Th style={{ textAlign: "right" }}>Build %</Table.Th>
-              <Table.Th style={{ textAlign: "right" }}>Any %</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Chars at 20+</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>
+                <Tooltip label="% of cohort with 20+ hard points in this skill (same threshold pd2.tools/builds uses).">
+                  <span style={{ borderBottom: "1px dotted currentColor", cursor: "help" }}>
+                    Hard %
+                  </span>
+                </Tooltip>
+              </Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>
+                <Tooltip label="% with any base level in this skill (includes 1-pt prereqs).">
+                  <span style={{ borderBottom: "1px dotted currentColor", cursor: "help" }}>
+                    Any %
+                  </span>
+                </Tooltip>
+              </Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {display.map((sk, i) => {
-              const isPrereqRow = sk.numAsBuild === 0;
+              const isPrereqRow = sk.numAtTwenty === 0;
               const isTopBuild = !isPrereqRow && i < 3;
               return (
                 <Table.Tr key={sk.name}>
@@ -142,10 +157,10 @@ export function BuildSheet({ skillUsage, levelDistribution }: Props) {
                     )}
                   </Table.Td>
                   <Table.Td style={{ textAlign: "right" }} c="dimmed">
-                    {sk.numAsBuild.toLocaleString()}
+                    {sk.numAtTwenty.toLocaleString()}
                   </Table.Td>
                   <Table.Td style={{ textAlign: "right" }} fw={isTopBuild ? 600 : undefined}>
-                    {sk.pctBuild.toFixed(1)}%
+                    {sk.pctAtTwenty.toFixed(1)}%
                   </Table.Td>
                   <Table.Td style={{ textAlign: "right" }} c="dimmed">
                     {sk.pct.toFixed(1)}%

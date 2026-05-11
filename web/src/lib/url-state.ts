@@ -10,7 +10,7 @@ export type UiState = {
 };
 
 const DEFAULTS: UiState = {
-  filter: { gameMode: "hardcore", className: "Paladin", minLevel: 80 },
+  filter: { gameMode: "softcore", className: undefined, minLevel: 80 },
   mode: "guide",
   diffName: "",
   skills: [],
@@ -42,7 +42,7 @@ export function paramsToUiState(p: URLSearchParams): UiState {
     mode: ((p.get("mode") as "guide" | "diff") ?? DEFAULTS.mode),
     diffName: p.get("char") ?? "",
     skills,
-  };
+  } as UiState;
 }
 
 export const DEFAULT_UI_STATE: UiState = DEFAULTS;
