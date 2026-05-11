@@ -53,6 +53,31 @@ export interface ISkillUsageRow {
   pct: number;
 }
 
+/**
+ * Classified skill-usage row — extends the simple ISkillUsageRow with
+ * prereq/build breakdown. Returned by aggregateSkillUsageClassified.
+ *
+ * numAsBuild + numAsPrereq === numOccurrences for every row.
+ * pctBuild  = numAsBuild  / totalSample * 100
+ * pct       = numOccurrences / totalSample * 100
+ */
+export interface IClassifiedSkillRow {
+  name: string;
+  /** Characters in the cohort who have any base level >= 1. */
+  numOccurrences: number;
+  /** Characters where the skill counts as part of their build
+   *  (base > 1, OR base = 1 and not a prereq-only unlock). */
+  numAsBuild: number;
+  /** Characters where the skill is 1pt and only present to
+   *  unlock another skill they've actually invested in. */
+  numAsPrereq: number;
+  totalSample: number;
+  /** numOccurrences / totalSample * 100 */
+  pct: number;
+  /** numAsBuild / totalSample * 100 */
+  pctBuild: number;
+}
+
 export interface IMercTypeUsageRow {
   mercType: string;
   numOccurrences: number;
@@ -88,7 +113,8 @@ export interface IAffixModRow {
 export interface IMetaResponse {
   cohortSize: number;
   itemUsage: IItemUsageRow[];
-  skillUsage: ISkillUsageRow[];
+  /** Classified skill usage — prereq/build breakdown per skill, sorted by pctBuild desc. */
+  skillUsage: IClassifiedSkillRow[];
   mercTypeUsage: IMercTypeUsageRow[];
   mercItemUsage: IItemUsageRow[];
   levelDistribution: ILevelDistribution;

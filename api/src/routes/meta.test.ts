@@ -210,6 +210,20 @@ describe("/api/v1/meta", () => {
           }
         });
 
+        // Test 3b: classified skill rows have the correct shape
+        it("skillUsage rows have classified shape (numAsBuild, numAsPrereq, pctBuild)", () => {
+          for (const r of resp.skillUsage) {
+            expect(typeof r.numAsBuild).toBe("number");
+            expect(typeof r.numAsPrereq).toBe("number");
+            expect(typeof r.pctBuild).toBe("number");
+            // Invariant: numAsBuild + numAsPrereq === numOccurrences
+            expect(r.numAsBuild + r.numAsPrereq).toBe(r.numOccurrences);
+            // pctBuild must be in [0, 100]
+            expect(r.pctBuild).toBeGreaterThanOrEqual(0);
+            expect(r.pctBuild).toBeLessThanOrEqual(100);
+          }
+        });
+
         // Test 4: No duplicate (item, itemType) rows
         it("no duplicate (item, itemType) rows", () => {
           const seen = new Set<string>();

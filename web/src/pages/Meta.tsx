@@ -2,14 +2,17 @@ import { useEffect, useState } from "react";
 import {
   Container,
   Title,
-  Text,
   Stack,
   Loader,
   Alert,
 } from "@mantine/core";
+import { Helmet } from "react-helmet";
 import { ItemFrequencyTable } from "../components/meta/ItemFrequencyTable";
 import { AffixFrequencyTable } from "../components/meta/AffixFrequencyTable";
-import { Helmet } from "react-helmet";
+import { BuildSheet } from "../components/meta/BuildSheet";
+import { CharmPanel } from "../components/meta/CharmPanel";
+import { DataFreshness } from "../components/meta/DataFreshness";
+import { MatchBanner } from "../components/meta/MatchBanner";
 import { useMetaData } from "../hooks/useMetaData";
 import { FilterForm } from "../components/meta/FilterForm";
 import {
@@ -23,6 +26,8 @@ export default function Meta() {
   const [uiState, setUiState] = useState<UiState>(DEFAULT_UI_STATE);
   // Prevents rendering FilterForm with the server-side default before URL is read.
   const [hydrated, setHydrated] = useState(false);
+  // Track when data was last fetched for the DataFreshness badge.
+  const [fetchedAt, setFetchedAt] = useState<Date | null>(null);
 
   useEffect(() => {
     setUiState(paramsToUiState(new URLSearchParams(window.location.search)));
@@ -46,14 +51,23 @@ export default function Meta() {
     skills: uiState.skills,
   });
 
+  // Record the fetch time whenever new data arrives.
+  useEffect(() => {
+    if (data) {
+      setFetchedAt(new Date());
+    }
+  }, [data]);
+
   if (!hydrated) {
     return (
       <Container size="xl" py="md">
         <Title order={1}>Meta</Title>
-        <Text c="dimmed">Loading…</Text>
+        <Loader size="sm" mt="sm" />
       </Container>
     );
   }
+
+  const activeClassName = uiState.filter.className ?? "Paladin";
 
   return (
     <Container size="xl" py="md">
@@ -77,12 +91,22 @@ export default function Meta() {
         </Alert>
       )}
       {data && (
-        <Stack>
-          <Text>
-            Cohort size: <strong>{data.cohortSize}</strong>
-          </Text>
+        <Stack gap="lg" mt="md">
+          <MatchBanner
+            cohortSize={data.cohortSize}
+            className={activeClassName}
+          />
+          <DataFreshness
+            cohortSize={data.cohortSize}
+            fetchedAt={fetchedAt}
+          />
+          <BuildSheet
+            skillUsage={data.skillUsage}
+            levelDistribution={data.levelDistribution}
+          />
           <ItemFrequencyTable rows={data.itemUsage} />
           <AffixFrequencyTable rows={data.affixMods} />
+          <CharmPanel />
         </Stack>
       )}
     </Container>

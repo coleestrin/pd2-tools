@@ -1,13 +1,43 @@
 import { Pool, PoolConfig } from "pg";
+import skillPrereqsRaw from "../../data/skill-prereqs.json";
 import type {
   GameMode,
   IAffixModRow,
+  IClassifiedSkillRow,
   IItemUsageRow,
   ILevelDistribution,
   IMercTypeUsageRow,
   ISkillRequirement,
   ISkillUsageRow,
 } from "../../types/meta";
+
+// ---------------------------------------------------------------------------
+// Skill-prereqs helpers (ported from PD2/src/lib/aggregate/skillUsage.ts)
+// ---------------------------------------------------------------------------
+
+type ClassSkillMap = Record<string, { prereqs: string[]; receivesBonusesFrom: string[] }>;
+type SkillPrereqs = Record<string, ClassSkillMap>;
+const SKILL_PREREQS = skillPrereqsRaw as SkillPrereqs;
+
+/**
+ * Returns true if `skillName` is at exactly base level 1 for this character AND
+ * some OTHER skill on the same character (at base level > 1) lists it as a
+ * prerequisite. Ported verbatim from PD2/src/lib/aggregate/skillUsage.ts.
+ */
+function isPrereqOnly(
+  skillName: string,
+  baseLevel: number,
+  characterSkills: Map<string, number>,
+  classMap: ClassSkillMap,
+): boolean {
+  if (baseLevel !== 1) return false;
+  for (const [otherName, level] of characterSkills) {
+    if (level <= 1) continue;
+    if (otherName === skillName) continue;
+    if (classMap[otherName]?.prereqs.includes(skillName)) return true;
+  }
+  return false;
+}
 
 // ---------------------------------------------------------------------------
 // Affix-mod helpers (ported from PD2/src/lib/aggregate/affixMods.ts + slot.ts)
@@ -235,6 +265,88 @@ export class MetaDB_Postgres {
     `;
     const result = await this.pool.query<ISkillUsageRow>(sql, [cohortIds, cohortIds.length]);
     return result.rows;
+  }
+
+  /**
+   * Aggregate skill usage across the cohort with prereq/build classification.
+   *
+   * For each character, a 1-point skill is classified as "prereq-only" if
+   * another skill at base > 1 on the same character lists it as a prerequisite
+   * in skill-prereqs.json. All other skilled-into entries count as "build".
+   *
+   * Falls back gracefully when the className has no entry in skill-prereqs.json
+   * (classMap = undefined): every skill is treated as a build skill.
+   *
+   * Returns rows sorted by pctBuild desc (same ranking as the PD2 standalone).
+   */
+  public async aggregateSkillUsageClassified(
+    cohortIds: number[],
+    className: string,
+  ): Promise<IClassifiedSkillRow[]> {
+    if (cohortIds.length === 0) return [];
+
+    const classMap: ClassSkillMap | undefined = SKILL_PREREQS[className];
+
+    // Pull all (character_db_id, skill_name, base_level) tuples for the cohort
+    const sql = `
+      SELECT CS.character_db_id, SD.name, CS.skill_level
+      FROM CharacterSkills CS
+      JOIN SkillsDefinitions SD ON CS.skill_def_id = SD.skill_def_id
+      WHERE CS.character_db_id = ANY($1::int[])
+        AND CS.skill_level >= 1
+    `;
+    const result = await this.pool.query<{
+      character_db_id: number;
+      name: string;
+      skill_level: number;
+    }>(sql, [cohortIds]);
+
+    // Group by character: character_db_id -> Map<skillName, baseLevel>
+    const byChar = new Map<number, Map<string, number>>();
+    for (const row of result.rows) {
+      let cs = byChar.get(row.character_db_id);
+      if (!cs) {
+        cs = new Map();
+        byChar.set(row.character_db_id, cs);
+      }
+      cs.set(row.name, row.skill_level);
+    }
+
+    // Aggregate per skill
+    type Acc = { numWithAny: number; numAsBuild: number; numAsPrereq: number };
+    const stats = new Map<string, Acc>();
+
+    for (const [, charSkills] of byChar) {
+      for (const [skillName, baseLevel] of charSkills) {
+        let s = stats.get(skillName);
+        if (!s) {
+          s = { numWithAny: 0, numAsBuild: 0, numAsPrereq: 0 };
+          stats.set(skillName, s);
+        }
+        s.numWithAny++;
+        if (classMap && isPrereqOnly(skillName, baseLevel, charSkills, classMap)) {
+          s.numAsPrereq++;
+        } else {
+          s.numAsBuild++;
+        }
+      }
+    }
+
+    const total = cohortIds.length;
+    const out: IClassifiedSkillRow[] = [];
+    for (const [name, s] of stats) {
+      out.push({
+        name,
+        numOccurrences: s.numWithAny,
+        numAsBuild: s.numAsBuild,
+        numAsPrereq: s.numAsPrereq,
+        totalSample: total,
+        pct: (s.numWithAny / total) * 100,
+        pctBuild: (s.numAsBuild / total) * 100,
+      });
+    }
+    out.sort((a, b) => b.pctBuild - a.pctBuild);
+    return out;
   }
 
   /**

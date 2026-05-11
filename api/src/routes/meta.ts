@@ -128,7 +128,7 @@ router.get(
         affixMods,
       ] = await Promise.all([
         metaDB.aggregateItemUsage(cohortIds),
-        metaDB.aggregateSkillUsage(cohortIds),
+        metaDB.aggregateSkillUsageClassified(cohortIds, className),
         metaDB.aggregateMercType(cohortIds),
         metaDB.aggregateMercItems(cohortIds),
         metaDB.aggregateLevelDistribution(cohortIds, gameMode),

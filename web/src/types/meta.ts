@@ -49,6 +49,20 @@ export interface ISkillUsageRow {
   pct: number;
 }
 
+/**
+ * Classified skill-usage row — mirrors api/src/types/meta.ts IClassifiedSkillRow.
+ * numAsBuild + numAsPrereq === numOccurrences for every row.
+ */
+export interface IClassifiedSkillRow {
+  name: string;
+  numOccurrences: number;
+  numAsBuild: number;
+  numAsPrereq: number;
+  totalSample: number;
+  pct: number;
+  pctBuild: number;
+}
+
 export interface IMercTypeUsageRow {
   mercType: string;
   numOccurrences: number;
@@ -89,7 +103,8 @@ export interface IAffixModRow {
 export interface IMetaResponse {
   cohortSize: number;
   itemUsage: IItemUsageRow[];
-  skillUsage: ISkillUsageRow[];
+  /** Classified skill usage with prereq/build breakdown, sorted by pctBuild desc. */
+  skillUsage: IClassifiedSkillRow[];
   mercTypeUsage: IMercTypeUsageRow[];
   mercItemUsage: IItemUsageRow[];
   levelDistribution: ILevelDistribution;
