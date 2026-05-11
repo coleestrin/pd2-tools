@@ -16,7 +16,7 @@ import {
   ActionIcon,
   Tooltip,
 } from "@mantine/core";
-import { IconX, IconInfoCircle } from "@tabler/icons-react";
+import { IconInfoCircle } from "@tabler/icons-react";
 import { BUILD_PRESETS, PRESET_MIN_LEVEL, isPresetActive } from "../../lib/buildPresets";
 import type { UiState } from "../../lib/url-state";
 import skillPrereqsRaw from "../../data/skill-prereqs.json";
@@ -339,7 +339,9 @@ export function FilterForm({ initial, onSubmit }: Props) {
 
           {/* Scrollable available skill list — pd2.tools /builds SkillCard
               style: each row a top-bordered Paper so stacked rows form
-              dividers, with a percentage fill bar behind the content. */}
+              dividers. Unselected rows: purple percentage-width fill bar
+              behind the content. Selected rows: solid darker-green row,
+              no fill bar (clear single-tone affordance). */}
           {skillRows.length > 0 ? (
             <ScrollArea h={460} type="auto" style={{ backgroundColor: "rgba(0,0,0,0.15)" }}>
               <Stack gap={0}>
@@ -362,23 +364,23 @@ export function FilterForm({ initial, onSubmit }: Props) {
                         position: "relative",
                         overflow: "hidden",
                         backgroundColor: isSelected
-                          ? "rgba(0, 255, 0, 0.18)"
+                          ? "rgba(34, 139, 34, 0.55)"
                           : undefined,
                       }}
                     >
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          right: 0,
-                          bottom: 0,
-                          width: `${Math.min(sk.pct, 100)}%`,
-                          backgroundColor: isSelected
-                            ? "rgba(0, 255, 0, 0.2)"
-                            : "rgba(168, 85, 247, 0.35)",
-                          zIndex: 0,
-                        }}
-                      />
+                      {!isSelected && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            right: 0,
+                            bottom: 0,
+                            width: `${Math.min(sk.pct, 100)}%`,
+                            backgroundColor: "rgba(168, 85, 247, 0.35)",
+                            zIndex: 0,
+                          }}
+                        />
+                      )}
                       <Flex
                         justify="space-between"
                         align="center"
@@ -390,26 +392,13 @@ export function FilterForm({ initial, onSubmit }: Props) {
                             {sk.name}
                           </Text>
                         </Flex>
-                        {isSelected ? (
-                          <ActionIcon
-                            size="md"
-                            variant="default"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleSkill(sk.name);
-                            }}
-                          >
-                            <IconX size={18} />
-                          </ActionIcon>
-                        ) : (
-                          <Text
-                            size="md"
-                            fw={700}
-                            style={{ fontVariantNumeric: "tabular-nums" }}
-                          >
-                            {sk.pct.toFixed(1)}%
-                          </Text>
-                        )}
+                        <Text
+                          size="md"
+                          fw={700}
+                          style={{ fontVariantNumeric: "tabular-nums" }}
+                        >
+                          {sk.pct.toFixed(1)}%
+                        </Text>
                       </Flex>
                     </Paper>
                   );
