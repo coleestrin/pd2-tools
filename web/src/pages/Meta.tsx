@@ -8,6 +8,7 @@ import {
   Alert,
 } from "@mantine/core";
 import { ItemFrequencyTable } from "../components/meta/ItemFrequencyTable";
+import { AffixFrequencyTable } from "../components/meta/AffixFrequencyTable";
 import { Helmet } from "react-helmet";
 import { useMetaData } from "../hooks/useMetaData";
 import { FilterForm } from "../components/meta/FilterForm";
@@ -81,6 +82,7 @@ export default function Meta() {
             Cohort size: <strong>{data.cohortSize}</strong>
           </Text>
           <ItemFrequencyTable rows={data.itemUsage} />
+          <AffixFrequencyTable rows={data.affixMods} />
         </Stack>
       )}
     </Container>

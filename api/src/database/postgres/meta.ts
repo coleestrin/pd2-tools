@@ -1,12 +1,66 @@
 import { Pool, PoolConfig } from "pg";
 import type {
   GameMode,
+  IAffixModRow,
   IItemUsageRow,
   ILevelDistribution,
   IMercTypeUsageRow,
   ISkillRequirement,
   ISkillUsageRow,
 } from "../../types/meta";
+
+// ---------------------------------------------------------------------------
+// Affix-mod helpers (ported from PD2/src/lib/aggregate/affixMods.ts + slot.ts)
+// ---------------------------------------------------------------------------
+
+/** Raw item shape as stored in Characters.full_response_json->'items'[] */
+interface RawItemJson {
+  quality?: { name?: string };
+  location?: { zone?: string; equipment?: string };
+  modifiers?: Array<{ name?: string; label?: string; values?: number[] }>;
+}
+
+/**
+ * Slot mapping — mirrors SLOT_BY_EQUIPMENT in PD2/src/lib/slot.ts.
+ * Only "Equipped" zone items are included (zone gate applied before this call).
+ */
+const SLOT_BY_EQUIPMENT: Record<string, string> = {
+  Helm: "helm",
+  Armor: "armor",
+  "Right Hand": "weapon",
+  "Right Hand Switch": "weapon",
+  "Left Hand": "offhand",
+  "Left Hand Switch": "offhand",
+  Gloves: "gloves",
+  Belt: "belt",
+  Boots: "boots",
+  Amulet: "amulet",
+  "Left Ring": "ring",
+  "Right Ring": "ring",
+};
+
+function inferSlot(
+  location: { zone?: string; equipment?: string } | undefined,
+): string | null {
+  if (!location) return null;
+  const equipment = location.equipment ?? "";
+  return SLOT_BY_EQUIPMENT[equipment] ?? null;
+}
+
+/**
+ * Skill-tab modifier key — strips leading magnitude so "+1 to Combat Skills"
+ * and "+3 to Combat Skills" collapse to the same bucket.
+ * Mirrors skillTabBucketKey in PD2/src/lib/aggregate/affixMods.ts.
+ */
+const SKILL_TAB_MOD = "item_addskill_tab";
+const SKILL_TAB_MAGNITUDE_RE = /^\+?\d+(?:\.\d+)?\s+(?:to\s+)?/i;
+
+function skillTabBucketKey(label: string): string {
+  const tabName = label.replace(SKILL_TAB_MAGNITUDE_RE, "").trim();
+  return `${SKILL_TAB_MOD}|${tabName}`;
+}
+
+// ---------------------------------------------------------------------------
 
 /**
  * Items excluded from Unique/Runeword aggregation because they are
@@ -287,6 +341,126 @@ export class MetaDB_Postgres {
     return gameMode === "hardcore"
       ? { hardcore: result.rows, softcore: [] }
       : { hardcore: [], softcore: result.rows };
+  }
+
+  /**
+   * Aggregate affix modifiers from Rare/Magic/Crafted equipped items across
+   * the cohort.
+   *
+   * Strategy (Node-side parsing, Approach B):
+   *   - SQL: pull full items array from each character's full_response_json.
+   *   - Node: iterate items, check quality + zone, bucket modifiers by
+   *     (slot, mod.name / skill-tab key), compute count / avg / median / p75.
+   *
+   * Parsing logic is ported verbatim from PD2/src/lib/aggregate/affixMods.ts
+   * so numbers line up with the standalone's parity test corpus.
+   */
+  public async aggregateAffixMods(
+    cohortIds: number[],
+  ): Promise<IAffixModRow[]> {
+    if (cohortIds.length === 0) return [];
+
+    // Pull the raw items array for every character in the cohort.
+    // jsonb_array_elements expands the JSON array into one row per item.
+    const sql = `
+      SELECT
+        jsonb_array_elements(C.full_response_json->'items') AS item_json
+      FROM Characters C
+      WHERE C.character_db_id = ANY($1::int[])
+    `;
+    const { rows } = await this.pool.query<{ item_json: RawItemJson }>(
+      sql,
+      [cohortIds],
+    );
+
+    // slot -> modKey -> values[]
+    const grouped = new Map<string, Map<string, number[]>>();
+    // slot -> number of eligible items (denominator for pct — mirrors standalone)
+    const itemCountBySlot = new Map<string, number>();
+
+    for (const row of rows) {
+      const item = row.item_json;
+      if (!item) continue;
+
+      // Quality gate: only Rare / Magic / Crafted
+      const quality = item.quality?.name;
+      if (quality !== "Rare" && quality !== "Magic" && quality !== "Crafted") continue;
+
+      // Zone gate: must be equipped (location.zone === "Equipped")
+      if (item.location?.zone !== "Equipped") continue;
+
+      // Slot resolution — mirrors slotFromRawItem in PD2/src/lib/slot.ts
+      const slot = inferSlot(item.location);
+      if (!slot) continue;
+
+      // Track per-slot item count (denominator for pct, same as standalone)
+      itemCountBySlot.set(slot, (itemCountBySlot.get(slot) ?? 0) + 1);
+
+      const modifiers = Array.isArray(item.modifiers) ? item.modifiers : [];
+      for (const mod of modifiers) {
+        if (typeof mod.name !== "string") continue;
+        const val = Array.isArray(mod.values)
+          ? (mod.values[0] ?? 0)
+          : Number(mod.values) || 0;
+
+        // For item_addskill_tab: bucket by "item_addskill_tab|Tab Name"
+        // so +1/+3 to the same tab land in the same bucket.
+        const bucketKey =
+          mod.name === SKILL_TAB_MOD
+            ? skillTabBucketKey(mod.label ?? "")
+            : mod.name;
+
+        let bySlot = grouped.get(slot);
+        if (!bySlot) {
+          bySlot = new Map();
+          grouped.set(slot, bySlot);
+        }
+        const arr = bySlot.get(bucketKey) ?? [];
+        arr.push(val);
+        bySlot.set(bucketKey, arr);
+      }
+    }
+
+    const out: IAffixModRow[] = [];
+
+    for (const [slot, byMod] of grouped) {
+      // Per-slot item count as denominator (mirrors standalone's itemCount[slot])
+      const slotItemCount = itemCountBySlot.get(slot) ?? 1;
+
+      for (const [modKey, vals] of byMod) {
+        // Suppress rare mods (< 3 occurrences) to reduce noise
+        if (vals.length < 3) continue;
+
+        const sorted = [...vals].sort((a, b) => a - b);
+        const sum = sorted.reduce((a, b) => a + b, 0);
+        const avg = sum / sorted.length;
+        const mid = Math.floor(sorted.length / 2);
+        const medianVal =
+          sorted.length % 2 === 1
+            ? sorted[mid]
+            : (sorted[mid - 1] + sorted[mid]) / 2;
+        const p75Idx = Math.ceil(0.75 * sorted.length) - 1;
+        const p75Val = sorted[Math.max(0, p75Idx)];
+
+        out.push({
+          slot,
+          modKey,
+          numOccurrences: vals.length,
+          totalSample: slotItemCount,
+          pct: (vals.length / slotItemCount) * 100,
+          avg,
+          median: medianVal,
+          p75: p75Val,
+        });
+      }
+    }
+
+    // Sort by slot asc, then pct desc (mirrors standalone)
+    out.sort((a, b) =>
+      a.slot === b.slot ? b.pct - a.pct : a.slot.localeCompare(b.slot),
+    );
+
+    return out;
   }
 
   public async close(): Promise<void> {

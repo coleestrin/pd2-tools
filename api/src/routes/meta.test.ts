@@ -180,8 +180,8 @@ describe("/api/v1/meta", () => {
           resp = body as IMetaResponse;
         });
 
-        // Test 1: cohortSize and all 5 aggregation arrays/objects exist
-        it("returns cohortSize >= 0 and all 5 aggregation arrays/objects", () => {
+        // Test 1: cohortSize and all 6 aggregation arrays/objects exist
+        it("returns cohortSize >= 0 and all 6 aggregation arrays/objects", () => {
           expect(typeof resp.cohortSize).toBe("number");
           expect(resp.cohortSize).toBeGreaterThanOrEqual(0);
           expect(Array.isArray(resp.itemUsage)).toBe(true);
@@ -191,6 +191,7 @@ describe("/api/v1/meta", () => {
           expect(resp.levelDistribution).toBeDefined();
           expect(Array.isArray(resp.levelDistribution.hardcore)).toBe(true);
           expect(Array.isArray(resp.levelDistribution.softcore)).toBe(true);
+          expect(Array.isArray(resp.affixMods)).toBe(true);
         });
 
         // Test 2: totalSample matches cohortSize on first item-usage row (if any)
@@ -234,6 +235,35 @@ describe("/api/v1/meta", () => {
         // Test 6: pct math is correct (pct = numOccurrences / totalSample * 100)
         it("pct math is correct (within float tolerance)", () => {
           for (const r of resp.itemUsage) {
+            const expected = (r.numOccurrences / r.totalSample) * 100;
+            expect(r.pct).toBeCloseTo(expected, 6);
+          }
+        });
+
+        // Test 7: affixMods rows have valid shape and numeric stats
+        it("affixMods rows have valid shape (if any)", () => {
+          for (const r of resp.affixMods) {
+            expect(typeof r.slot).toBe("string");
+            expect(r.slot.length).toBeGreaterThan(0);
+            expect(typeof r.modKey).toBe("string");
+            expect(r.modKey.length).toBeGreaterThan(0);
+            expect(typeof r.numOccurrences).toBe("number");
+            expect(r.numOccurrences).toBeGreaterThan(0);
+            expect(typeof r.totalSample).toBe("number");
+            expect(r.totalSample).toBeGreaterThan(0);
+            // pct = numOccurrences / slotItemCount * 100.
+            // A single item can carry the same mod multiple times (e.g. corruption
+            // stacks), so pct CAN exceed 100. We only require it to be non-negative.
+            expect(r.pct).toBeGreaterThanOrEqual(0);
+            expect(Number.isFinite(r.avg)).toBe(true);
+            expect(Number.isFinite(r.median)).toBe(true);
+            expect(Number.isFinite(r.p75)).toBe(true);
+          }
+        });
+
+        // Test 8: affixMods pct math is correct
+        it("affixMods pct math is correct (within float tolerance)", () => {
+          for (const r of resp.affixMods) {
             const expected = (r.numOccurrences / r.totalSample) * 100;
             expect(r.pct).toBeCloseTo(expected, 6);
           }

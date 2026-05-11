@@ -66,6 +66,26 @@ export interface ILevelDistribution {
   softcore: ILevelBucket[];
 }
 
+/**
+ * One row in the affix-mod frequency table.
+ *
+ * `modKey` is an opaque bucket key — for most mods it equals the modifier
+ * `name` (e.g. "item_fastercastrate"). For `item_addskill_tab` entries it
+ * is suffixed with the tab name:
+ *   "item_addskill_tab|Combat Skills (Paladin Only)"
+ * Use mod-dictionary.json to resolve a displayLabel; fall back to modKey.
+ */
+export interface IAffixModRow {
+  slot: string;
+  modKey: string;
+  numOccurrences: number;
+  totalSample: number;
+  pct: number;
+  avg: number;
+  median: number;
+  p75: number;
+}
+
 export interface IMetaResponse {
   cohortSize: number;
   itemUsage: IItemUsageRow[];
@@ -73,4 +93,5 @@ export interface IMetaResponse {
   mercTypeUsage: IMercTypeUsageRow[];
   mercItemUsage: IItemUsageRow[];
   levelDistribution: ILevelDistribution;
+  affixMods: IAffixModRow[];
 }

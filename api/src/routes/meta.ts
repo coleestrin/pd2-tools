@@ -125,12 +125,14 @@ router.get(
         mercTypeUsage,
         mercItemUsage,
         levelDistribution,
+        affixMods,
       ] = await Promise.all([
         metaDB.aggregateItemUsage(cohortIds),
         metaDB.aggregateSkillUsage(cohortIds),
         metaDB.aggregateMercType(cohortIds),
         metaDB.aggregateMercItems(cohortIds),
         metaDB.aggregateLevelDistribution(cohortIds, gameMode),
+        metaDB.aggregateAffixMods(cohortIds),
       ]);
 
       const response: IMetaResponse = {
@@ -140,6 +142,7 @@ router.get(
         mercTypeUsage,
         mercItemUsage,
         levelDistribution,
+        affixMods,
       };
 
       logger.info("Meta aggregations served", {
