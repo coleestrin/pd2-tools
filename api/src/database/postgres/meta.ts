@@ -1,5 +1,18 @@
 import { Pool, PoolConfig } from "pg";
-import type { GameMode, ISkillRequirement } from "../../types/meta";
+import type { GameMode, IItemUsageRow, ISkillRequirement } from "../../types/meta";
+
+/**
+ * Items excluded from Unique/Runeword aggregation because they are
+ * universal (nearly every character carries them) and would dominate
+ * the frequency table. Mirrors IGNORED_UNIQUES_ARRAY in
+ * CharacterDB_Postgres (postgres/index.ts).
+ */
+const IGNORED_UNIQUES_ARRAY = [
+  "Hellfire Torch",
+  "Annihilus",
+  "Call to Arms",
+  "Lidless Wall",
+];
 
 export interface ICohortFilter {
   gameMode: GameMode;
@@ -76,6 +89,60 @@ export class MetaDB_Postgres {
       params
     );
     return result.rows.map((r) => r.character_db_id);
+  }
+
+  /**
+   * Aggregate equipped-item usage across the given cohort.
+   *
+   * Counts how many characters wear each named item. Only Unique / Set /
+   * Runeword qualities are included — Rare / Magic / Crafted items have
+   * unique random names and can't be name-aggregated (those are handled
+   * by the affix-mods aggregation in Task 17).
+   *
+   * Mirrors the existing analyzeItemUsage CASE logic for item-type
+   * classification (see CharacterDB_Postgres for reference), including
+   * the IGNORED_UNIQUES_ARRAY exclusion for ubiquitous items (Torch,
+   * Annihilus, Call to Arms, Lidless Wall).
+   *
+   * Returns rows sorted by numOccurrences desc.
+   */
+  public async aggregateItemUsage(
+    cohortIds: number[],
+  ): Promise<IItemUsageRow[]> {
+    if (cohortIds.length === 0) return [];
+
+    const sql = `
+      SELECT
+        BI.name AS item,
+        CASE
+          WHEN CI.is_runeword = true AND BI.name <> ALL($3) THEN 'Runeword'
+          WHEN Q.name = 'Unique' AND BI.name <> ALL($3) THEN 'Unique'
+          WHEN Q.name = 'Set' THEN 'Set'
+          ELSE NULL
+        END AS "itemType",
+        COUNT(DISTINCT CI.character_db_id)::int AS "numOccurrences",
+        $2::int AS "totalSample",
+        (COUNT(DISTINCT CI.character_db_id)::float / $2 * 100) AS pct
+      FROM CharacterItems CI
+      JOIN BaseItems BI ON CI.base_item_id = BI.base_item_id
+      JOIN Qualities Q ON CI.quality_id = Q.quality_id
+      WHERE CI.character_db_id = ANY($1::int[])
+        AND CASE
+          WHEN CI.is_runeword = true AND BI.name <> ALL($3) THEN 'Runeword'
+          WHEN Q.name = 'Unique' AND BI.name <> ALL($3) THEN 'Unique'
+          WHEN Q.name = 'Set' THEN 'Set'
+          ELSE NULL
+        END IS NOT NULL
+      GROUP BY BI.name, "itemType"
+      ORDER BY "numOccurrences" DESC
+    `;
+
+    const result = await this.pool.query<IItemUsageRow>(sql, [
+      cohortIds,
+      cohortIds.length,
+      IGNORED_UNIQUES_ARRAY,
+    ]);
+    return result.rows;
   }
 
   public async close(): Promise<void> {
