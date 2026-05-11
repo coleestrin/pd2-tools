@@ -1,4 +1,4 @@
-import { Tabs, Table, Text, Badge, ScrollArea } from "@mantine/core";
+import { Tabs, Table, Text, Badge, ScrollArea, Title, Group, Stack } from "@mantine/core";
 import { shapeTopItemsBySlot } from "../../lib/shape/topItems";
 import type { TopItemsBySlot } from "../../lib/shape/topItems";
 import type { IItemUsageRow } from "../../types/meta";
@@ -23,8 +23,15 @@ export function ItemFrequencyTable({ rows }: Props) {
   const bySlot = shapeTopItemsBySlot(rows);
 
   return (
-    <Tabs defaultValue={SLOTS[0]}>
-      <Tabs.List>
+    <Stack gap="xs">
+      <Group justify="space-between" align="baseline">
+        <Title order={4}>Top items</Title>
+        <Text size="xs" c="dimmed">
+          Unique, Set, and Runeword items
+        </Text>
+      </Group>
+      <Tabs defaultValue={SLOTS[0]}>
+        <Tabs.List>
         {SLOTS.map((slot) => (
           <Tabs.Tab key={slot} value={slot}>
             {slot.charAt(0).toUpperCase() + slot.slice(1)} ({bySlot[slot].length})
@@ -68,7 +75,8 @@ export function ItemFrequencyTable({ rows }: Props) {
           )}
         </Tabs.Panel>
       ))}
-    </Tabs>
+      </Tabs>
+    </Stack>
   );
 }
 

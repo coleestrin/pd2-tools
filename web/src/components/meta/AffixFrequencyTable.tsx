@@ -1,4 +1,4 @@
-import { Tabs, Table, Text, ScrollArea } from "@mantine/core";
+import { Tabs, Table, Text, ScrollArea, Title, Group, Stack, Tooltip } from "@mantine/core";
 import type { IAffixModRow } from "../../types/meta";
 import modDictionaryRaw from "../../data/mod-dictionary.json";
 
@@ -70,8 +70,17 @@ export function AffixFrequencyTable({ rows }: Props) {
   }
 
   return (
-    <Tabs defaultValue={SLOTS[0]}>
-      <Tabs.List>
+    <Stack gap="xs">
+      <Group justify="space-between" align="baseline">
+        <Title order={4}>Affix patterns</Title>
+        <Tooltip label="Per-slot mod frequencies on Rare/Magic/Crafted items. The % denominator is items-in-slot, not cohort size, so the same mod appearing on every weapon in the cohort reads as 100%. Counts will differ from the Top items table above, which only includes Unique/Set/Runeword named items.">
+          <Text size="xs" c="dimmed" style={{ borderBottom: "1px dotted currentColor", cursor: "help" }}>
+            Rare, Magic, and Crafted items only
+          </Text>
+        </Tooltip>
+      </Group>
+      <Tabs defaultValue={SLOTS[0]}>
+        <Tabs.List>
         {SLOTS.map((slot) => (
           <Tabs.Tab key={slot} value={slot}>
             {slot.charAt(0).toUpperCase() + slot.slice(1)} (
@@ -117,6 +126,7 @@ export function AffixFrequencyTable({ rows }: Props) {
           </Tabs.Panel>
         );
       })}
-    </Tabs>
+      </Tabs>
+    </Stack>
   );
 }

@@ -111,6 +111,13 @@ export function FilterForm({ initial, onSubmit }: Props) {
   // classOnlyMeta.skillUsage[].pctAtTwenty — characters with >= 20 hard
   // points (matches pd2.tools/builds' threshold; same numbers /builds shows).
   // Skills not in the response get pct=0.
+  //
+  // Selected skills float to the top so clicking a skill (or a preset) gives
+  // immediate visual feedback; within each group rows stay sorted by pct desc.
+  const selectedSkillNames = useMemo(
+    () => new Set(s.skills.map((sk) => sk.name)),
+    [s.skills],
+  );
   const skillRows = useMemo<{ name: string; pct: number }[]>(() => {
     if (!s.filter.className) return [];
     const classMap = SKILL_PREREQS[s.filter.className];
@@ -122,14 +129,14 @@ export function FilterForm({ initial, onSubmit }: Props) {
       name,
       pct: usagePct.get(name) ?? 0,
     }));
-    rows.sort((a, b) => b.pct - a.pct);
+    rows.sort((a, b) => {
+      const aSel = selectedSkillNames.has(a.name);
+      const bSel = selectedSkillNames.has(b.name);
+      if (aSel !== bSel) return aSel ? -1 : 1;
+      return b.pct - a.pct;
+    });
     return rows;
-  }, [s.filter.className, classOnlyMeta.data]);
-
-  const selectedSkillNames = useMemo(
-    () => new Set(s.skills.map((sk) => sk.name)),
-    [s.skills],
-  );
+  }, [s.filter.className, classOnlyMeta.data, selectedSkillNames]);
 
   function toggleSkill(name: string) {
     if (selectedSkillNames.has(name)) {
