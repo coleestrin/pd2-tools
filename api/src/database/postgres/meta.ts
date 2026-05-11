@@ -39,11 +39,11 @@ export class MetaDB_Postgres {
    * starting set.
    */
   public async findCohort(filter: ICohortFilter): Promise<number[]> {
-    const params: unknown[] = [
-      filter.gameMode.toLowerCase(), // $1 — resolved via subquery in GameModes
-      filter.season,                 // $2
-      filter.minLevel,               // $3
-      filter.className,              // $4 — matched via Classes join
+    const params: any[] = [
+      filter.gameMode,   // $1 — resolved via subquery in GameModes
+      filter.season,     // $2
+      filter.minLevel,   // $3
+      filter.className,  // $4 — matched via Classes join
     ];
     let paramIndex = 5;
 
