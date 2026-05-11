@@ -134,7 +134,7 @@ describe("Parser Utility", () => {
       expect(result.length).toBe(2); // All characters match when no requirements
     });
 
-    it("should ignore standard unique items (Torch, Anni, Gheeds)", () => {
+    it("should ignore Torch and Anni", () => {
       const chars = [
         createMockCharacter("Char1", [
           createMockItem("Shako"),
@@ -143,7 +143,7 @@ describe("Parser Utility", () => {
         ]),
       ];
 
-      // Torch, Anni, and Gheeds should not count toward requirements
+      // Torch and Anni should not count toward requirements
       const result = charsWithUniques(chars, ["Hellfire Torch"]);
 
       expect(result.length).toBe(0);
@@ -276,7 +276,7 @@ describe("Parser Utility", () => {
       expect(result.length).toBe(0);
     });
 
-    it("should ignore Torch, Anni, and Gheeds in usage stats", () => {
+    it("should ignore Torch and Anni in usage stats", () => {
       const chars = [
         createMockCharacter("Char1", [
           createMockItem("Shako"),
@@ -295,7 +295,6 @@ describe("Parser Utility", () => {
       expect(result[0].item).toBe("Shako");
       expect(result.find((r) => r.item === "Hellfire Torch")).toBeUndefined();
       expect(result.find((r) => r.item === "Annihilus")).toBeUndefined();
-      expect(result.find((r) => r.item === "Gheed's Fortune")).toBeUndefined();
     });
 
     it("should calculate correct percentages with different usage counts", () => {
