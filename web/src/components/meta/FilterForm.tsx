@@ -20,7 +20,7 @@ import { IconInfoCircle } from "@tabler/icons-react";
 import { useMediaQuery } from "@mantine/hooks";
 import { BUILD_PRESETS, PRESET_MIN_LEVEL, isPresetActive } from "../../lib/buildPresets";
 import type { UiState } from "../../lib/url-state";
-import skillPrereqsRaw from "../../data/skill-prereqs.json";
+import skillClassificationRaw from "../../data/skill-classification.json";
 import { useMetaData } from "../../hooks/useMetaData";
 
 function skillIconUrl(name: string): string {
@@ -70,10 +70,9 @@ function SectionLabel({
   );
 }
 
-type SkillPrereqEntry = { prereqs: string[]; receivesBonusesFrom: string[] };
-type SkillPrereqsMap = Record<string, Record<string, SkillPrereqEntry>>;
-
-const SKILL_PREREQS = skillPrereqsRaw as SkillPrereqsMap;
+// Loaded for the per-class skill list (Object.keys). Role values aren't used
+// here; BuildSheet reads them separately.
+const SKILLS_BY_CLASS = skillClassificationRaw as Record<string, Record<string, string>>;
 
 const CLASSES = [
   "Amazon",
@@ -148,7 +147,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
   );
   const skillRows = useMemo<{ name: string; pct: number }[]>(() => {
     if (!s.filter.className) return [];
-    const classMap = SKILL_PREREQS[s.filter.className];
+    const classMap = SKILLS_BY_CLASS[s.filter.className];
     if (!classMap) return [];
     const usage = classOnlyMeta.data?.skillUsage ?? [];
     const usagePct = new Map<string, number>();
