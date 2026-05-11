@@ -3,11 +3,11 @@ import {
   Container,
   Title,
   Text,
-  Code,
   Stack,
   Loader,
   Alert,
 } from "@mantine/core";
+import { ItemFrequencyTable } from "../components/meta/ItemFrequencyTable";
 import { Helmet } from "react-helmet";
 import { useMetaData } from "../hooks/useMetaData";
 import { FilterForm } from "../components/meta/FilterForm";
@@ -80,10 +80,7 @@ export default function Meta() {
           <Text>
             Cohort size: <strong>{data.cohortSize}</strong>
           </Text>
-          <Text>Top items ({data.itemUsage.length}):</Text>
-          <Code block>
-            {JSON.stringify(data.itemUsage.slice(0, 10), null, 2)}
-          </Code>
+          <ItemFrequencyTable rows={data.itemUsage} />
         </Stack>
       )}
     </Container>
