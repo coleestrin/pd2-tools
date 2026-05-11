@@ -3,8 +3,10 @@ import {
   Container,
   Title,
   Stack,
-  Loader,
+  Skeleton,
   Alert,
+  Button,
+  Text,
 } from "@mantine/core";
 import { Helmet } from "react-helmet";
 import { ItemFrequencyTable } from "../components/meta/ItemFrequencyTable";
@@ -45,7 +47,7 @@ export default function Meta() {
     );
   }
 
-  const { data, isLoading, error } = useMetaData({
+  const { data, isLoading, error, refetch } = useMetaData({
     gameMode: uiState.filter.gameMode,
     className: uiState.filter.className ?? "Paladin",
     minLevel: uiState.filter.minLevel ?? 80,
@@ -63,7 +65,11 @@ export default function Meta() {
     return (
       <Container size="xl" py="md">
         <Title order={1}>Meta</Title>
-        <Loader size="sm" mt="sm" />
+        <Stack mt="sm">
+          <Skeleton height={28} width={300} />
+          <Skeleton height={20} width={200} />
+          <Skeleton height={400} />
+        </Stack>
       </Container>
     );
   }
@@ -85,10 +91,21 @@ export default function Meta() {
 
       <FilterForm initial={uiState} onSubmit={handleSubmit} />
 
-      {isLoading && <Loader />}
-      {error && (
-        <Alert color="red" title="Error">
-          {error.message}
+      {isLoading && (
+        <Stack mt="md">
+          <Skeleton height={28} width={300} />
+          <Skeleton height={20} width={200} />
+          <Skeleton height={400} />
+        </Stack>
+      )}
+      {error && !isLoading && (
+        <Alert color="red" title="Failed to load build data" mt="md">
+          <Stack gap="xs">
+            <Text size="sm">{error.message}</Text>
+            <Button size="xs" variant="light" onClick={() => refetch()}>
+              Retry
+            </Button>
+          </Stack>
         </Alert>
       )}
       {data && uiState.mode === "diff" && uiState.diffName ? (
@@ -98,6 +115,13 @@ export default function Meta() {
           className={activeClassName}
           gameMode={uiState.filter.gameMode}
         />
+      ) : data && data.cohortSize === 0 ? (
+        <Alert color="yellow" title="No characters match" mt="md">
+          <Text size="sm">
+            No {activeClassName} characters match this filter. Try lowering the
+            min level, removing skills, or switching game mode.
+          </Text>
+        </Alert>
       ) : data ? (
         <Stack gap="lg" mt="md">
           <MatchBanner

@@ -123,7 +123,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
         {/* Game mode pills */}
         <Stack gap="xs">
           <Title order={6}>Game mode</Title>
-          <Group gap="xs">
+          <Group gap="xs" wrap="wrap">
             {(["hardcore", "softcore"] as const).map((gm) => (
               <Button
                 key={gm}
@@ -141,7 +141,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
         {/* Class selector */}
         <Stack gap="xs">
           <Title order={6}>Class</Title>
-          <Group gap="xs">
+          <Group gap="xs" wrap="wrap">
             {CLASSES.map((c) => (
               <Button
                 key={c}
@@ -164,7 +164,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
         {s.filter.className && BUILD_PRESETS[s.filter.className] && (
           <Stack gap="xs">
             <Title order={6}>Build preset</Title>
-            <Group gap="xs">
+            <Group gap="xs" wrap="wrap">
               {BUILD_PRESETS[s.filter.className].map((preset) => {
                 const active = isPresetActive(
                   s.skills.map((sk) => sk.name),
@@ -208,6 +208,13 @@ export function FilterForm({ initial, onSubmit }: Props) {
             onChange={(v) =>
               setS({ ...s, filter: { ...s.filter, minLevel: v } })
             }
+            label={(v) => `Level ${v}`}
+            marks={[
+              { value: 1, label: "1" },
+              { value: 50, label: "50" },
+              { value: 99, label: "99" },
+            ]}
+            mb="lg"
           />
         </Stack>
 
