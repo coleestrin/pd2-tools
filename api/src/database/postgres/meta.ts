@@ -267,6 +267,8 @@ export class MetaDB_Postgres {
    */
   public async aggregateLevelDistribution(
     cohortIds: number[],
+    /** Selects which side of the response shape to populate.
+     *  Not used in the SQL — the cohort is already mode-filtered by findCohort. */
     gameMode: GameMode,
   ): Promise<ILevelDistribution> {
     if (cohortIds.length === 0) return { hardcore: [], softcore: [] };
