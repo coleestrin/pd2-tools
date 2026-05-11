@@ -1,16 +1,58 @@
-import { Container, Title, Text, Code, Stack, Loader, Alert } from "@mantine/core";
+import { useEffect, useState } from "react";
+import {
+  Container,
+  Title,
+  Text,
+  Code,
+  Stack,
+  Loader,
+  Alert,
+} from "@mantine/core";
 import { Helmet } from "react-helmet";
 import { useMetaData } from "../hooks/useMetaData";
+import { FilterForm } from "../components/meta/FilterForm";
+import {
+  DEFAULT_UI_STATE,
+  paramsToUiState,
+  uiStateToParams,
+  type UiState,
+} from "../lib/url-state";
 
 export default function Meta() {
-  // Hardcoded filter for now — Task 15 (FilterForm) replaces this with
-  // state-driven input. Softcore Hammerdin is a reliable cohort in dev.
+  const [uiState, setUiState] = useState<UiState>(DEFAULT_UI_STATE);
+  // Prevents rendering FilterForm with the server-side default before URL is read.
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setUiState(paramsToUiState(new URLSearchParams(window.location.search)));
+    setHydrated(true);
+  }, []);
+
+  function handleSubmit(s: UiState) {
+    setUiState(s);
+    const search = uiStateToParams(s).toString();
+    window.history.replaceState(
+      null,
+      "",
+      search ? "?" + search : window.location.pathname,
+    );
+  }
+
   const { data, isLoading, error } = useMetaData({
-    gameMode: "softcore",
-    className: "Paladin",
-    minLevel: 1,
-    skills: [{ name: "Blessed Hammer", minLevel: 20 }],
+    gameMode: uiState.filter.gameMode,
+    className: uiState.filter.className ?? "Paladin",
+    minLevel: uiState.filter.minLevel ?? 80,
+    skills: uiState.skills,
   });
+
+  if (!hydrated) {
+    return (
+      <Container size="xl" py="md">
+        <Title order={1}>Meta</Title>
+        <Text c="dimmed">Loading…</Text>
+      </Container>
+    );
+  }
 
   return (
     <Container size="xl" py="md">
@@ -24,9 +66,8 @@ export default function Meta() {
       <Title order={1} mb="sm">
         Meta
       </Title>
-      <Text c="dimmed" mb="lg">
-        Build aggregator — Task 13 checkpoint (data path wired).
-      </Text>
+
+      <FilterForm initial={uiState} onSubmit={handleSubmit} />
 
       {isLoading && <Loader />}
       {error && (
@@ -36,9 +77,13 @@ export default function Meta() {
       )}
       {data && (
         <Stack>
-          <Text>Cohort size: <strong>{data.cohortSize}</strong></Text>
+          <Text>
+            Cohort size: <strong>{data.cohortSize}</strong>
+          </Text>
           <Text>Top items ({data.itemUsage.length}):</Text>
-          <Code block>{JSON.stringify(data.itemUsage.slice(0, 10), null, 2)}</Code>
+          <Code block>
+            {JSON.stringify(data.itemUsage.slice(0, 10), null, 2)}
+          </Code>
         </Stack>
       )}
     </Container>
