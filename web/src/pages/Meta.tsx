@@ -13,6 +13,7 @@ import { BuildSheet } from "../components/meta/BuildSheet";
 import { CharmPanel } from "../components/meta/CharmPanel";
 import { DataFreshness } from "../components/meta/DataFreshness";
 import { MatchBanner } from "../components/meta/MatchBanner";
+import { DiffView } from "../components/meta/DiffView";
 import { useMetaData } from "../hooks/useMetaData";
 import { FilterForm } from "../components/meta/FilterForm";
 import {
@@ -90,7 +91,14 @@ export default function Meta() {
           {error.message}
         </Alert>
       )}
-      {data && (
+      {data && uiState.mode === "diff" && uiState.diffName ? (
+        <DiffView
+          characterName={uiState.diffName}
+          meta={data}
+          className={activeClassName}
+          gameMode={uiState.filter.gameMode}
+        />
+      ) : data ? (
         <Stack gap="lg" mt="md">
           <MatchBanner
             cohortSize={data.cohortSize}
@@ -108,7 +116,7 @@ export default function Meta() {
           <AffixFrequencyTable rows={data.affixMods} />
           <CharmPanel />
         </Stack>
-      )}
+      ) : null}
     </Container>
   );
 }
