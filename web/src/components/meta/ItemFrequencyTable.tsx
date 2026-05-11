@@ -1,4 +1,4 @@
-import { Tabs, Table, Text, Badge, ScrollArea, Title, Group, Stack } from "@mantine/core";
+import { Tabs, Table, Text, Badge, ScrollArea } from "@mantine/core";
 import { shapeTopItemsBySlot } from "../../lib/shape/topItems";
 import type { TopItemsBySlot } from "../../lib/shape/topItems";
 import type { IItemUsageRow } from "../../types/meta";
@@ -23,15 +23,8 @@ export function ItemFrequencyTable({ rows }: Props) {
   const bySlot = shapeTopItemsBySlot(rows);
 
   return (
-    <Stack gap="xs">
-      <Group justify="space-between" align="baseline">
-        <Title order={4}>Top items</Title>
-        <Text size="xs" c="dimmed">
-          Unique, Set, and Runeword items
-        </Text>
-      </Group>
-      <Tabs defaultValue={SLOTS[0]}>
-        <Tabs.List>
+    <Tabs defaultValue={SLOTS[0]}>
+      <Tabs.List justify="center" style={{ flexWrap: "wrap" }}>
         {SLOTS.map((slot) => (
           <Tabs.Tab key={slot} value={slot}>
             {slot.charAt(0).toUpperCase() + slot.slice(1)} ({bySlot[slot].length})
@@ -47,13 +40,13 @@ export function ItemFrequencyTable({ rows }: Props) {
             </Text>
           ) : (
             <ScrollArea>
-              <Table striped highlightOnHover>
+              <Table striped highlightOnHover style={{ tableLayout: "fixed" }}>
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>Item</Table.Th>
-                    <Table.Th>Type</Table.Th>
-                    <Table.Th ta="right">Count</Table.Th>
-                    <Table.Th ta="right">%</Table.Th>
+                    <Table.Th style={{ width: 110 }}>Type</Table.Th>
+                    <Table.Th style={{ width: 90 }} ta="right">Count</Table.Th>
+                    <Table.Th style={{ width: 70 }} ta="right">%</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -75,8 +68,7 @@ export function ItemFrequencyTable({ rows }: Props) {
           )}
         </Tabs.Panel>
       ))}
-      </Tabs>
-    </Stack>
+    </Tabs>
   );
 }
 

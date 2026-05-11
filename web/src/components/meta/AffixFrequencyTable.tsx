@@ -1,4 +1,4 @@
-import { Tabs, Table, Text, ScrollArea, Title, Group, Stack, Tooltip } from "@mantine/core";
+import { Tabs, Table, Text, ScrollArea } from "@mantine/core";
 import type { IAffixModRow } from "../../types/meta";
 import modDictionaryRaw from "../../data/mod-dictionary.json";
 
@@ -19,6 +19,36 @@ const SLOTS = [
 ] as const;
 
 type Slot = (typeof SLOTS)[number];
+
+const ALL_SLOTS_TAB = "__all__";
+
+// Meta-flags in PD2 appear as modifier keys but aren't rollable mods. Filter
+// them out of the cross-slot view (kept in per-slot views for reference).
+const META_FLAG_KEYS = new Set(["corrupted", "desecrated", "mirrored"]);
+
+type CrossSlotRow = { modKey: string; count: number; pct: number };
+
+function aggregateAcrossSlots(
+  rows: IAffixModRow[],
+): { totalItems: number; mods: CrossSlotRow[] } {
+  // Each row in a slot shares the same totalSample — record once per slot.
+  const slotTotals = new Map<string, number>();
+  const modCounts = new Map<string, number>();
+  for (const r of rows) {
+    if (!slotTotals.has(r.slot)) slotTotals.set(r.slot, r.totalSample);
+    if (META_FLAG_KEYS.has(r.modKey.toLowerCase())) continue;
+    modCounts.set(r.modKey, (modCounts.get(r.modKey) ?? 0) + r.numOccurrences);
+  }
+  const totalItems = [...slotTotals.values()].reduce((a, b) => a + b, 0);
+  const mods: CrossSlotRow[] = [...modCounts.entries()]
+    .map(([modKey, count]) => ({
+      modKey,
+      count,
+      pct: totalItems > 0 ? (count / totalItems) * 100 : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+  return { totalItems, mods };
+}
 
 // ---------------------------------------------------------------------------
 // Mod dictionary — maps mod key → { displayLabel, category }
@@ -69,18 +99,14 @@ export function AffixFrequencyTable({ rows }: Props) {
     }
   }
 
+  const crossSlot = aggregateAcrossSlots(rows);
+
   return (
-    <Stack gap="xs">
-      <Group justify="space-between" align="baseline">
-        <Title order={4}>Affix patterns</Title>
-        <Tooltip label="Per-slot mod frequencies on Rare/Magic/Crafted items. The % denominator is items-in-slot, not cohort size, so the same mod appearing on every weapon in the cohort reads as 100%. Counts will differ from the Top items table above, which only includes Unique/Set/Runeword named items.">
-          <Text size="xs" c="dimmed" style={{ borderBottom: "1px dotted currentColor", cursor: "help" }}>
-            Rare, Magic, and Crafted items only
-          </Text>
-        </Tooltip>
-      </Group>
-      <Tabs defaultValue={SLOTS[0]}>
-        <Tabs.List>
+    <Tabs defaultValue={ALL_SLOTS_TAB}>
+      <Tabs.List justify="center" style={{ flexWrap: "wrap" }}>
+        <Tabs.Tab value={ALL_SLOTS_TAB}>
+          All slots ({crossSlot.totalItems.toLocaleString()})
+        </Tabs.Tab>
         {SLOTS.map((slot) => (
           <Tabs.Tab key={slot} value={slot}>
             {slot.charAt(0).toUpperCase() + slot.slice(1)} (
@@ -88,6 +114,35 @@ export function AffixFrequencyTable({ rows }: Props) {
           </Tabs.Tab>
         ))}
       </Tabs.List>
+
+      <Tabs.Panel value={ALL_SLOTS_TAB} pt="md">
+        {crossSlot.mods.length === 0 ? (
+          <Text c="dimmed" fs="italic">
+            No affix data across any slot
+          </Text>
+        ) : (
+          <ScrollArea>
+            <Table striped highlightOnHover style={{ tableLayout: "fixed" }}>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Mod</Table.Th>
+                  <Table.Th style={{ width: 80 }} ta="right">%</Table.Th>
+                  <Table.Th style={{ width: 100 }} ta="right">Count</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {crossSlot.mods.slice(0, 15).map((m) => (
+                  <Table.Tr key={m.modKey}>
+                    <Table.Td>{resolveLabel(m.modKey)}</Table.Td>
+                    <Table.Td ta="right">{m.pct.toFixed(1)}%</Table.Td>
+                    <Table.Td ta="right">{m.count.toLocaleString()}</Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </ScrollArea>
+        )}
+      </Tabs.Panel>
 
       {SLOTS.map((slot) => {
         const slotRows = bySlot[slot] ?? [];
@@ -99,14 +154,14 @@ export function AffixFrequencyTable({ rows }: Props) {
               </Text>
             ) : (
               <ScrollArea>
-                <Table striped highlightOnHover>
+                <Table striped highlightOnHover style={{ tableLayout: "fixed" }}>
                   <Table.Thead>
                     <Table.Tr>
                       <Table.Th>Mod</Table.Th>
-                      <Table.Th ta="right">%</Table.Th>
-                      <Table.Th ta="right">Avg</Table.Th>
-                      <Table.Th ta="right">Median</Table.Th>
-                      <Table.Th ta="right">p75</Table.Th>
+                      <Table.Th style={{ width: 70 }} ta="right">%</Table.Th>
+                      <Table.Th style={{ width: 70 }} ta="right">Avg</Table.Th>
+                      <Table.Th style={{ width: 80 }} ta="right">Median</Table.Th>
+                      <Table.Th style={{ width: 70 }} ta="right">p75</Table.Th>
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>
@@ -126,7 +181,6 @@ export function AffixFrequencyTable({ rows }: Props) {
           </Tabs.Panel>
         );
       })}
-      </Tabs>
-    </Stack>
+    </Tabs>
   );
 }

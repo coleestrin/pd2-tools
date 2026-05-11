@@ -6,9 +6,14 @@ import {
   Stack,
   Table,
   Text,
-  Title,
   Tooltip,
 } from "@mantine/core";
+import { CollapsibleSection } from "./CollapsibleSection";
+import skillPrereqsRaw from "../../data/skill-prereqs.json";
+
+type SkillPrereqEntry = { prereqs: string[]; receivesBonusesFrom: string[] };
+type SkillPrereqsMap = Record<string, Record<string, SkillPrereqEntry>>;
+const SKILL_PREREQS = skillPrereqsRaw as SkillPrereqsMap;
 import type { IClassifiedSkillRow } from "../../types/meta";
 import type { ILevelDistribution } from "../../types/meta";
 
@@ -90,46 +95,85 @@ function LevelDistributionChart({ dist }: { dist: ILevelDistribution }) {
 interface Props {
   skillUsage: IClassifiedSkillRow[];
   levelDistribution?: ILevelDistribution;
+  className: string;
 }
 
-export function BuildSheet({ skillUsage, levelDistribution }: Props) {
+export function BuildSheet({ skillUsage, levelDistribution, className }: Props) {
   const [showPrereqs, setShowPrereqs] = useState(false);
+  const [showSynergies, setShowSynergies] = useState(false);
 
-  // Primary view: skills any cohort member actually built into
-  // (>= 20 hard points — matches pd2.tools/builds' threshold).
-  const buildRows = skillUsage
+  const classMap = SKILL_PREREQS[className] ?? {};
+
+  // All skills any cohort member actually built into (>= 20 hard points —
+  // matches pd2.tools/builds' threshold).
+  const allBuildRows = skillUsage
     .filter((r) => r.numAtTwenty > 0)
     .sort((a, b) => b.pctAtTwenty - a.pctAtTwenty);
+
+  // A skill is a "synergy" in this cohort if it appears in some OTHER
+  // displayed 20+ skill's receivesBonusesFrom list. Example: in a Holy
+  // Shock cohort, Holy Shock.receivesBonusesFrom = [Blessed Aim, Resist
+  // Lightning, ...] so those get bucketed as synergies. The core skill
+  // itself isn't typically buffed by anything in the displayed set, so it
+  // survives the filter.
+  const synergiesOfDisplayed = new Set<string>();
+  for (const row of allBuildRows) {
+    const syns = classMap[row.name]?.receivesBonusesFrom ?? [];
+    for (const s of syns) synergiesOfDisplayed.add(s);
+  }
+
+  const coreRows = allBuildRows.filter((r) => !synergiesOfDisplayed.has(r.name));
+  const synergyRows = allBuildRows.filter((r) => synergiesOfDisplayed.has(r.name));
+
   // Prereq-only view: skills no one builds, but are commonly 1-pt prereqs.
   const prereqOnlyRows = skillUsage.filter(
     (r) => r.numAtTwenty === 0 && r.numAsPrereq > 0,
   );
 
-  const display = showPrereqs ? [...buildRows, ...prereqOnlyRows] : buildRows;
+  const display = [
+    ...coreRows,
+    ...(showSynergies ? synergyRows : []),
+    ...(showPrereqs ? prereqOnlyRows : []),
+  ];
 
   return (
-    <Stack gap="sm">
-      <Group justify="space-between" align="center" wrap="wrap">
-        <Title order={4}>Core Skills</Title>
-        {prereqOnlyRows.length > 0 && (
-          <Button
-            variant="subtle"
-            size="compact-xs"
-            color="gray"
-            onClick={() => setShowPrereqs((v) => !v)}
-          >
-            {showPrereqs
-              ? `Hide prerequisites (${prereqOnlyRows.length})`
-              : `Show prerequisites (${prereqOnlyRows.length})`}
-          </Button>
-        )}
-      </Group>
+    <Stack gap="md">
+      <CollapsibleSection title="Core Skills">
+        <Stack gap="sm">
+          {(synergyRows.length > 0 || prereqOnlyRows.length > 0) && (
+            <Group justify="flex-end" gap="xs">
+              {synergyRows.length > 0 && (
+                <Button
+                  variant="subtle"
+                  size="compact-xs"
+                  color="gray"
+                  onClick={() => setShowSynergies((v) => !v)}
+                >
+                  {showSynergies
+                    ? `Hide synergies (${synergyRows.length})`
+                    : `Show synergies (${synergyRows.length})`}
+                </Button>
+              )}
+              {prereqOnlyRows.length > 0 && (
+                <Button
+                  variant="subtle"
+                  size="compact-xs"
+                  color="gray"
+                  onClick={() => setShowPrereqs((v) => !v)}
+                >
+                  {showPrereqs
+                    ? `Hide prerequisites (${prereqOnlyRows.length})`
+                    : `Show prerequisites (${prereqOnlyRows.length})`}
+                </Button>
+              )}
+            </Group>
+          )}
 
-      {display.length === 0 ? (
-        <Text size="sm" c="dimmed" fs="italic">
-          — no skill data —
-        </Text>
-      ) : (
+          {display.length === 0 ? (
+            <Text size="sm" c="dimmed" fs="italic">
+              — no skill data —
+            </Text>
+          ) : (
         <Table striped highlightOnHover withColumnBorders={false} fz="sm">
           <Table.Thead>
             <Table.Tr>
@@ -154,11 +198,12 @@ export function BuildSheet({ skillUsage, levelDistribution }: Props) {
           <Table.Tbody>
             {display.map((sk, i) => {
               const isPrereqRow = sk.numAtTwenty === 0;
-              const isTopBuild = !isPrereqRow && i < 3;
+              const isSynergyRow = !isPrereqRow && synergiesOfDisplayed.has(sk.name);
+              const isTopBuild = !isPrereqRow && !isSynergyRow && i < 3;
               return (
                 <Table.Tr key={sk.name}>
                   <Table.Td
-                    c={isPrereqRow ? "dimmed" : isTopBuild ? "yellow.4" : undefined}
+                    c={isPrereqRow || isSynergyRow ? "dimmed" : isTopBuild ? "yellow.4" : undefined}
                     fw={isTopBuild ? 700 : undefined}
                     fs={isPrereqRow ? "italic" : undefined}
                   >
@@ -172,6 +217,17 @@ export function BuildSheet({ skillUsage, levelDistribution }: Props) {
                         style={{ textTransform: "uppercase", letterSpacing: "0.05em" }}
                       >
                         prereq
+                      </Text>
+                    )}
+                    {isSynergyRow && (
+                      <Text
+                        component="span"
+                        size="xs"
+                        c="dimmed"
+                        ml={6}
+                        style={{ textTransform: "uppercase", letterSpacing: "0.05em" }}
+                      >
+                        synergy
                       </Text>
                     )}
                   </Table.Td>
@@ -191,26 +247,25 @@ export function BuildSheet({ skillUsage, levelDistribution }: Props) {
         </Table>
       )}
 
-      <Text size="xs" c="dimmed" fs="italic">
-        Prereq detection uses skill-tree data from{" "}
-        <a
-          href="https://wiki.projectdiablo2.com"
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: "inherit", textDecoration: "underline" }}
-        >
-          wiki.projectdiablo2.com
-        </a>{" "}
-        (CC-BY-SA).
-      </Text>
+          <Text size="xs" c="dimmed" fs="italic">
+            Prereq detection uses skill-tree data from{" "}
+            <a
+              href="https://wiki.projectdiablo2.com"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "inherit", textDecoration: "underline" }}
+            >
+              wiki.projectdiablo2.com
+            </a>{" "}
+            (CC-BY-SA).
+          </Text>
+        </Stack>
+      </CollapsibleSection>
 
       {levelDistribution && (
-        <Stack gap={4}>
-          <Text size="sm" fw={500}>
-            Level distribution
-          </Text>
+        <CollapsibleSection title="Level distribution">
           <LevelDistributionChart dist={levelDistribution} />
-        </Stack>
+        </CollapsibleSection>
       )}
     </Stack>
   );

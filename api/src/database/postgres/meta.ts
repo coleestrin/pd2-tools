@@ -3,6 +3,7 @@ import skillPrereqsRaw from "../../data/skill-prereqs.json";
 import type {
   GameMode,
   IAffixModRow,
+  IAvgStatRow,
   IClassifiedSkillRow,
   IItemUsageRow,
   ILevelDistribution,
@@ -45,7 +46,9 @@ function isPrereqOnly(
 
 /** Raw item shape as stored in Characters.full_response_json->'items'[] */
 interface RawItemJson {
+  name?: string;
   quality?: { name?: string };
+  base?: { type?: string };
   location?: { zone?: string; equipment?: string };
   modifiers?: Array<{ name?: string; label?: string; values?: number[] }>;
 }
@@ -605,6 +608,84 @@ export class MetaDB_Postgres {
     );
 
     return out;
+  }
+
+  /**
+   * Cohort-averaged "stats page" values: the 4 core attributes plus life
+   * and mana, pulled from each character's precomputed totals.
+   *
+   * Why these and not gear-modifier sums? The values in `character.attributes`
+   * + `character.life` / `character.mana` are the same numbers pd2.tools'
+   * Stats panel displays — base + gear + charms + leveling already rolled in.
+   * Gear-modifier sums tell you avg gear bonus, which isn't what users
+   * actually compare across builds.
+   *
+   * Resistances / FCR / FHR / etc. aren't included: they're computed
+   * client-side on pd2.tools (no precomputed field), and replicating cap +
+   * difficulty-penalty logic isn't worth it for "everyone caps resists" —
+   * the frontend shows a static note instead.
+   *
+   * Returns 6 rows in fixed order: strength, dexterity, vitality, energy,
+   * life, mana. charsWithMod / pctOfChars stay equal to cohortSize / 100
+   * since every character has these stats.
+   */
+  public async aggregateAvgStats(cohortIds: number[]): Promise<IAvgStatRow[]> {
+    if (cohortIds.length === 0) return [];
+
+    const sql = `
+      SELECT
+        (C.full_response_json->'character'->'attributes'->>'strength')::numeric AS strength,
+        (C.full_response_json->'character'->'attributes'->>'dexterity')::numeric AS dexterity,
+        (C.full_response_json->'character'->'attributes'->>'vitality')::numeric AS vitality,
+        (C.full_response_json->'character'->'attributes'->>'energy')::numeric AS energy,
+        (C.full_response_json->'character'->>'life')::numeric AS life,
+        (C.full_response_json->'character'->>'mana')::numeric AS mana
+      FROM Characters C
+      WHERE C.character_db_id = ANY($1::int[])
+    `;
+    const { rows } = await this.pool.query<{
+      strength: string | null;
+      dexterity: string | null;
+      vitality: string | null;
+      energy: string | null;
+      life: string | null;
+      mana: string | null;
+    }>(sql, [cohortIds]);
+
+    const cohortSize = rows.length;
+    if (cohortSize === 0) return [];
+
+    const sums = {
+      strength: 0,
+      dexterity: 0,
+      vitality: 0,
+      energy: 0,
+      life: 0,
+      mana: 0,
+    };
+    for (const row of rows) {
+      sums.strength += Number(row.strength) || 0;
+      sums.dexterity += Number(row.dexterity) || 0;
+      sums.vitality += Number(row.vitality) || 0;
+      sums.energy += Number(row.energy) || 0;
+      sums.life += Number(row.life) || 0;
+      sums.mana += Number(row.mana) || 0;
+    }
+
+    const order: Array<keyof typeof sums> = [
+      "strength",
+      "dexterity",
+      "vitality",
+      "energy",
+      "life",
+      "mana",
+    ];
+    return order.map((k) => ({
+      modName: k,
+      avgValue: sums[k] / cohortSize,
+      charsWithMod: cohortSize,
+      pctOfChars: 100,
+    }));
   }
 
   public async close(): Promise<void> {

@@ -16,6 +16,9 @@ import { CharmPanel } from "../components/meta/CharmPanel";
 import { DataFreshness } from "../components/meta/DataFreshness";
 import { MatchBanner } from "../components/meta/MatchBanner";
 import { DiffView } from "../components/meta/DiffView";
+import { CollapsibleSection } from "../components/meta/CollapsibleSection";
+import { AvgStatsPanel } from "../components/meta/AvgStatsPanel";
+import { TopAffixAveragesPanel } from "../components/meta/TopAffixAveragesPanel";
 import { useMetaData } from "../hooks/useMetaData";
 import { FilterForm } from "../components/meta/FilterForm";
 import {
@@ -65,7 +68,7 @@ export default function Meta() {
   if (!hydrated) {
     return (
       <Container size="xl" py="md">
-        <Title order={1}>Meta</Title>
+        <Title order={1} ta="center">Meta</Title>
         <Stack mt="sm">
           <Skeleton height={28} width={300} />
           <Skeleton height={20} width={200} />
@@ -86,15 +89,15 @@ export default function Meta() {
           content="Build aggregator: top gear, affixes, and charms used by Project Diablo 2 ladder players for a given class and skills."
         />
       </Helmet>
-      <Title order={1} mb="sm">
+      <Title order={1} ta="center" mb="sm">
         Meta
       </Title>
 
       <FilterForm initial={uiState} onSubmit={handleSubmit} />
 
       {noClass && (
-        <Alert color="blue" variant="light" mt="md">
-          Pick a class above to see the meta build.
+        <Alert color="blue" variant="light" mt="md" maw={1050} mx="auto" ta="center">
+          Pick a class and a build, then hit Generate to see the current meta snapshot.
         </Alert>
       )}
       {!noClass && isLoading && (
@@ -138,13 +141,40 @@ export default function Meta() {
             cohortSize={data.cohortSize}
             fetchedAt={fetchedAt}
           />
+          <CollapsibleSection
+            title="Average build stats"
+            subtitle="Cohort averages from each character's stats page"
+          >
+            <Stack gap="md">
+              <AvgStatsPanel rows={data.avgStats} />
+              <TopAffixAveragesPanel rows={data.affixMods} />
+              <Text size="xs" c="dimmed" fs="italic" ta="center">
+                Resistances aren't shown. Practically every end-game build
+                caps at 75 all-res, so an average wouldn't tell you anything
+                new.
+              </Text>
+            </Stack>
+          </CollapsibleSection>
           <BuildSheet
             skillUsage={data.skillUsage}
             levelDistribution={data.levelDistribution}
+            className={activeClassName}
           />
-          <ItemFrequencyTable rows={data.itemUsage} />
-          <AffixFrequencyTable rows={data.affixMods} />
-          <CharmPanel />
+          <CollapsibleSection
+            title="Top items"
+            subtitle="Unique, Set, and Runeword items"
+          >
+            <ItemFrequencyTable rows={data.itemUsage} />
+          </CollapsibleSection>
+          <CollapsibleSection
+            title="Affix patterns"
+            subtitle="Rare, Magic, and Crafted items only"
+          >
+            <AffixFrequencyTable rows={data.affixMods} />
+          </CollapsibleSection>
+          <CollapsibleSection title="Charms">
+            <CharmPanel />
+          </CollapsibleSection>
         </Stack>
       ) : null}
     </Container>

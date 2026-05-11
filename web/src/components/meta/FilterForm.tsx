@@ -17,6 +17,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
+import { useMediaQuery } from "@mantine/hooks";
 import { BUILD_PRESETS, PRESET_MIN_LEVEL, isPresetActive } from "../../lib/buildPresets";
 import type { UiState } from "../../lib/url-state";
 import skillPrereqsRaw from "../../data/skill-prereqs.json";
@@ -86,6 +87,28 @@ const CLASSES = [
   "Sorceress",
 ];
 
+// Three-tier responsive labels. Full names fit at ≥ md breakpoint;
+// shortened ones fit on sub-tablet widths; single-letter fallback for
+// anything below ~mobile so the row never wraps or overflows.
+const CLASS_SHORT: Record<string, string> = {
+  Amazon: "Ama",
+  Assassin: "Assa",
+  Barbarian: "Barb",
+  Druid: "Druid",
+  Necromancer: "Necro",
+  Paladin: "Pala",
+  Sorceress: "Sorc",
+};
+const CLASS_INITIAL: Record<string, string> = {
+  Amazon: "A",
+  Assassin: "A",
+  Barbarian: "B",
+  Druid: "D",
+  Necromancer: "N",
+  Paladin: "P",
+  Sorceress: "S",
+};
+
 interface Props {
   initial: UiState;
   onSubmit: (s: UiState) => void;
@@ -93,6 +116,13 @@ interface Props {
 
 export function FilterForm({ initial, onSubmit }: Props) {
   const [s, setS] = useState<UiState>(initial);
+
+  // Pick the class-label tier based on viewport. The form has nowrap on the
+  // class row, so labels must shrink (not wrap) once the row stops fitting.
+  const isNarrow = useMediaQuery("(max-width: 576px)");
+  const isMedium = useMediaQuery("(max-width: 768px)");
+  const classLabel = (c: string) =>
+    isNarrow ? CLASS_INITIAL[c] : isMedium ? CLASS_SHORT[c] : c;
 
   // Fetch class-only baseline skill usage so we can show "X% of all <Class>s
   // who use this skill in their build" next to each entry. minLevel=80 keeps
@@ -160,7 +190,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
       p="lg"
       mb="lg"
       mx="auto"
-      maw={900}
+      maw={1050}
       style={{
         border: "1px solid var(--mantine-color-default-border)",
         borderRadius: "var(--mantine-radius-sm)",
@@ -195,7 +225,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
             {(["hardcore", "softcore"] as const).map((gm) => (
               <Button
                 key={gm}
-                size="lg"
+                size="md"
                 fw={700}
                 variant={s.filter.gameMode === gm ? "filled" : "default"}
                 onClick={() =>
@@ -215,9 +245,11 @@ export function FilterForm({ initial, onSubmit }: Props) {
             {CLASSES.map((c) => (
               <Button
                 key={c}
-                size="xs"
+                size="sm"
                 fw={700}
                 variant={s.filter.className === c ? "filled" : "default"}
+                aria-label={c}
+                title={c}
                 onClick={() =>
                   setS({
                     ...s,
@@ -226,7 +258,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
                   })
                 }
               >
-                {c}
+                {classLabel(c)}
               </Button>
             ))}
           </Group>
@@ -343,7 +375,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
               behind the content. Selected rows: solid darker-green row,
               no fill bar (clear single-tone affordance). */}
           {skillRows.length > 0 ? (
-            <ScrollArea h={460} type="auto" style={{ backgroundColor: "rgba(0,0,0,0.15)" }}>
+            <ScrollArea h={220} type="auto" style={{ backgroundColor: "rgba(0,0,0,0.15)" }}>
               <Stack gap={0}>
                 {skillRows.map((sk, idx) => {
                   const isSelected = selectedSkillNames.has(sk.name);
@@ -352,7 +384,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
                       key={sk.name}
                       withBorder
                       radius={0}
-                      py="sm"
+                      py={4}
                       px="md"
                       onClick={() => toggleSkill(sk.name)}
                       style={{
@@ -386,14 +418,14 @@ export function FilterForm({ initial, onSubmit }: Props) {
                         align="center"
                         style={{ position: "relative", zIndex: 1 }}
                       >
-                        <Flex align="center" gap={14} style={{ minWidth: 0 }}>
-                          <SkillIcon name={sk.name} size={36} />
-                          <Text size="md" fw={500} lineClamp={1}>
+                        <Flex align="center" gap={10} style={{ minWidth: 0 }}>
+                          <SkillIcon name={sk.name} size={28} />
+                          <Text size="sm" fw={500} lineClamp={1}>
                             {sk.name}
                           </Text>
                         </Flex>
                         <Text
-                          size="md"
+                          size="sm"
                           fw={700}
                           style={{ fontVariantNumeric: "tabular-nums" }}
                         >

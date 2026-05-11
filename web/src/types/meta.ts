@@ -107,6 +107,18 @@ export interface IAffixModRow {
   p75: number;
 }
 
+/**
+ * One row in the average-build-stats summary. Mirrors api/src/types/meta.ts
+ * IAvgStatRow. Computed per-character (sum across equipped items + non-unique
+ * charms) and averaged across the cohort with zeros included.
+ */
+export interface IAvgStatRow {
+  modName: string;
+  avgValue: number;
+  charsWithMod: number;
+  pctOfChars: number;
+}
+
 export interface IMetaResponse {
   cohortSize: number;
   itemUsage: IItemUsageRow[];
@@ -116,4 +128,5 @@ export interface IMetaResponse {
   mercItemUsage: IItemUsageRow[];
   levelDistribution: ILevelDistribution;
   affixMods: IAffixModRow[];
+  avgStats: IAvgStatRow[];
 }
