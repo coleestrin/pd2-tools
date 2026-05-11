@@ -33,4 +33,7 @@ export const API_ENDPOINTS = {
   // Leaderboard
   leaderboardLevel99: "/leaderboard/level99",
   leaderboardMirrored: "/leaderboard/mirrored",
+
+  // Meta
+  meta: "/meta",
 } as const;
