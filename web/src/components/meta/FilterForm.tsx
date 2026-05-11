@@ -211,11 +211,11 @@ export function FilterForm({ initial, onSubmit }: Props) {
         {/* Class selector */}
         <Stack gap={6}>
           <SectionLabel ta="center">Class</SectionLabel>
-          <Group gap="sm" wrap="wrap" justify="center">
+          <Group gap="xs" wrap="nowrap" justify="center">
             {CLASSES.map((c) => (
               <Button
                 key={c}
-                size="md"
+                size="xs"
                 fw={700}
                 variant={s.filter.className === c ? "filled" : "default"}
                 onClick={() =>
