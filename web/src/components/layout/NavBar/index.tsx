@@ -21,6 +21,7 @@ import { useNavbarStats, useTerrorZone } from "../../../hooks";
 import { SupportBanner } from "../Banner";
 const links = [
   { link: "/builds", label: "Builds" },
+  { link: "/meta", label: "Meta" },
   { link: "/economy/currency", label: "Economy" },
   {
     label: "Tools",
