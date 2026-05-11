@@ -34,16 +34,23 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       // --- gameMode ---
-      const gameModeRaw = (req.query.gameMode as string) || "softcore";
-      if (gameModeRaw !== "hardcore" && gameModeRaw !== "softcore") {
+      const gameModeRaw = req.query.gameMode;
+      if (gameModeRaw !== undefined && typeof gameModeRaw !== "string") {
+        res.status(400).json({
+          error: { message: "gameMode must be a single value" },
+        });
+        return;
+      }
+      const gameModeValue = gameModeRaw || "softcore";
+      if (gameModeValue !== "hardcore" && gameModeValue !== "softcore") {
         res.status(400).json({
           error: {
-            message: `gameMode must be 'hardcore' or 'softcore' (got '${gameModeRaw}')`,
+            message: `gameMode must be 'hardcore' or 'softcore' (got '${gameModeValue}')`,
           },
         });
         return;
       }
-      const gameMode = gameModeRaw as GameMode;
+      const gameMode = gameModeValue as GameMode;
 
       // --- className ---
       const className = req.query.className;
@@ -99,7 +106,7 @@ router.get(
       const seasonRaw = req.query.season;
       const season =
         typeof seasonRaw === "string"
-          ? parseInt(seasonRaw as string, 10)
+          ? parseInt(seasonRaw, 10)
           : config.currentSeason;
 
       const filter: ICohortFilter = {
@@ -135,6 +142,14 @@ router.get(
         levelDistribution,
       };
 
+      logger.info("Meta aggregations served", {
+        className,
+        gameMode,
+        season,
+        minLevel,
+        skillsCount: skills.length,
+        cohortSize: cohortIds.length,
+      });
       res.json(response);
     } catch (error: unknown) {
       logger.error("Error fetching meta aggregations", {
