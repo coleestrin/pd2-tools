@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import {
-  Container,
-  Title,
-  Stack,
-  Skeleton,
   Alert,
+  Badge,
   Button,
+  Container,
+  Group,
+  Skeleton,
+  Stack,
   Text,
+  Title,
 } from "@mantine/core";
 import { Helmet } from "react-helmet";
 import { ItemFrequencyTable } from "../components/meta/ItemFrequencyTable";
@@ -68,7 +70,12 @@ export default function Meta() {
   if (!hydrated) {
     return (
       <Container size="xl" py="md">
-        <Title order={1} ta="center">Meta</Title>
+        <Group justify="center" align="center" gap={10} wrap="nowrap">
+          <Title order={1}>Meta</Title>
+          <Badge size="md" variant="light" color="violet" style={{ textTransform: "uppercase" }}>
+            Beta
+          </Badge>
+        </Group>
         <Stack mt="sm">
           <Skeleton height={28} width={300} />
           <Skeleton height={20} width={200} />
@@ -89,15 +96,27 @@ export default function Meta() {
           content="Build aggregator: top gear, affixes, and charms used by Project Diablo 2 ladder players for a given class and skills."
         />
       </Helmet>
-      <Title order={1} ta="center" mb="sm">
-        Meta
-      </Title>
+      <Group justify="center" align="center" gap={10} mb="sm" wrap="nowrap">
+        <Title order={1}>Meta</Title>
+        <Badge size="md" variant="light" color="violet" style={{ textTransform: "uppercase" }}>
+          Beta
+        </Badge>
+      </Group>
 
       <FilterForm initial={uiState} onSubmit={handleSubmit} />
 
       {noClass && (
         <Alert color="blue" variant="light" mt="md" maw={1050} mx="auto" ta="center">
-          Pick a class and a build, then hit Generate to see the current meta snapshot.
+          <Stack gap={4}>
+            <Text>
+              Pick a class and a build, then hit Generate to see the current
+              meta snapshot.
+            </Text>
+            <Text size="xs" c="dimmed">
+              This tool is new. If you find bugs or have ideas for making it
+              better, ping me on Discord at <strong>@tekk0n</strong>.
+            </Text>
+          </Stack>
         </Alert>
       )}
       {!noClass && isLoading && (

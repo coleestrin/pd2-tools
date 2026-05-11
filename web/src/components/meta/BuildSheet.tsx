@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Badge,
   Box,
   Button,
   Group,
@@ -9,11 +10,11 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { CollapsibleSection } from "./CollapsibleSection";
-import skillPrereqsRaw from "../../data/skill-prereqs.json";
+import skillClassificationRaw from "../../data/skill-classification.json";
 
-type SkillPrereqEntry = { prereqs: string[]; receivesBonusesFrom: string[] };
-type SkillPrereqsMap = Record<string, Record<string, SkillPrereqEntry>>;
-const SKILL_PREREQS = skillPrereqsRaw as SkillPrereqsMap;
+type SkillRole = "core" | "synergy";
+type SkillClassification = Record<string, Record<string, SkillRole>>;
+const SKILL_CLASSIFICATION = skillClassificationRaw as SkillClassification;
 import type { IClassifiedSkillRow } from "../../types/meta";
 import type { ILevelDistribution } from "../../types/meta";
 
@@ -102,7 +103,7 @@ export function BuildSheet({ skillUsage, levelDistribution, className }: Props) 
   const [showPrereqs, setShowPrereqs] = useState(false);
   const [showSynergies, setShowSynergies] = useState(false);
 
-  const classMap = SKILL_PREREQS[className] ?? {};
+  const classMap = SKILL_CLASSIFICATION[className] ?? {};
 
   // All skills any cohort member actually built into (>= 20 hard points —
   // matches pd2.tools/builds' threshold).
@@ -110,31 +111,34 @@ export function BuildSheet({ skillUsage, levelDistribution, className }: Props) 
     .filter((r) => r.numAtTwenty > 0)
     .sort((a, b) => b.pctAtTwenty - a.pctAtTwenty);
 
-  // A skill is a "synergy" in this cohort if it appears in some OTHER
-  // displayed 20+ skill's receivesBonusesFrom list. Example: in a Holy
-  // Shock cohort, Holy Shock.receivesBonusesFrom = [Blessed Aim, Resist
-  // Lightning, ...] so those get bucketed as synergies. The core skill
-  // itself isn't typically buffed by anything in the displayed set, so it
-  // survives the filter.
-  const synergiesOfDisplayed = new Set<string>();
-  for (const row of allBuildRows) {
-    const syns = classMap[row.name]?.receivesBonusesFrom ?? [];
-    for (const s of syns) synergiesOfDisplayed.add(s);
-  }
-
-  const coreRows = allBuildRows.filter((r) => !synergiesOfDisplayed.has(r.name));
-  const synergyRows = allBuildRows.filter((r) => synergiesOfDisplayed.has(r.name));
+  // Per-skill role from the static wiki-scraped classification
+  // (web/src/data/skill-classification.json). Skills not in the table fall
+  // back to "core" so anything unexpected stays visible by default.
+  const roleOf = (name: string): SkillRole => classMap[name] ?? "core";
+  const coreRows = allBuildRows.filter((r) => roleOf(r.name) === "core");
+  const synergyRows = allBuildRows.filter((r) => roleOf(r.name) === "synergy");
 
   // Prereq-only view: skills no one builds, but are commonly 1-pt prereqs.
   const prereqOnlyRows = skillUsage.filter(
     (r) => r.numAtTwenty === 0 && r.numAsPrereq > 0,
   );
 
+  // Single popularity-sorted list. Synergies are interleaved with cores by
+  // pctAtTwenty rather than appended as a separate block, so a hammerdin
+  // cohort's Blessed Aim (typically 95%+) sits at the top alongside Blessed
+  // Hammer instead of being shoved below low-prevalence cores. Synergies are
+  // hidden by default for a compact entry view; the toggle opts them in.
+  const visibleBuildRows = showSynergies
+    ? allBuildRows
+    : allBuildRows.filter((r) => roleOf(r.name) === "core");
   const display = [
-    ...coreRows,
-    ...(showSynergies ? synergyRows : []),
+    ...visibleBuildRows,
     ...(showPrereqs ? prereqOnlyRows : []),
   ];
+
+  // Top-3 cores get yellow highlight regardless of how synergies interleave
+  // with them once the toggle is on.
+  const topCoreNames = new Set(coreRows.slice(0, 3).map((r) => r.name));
 
   return (
     <Stack gap="md">
@@ -178,6 +182,7 @@ export function BuildSheet({ skillUsage, levelDistribution, className }: Props) 
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Skill</Table.Th>
+              <Table.Th>Type</Table.Th>
               <Table.Th style={{ textAlign: "right" }}>Chars at 20+</Table.Th>
               <Table.Th style={{ textAlign: "right" }}>
                 <Tooltip label="% of cohort with 20+ hard points in this skill (same threshold pd2.tools/builds uses).">
@@ -196,10 +201,15 @@ export function BuildSheet({ skillUsage, levelDistribution, className }: Props) 
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {display.map((sk, i) => {
+            {display.map((sk) => {
               const isPrereqRow = sk.numAtTwenty === 0;
-              const isSynergyRow = !isPrereqRow && synergiesOfDisplayed.has(sk.name);
-              const isTopBuild = !isPrereqRow && !isSynergyRow && i < 3;
+              const isSynergyRow = !isPrereqRow && roleOf(sk.name) === "synergy";
+              const isTopBuild = topCoreNames.has(sk.name);
+              const typeBadge = isPrereqRow
+                ? { label: "Prereq", color: "gray", variant: "outline" as const }
+                : isSynergyRow
+                  ? { label: "Synergy", color: "gray", variant: "light" as const }
+                  : null;
               return (
                 <Table.Tr key={sk.name}>
                   <Table.Td
@@ -208,27 +218,16 @@ export function BuildSheet({ skillUsage, levelDistribution, className }: Props) 
                     fs={isPrereqRow ? "italic" : undefined}
                   >
                     {sk.name}
-                    {isPrereqRow && (
-                      <Text
-                        component="span"
+                  </Table.Td>
+                  <Table.Td>
+                    {typeBadge && (
+                      <Badge
                         size="xs"
-                        c="dimmed"
-                        ml={6}
-                        style={{ textTransform: "uppercase", letterSpacing: "0.05em" }}
+                        variant={typeBadge.variant}
+                        color={typeBadge.color}
                       >
-                        prereq
-                      </Text>
-                    )}
-                    {isSynergyRow && (
-                      <Text
-                        component="span"
-                        size="xs"
-                        c="dimmed"
-                        ml={6}
-                        style={{ textTransform: "uppercase", letterSpacing: "0.05em" }}
-                      >
-                        synergy
-                      </Text>
+                        {typeBadge.label}
+                      </Badge>
                     )}
                   </Table.Td>
                   <Table.Td style={{ textAlign: "right" }} c="dimmed">

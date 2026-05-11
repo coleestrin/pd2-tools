@@ -2,6 +2,7 @@ import { IconAlarm, IconChevronDown, IconDownload } from "@tabler/icons-react";
 import { GitHubStarsButton } from "../GitHubStarsButton";
 import { DiscordOnlineButton } from "../DiscordOnlineButton";
 import {
+  Badge,
   Burger,
   Drawer,
   Group,
@@ -21,7 +22,17 @@ import { useNavbarStats, useTerrorZone } from "../../../hooks";
 import { SupportBanner } from "../Banner";
 const links = [
   { link: "/builds", label: "Builds" },
-  { link: "/meta", label: "Meta" },
+  {
+    link: "/meta",
+    label: (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+        Meta
+        <Badge size="xs" variant="light" color="violet" style={{ textTransform: "uppercase" }}>
+          Beta
+        </Badge>
+      </span>
+    ),
+  },
   { link: "/economy/currency", label: "Economy" },
   {
     label: "Tools",
