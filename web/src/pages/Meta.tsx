@@ -5,7 +5,7 @@ export default function Meta() {
   return (
     <Container size="xl" py="md">
       <Helmet>
-        <title>Meta — PD2 Tools</title>
+        <title>Meta - pd2.tools</title>
         <meta
           name="description"
           content="Build aggregator: top gear, affixes, and charms used by Project Diablo 2 ladder players for a given class and skills."
