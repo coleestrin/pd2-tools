@@ -1,5 +1,12 @@
 import { Pool, PoolConfig } from "pg";
-import type { GameMode, IItemUsageRow, ISkillRequirement } from "../../types/meta";
+import type {
+  GameMode,
+  IItemUsageRow,
+  ILevelDistribution,
+  IMercTypeUsageRow,
+  ISkillRequirement,
+  ISkillUsageRow,
+} from "../../types/meta";
 
 /**
  * Items excluded from Unique/Runeword aggregation because they are
@@ -143,6 +150,141 @@ export class MetaDB_Postgres {
       IGNORED_UNIQUES_ARRAY,
     ]);
     return result.rows;
+  }
+
+  /**
+   * Aggregate skill usage across the cohort: for each skill, how many
+   * cohort members have base level >= 1 in it.
+   *
+   * Mirrors analyzeSkillUsage's JOIN structure (CharacterSkills JOIN
+   * SkillsDefinitions). Returns rows sorted by numOccurrences desc.
+   * Skills with zero cohort members do not appear. Uses base skill_level
+   * from CharacterSkills (not item-boosted effective level).
+   */
+  public async aggregateSkillUsage(
+    cohortIds: number[],
+  ): Promise<ISkillUsageRow[]> {
+    if (cohortIds.length === 0) return [];
+
+    const sql = `
+      SELECT
+        SD.name AS name,
+        COUNT(DISTINCT CS.character_db_id)::int AS "numOccurrences",
+        $2::int AS "totalSample",
+        (COUNT(DISTINCT CS.character_db_id)::float / $2 * 100) AS pct
+      FROM CharacterSkills CS
+      JOIN SkillsDefinitions SD ON CS.skill_def_id = SD.skill_def_id
+      WHERE CS.character_db_id = ANY($1::int[])
+        AND CS.skill_level >= 1
+      GROUP BY SD.name
+      ORDER BY "numOccurrences" DESC
+    `;
+    const result = await this.pool.query<ISkillUsageRow>(sql, [cohortIds, cohortIds.length]);
+    return result.rows;
+  }
+
+  /**
+   * Aggregate mercenary types across the cohort. CharacterMercenaries
+   * stores one row per character with the merc type in `description`.
+   *
+   * Mirrors analyzeMercTypeUsage's GROUP BY CM.description pattern.
+   * Returns rows sorted by numOccurrences desc.
+   */
+  public async aggregateMercType(
+    cohortIds: number[],
+  ): Promise<IMercTypeUsageRow[]> {
+    if (cohortIds.length === 0) return [];
+
+    const sql = `
+      SELECT
+        CM.description AS "mercType",
+        COUNT(DISTINCT CM.character_db_id)::int AS "numOccurrences",
+        $2::int AS "totalSample",
+        (COUNT(DISTINCT CM.character_db_id)::float / $2 * 100) AS pct
+      FROM CharacterMercenaries CM
+      WHERE CM.character_db_id = ANY($1::int[])
+        AND CM.description IS NOT NULL
+      GROUP BY CM.description
+      ORDER BY "numOccurrences" DESC
+    `;
+    const result = await this.pool.query<IMercTypeUsageRow>(sql, [cohortIds, cohortIds.length]);
+    return result.rows;
+  }
+
+  /**
+   * Aggregate equipped items on mercenaries across the cohort.
+   *
+   * Same CASE-based classification as aggregateItemUsage (Unique / Set /
+   * Runeword) and uses the same IGNORED_UNIQUES_ARRAY exclusion. MercenaryItems
+   * joins directly via character_db_id (no separate merc_id — one merc per
+   * character). Mirrors analyzeMercItemUsage's table/JOIN structure.
+   *
+   * Returns rows sorted by numOccurrences desc.
+   */
+  public async aggregateMercItems(
+    cohortIds: number[],
+  ): Promise<IItemUsageRow[]> {
+    if (cohortIds.length === 0) return [];
+
+    const sql = `
+      SELECT
+        BI.name AS item,
+        CASE
+          WHEN MI.is_runeword = true AND BI.name <> ALL($3) THEN 'Runeword'
+          WHEN Q.name = 'Unique' AND BI.name <> ALL($3) THEN 'Unique'
+          WHEN Q.name = 'Set' THEN 'Set'
+          ELSE NULL
+        END AS "itemType",
+        COUNT(DISTINCT MI.character_db_id)::int AS "numOccurrences",
+        $2::int AS "totalSample",
+        (COUNT(DISTINCT MI.character_db_id)::float / $2 * 100) AS pct
+      FROM MercenaryItems MI
+      JOIN BaseItems BI ON MI.base_item_id = BI.base_item_id
+      JOIN Qualities Q ON MI.quality_id = Q.quality_id
+      WHERE MI.character_db_id = ANY($1::int[])
+        AND CASE
+          WHEN MI.is_runeword = true AND BI.name <> ALL($3) THEN 'Runeword'
+          WHEN Q.name = 'Unique' AND BI.name <> ALL($3) THEN 'Unique'
+          WHEN Q.name = 'Set' THEN 'Set'
+          ELSE NULL
+        END IS NOT NULL
+      GROUP BY BI.name, "itemType"
+      ORDER BY "numOccurrences" DESC
+    `;
+    const result = await this.pool.query<IItemUsageRow>(sql, [
+      cohortIds,
+      cohortIds.length,
+      IGNORED_UNIQUES_ARRAY,
+    ]);
+    return result.rows;
+  }
+
+  /**
+   * Level distribution buckets — counts of characters at each integer level
+   * within the cohort. The pd2.tools level-distribution endpoint returns both
+   * hardcore and softcore sides; the /meta cohort is already filtered to one
+   * gameMode, so only the matching side is populated and the other is empty.
+   */
+  public async aggregateLevelDistribution(
+    cohortIds: number[],
+    gameMode: GameMode,
+  ): Promise<ILevelDistribution> {
+    if (cohortIds.length === 0) return { hardcore: [], softcore: [] };
+
+    const sql = `
+      SELECT C.level, COUNT(*)::int AS "numOccurrences"
+      FROM Characters C
+      WHERE C.character_db_id = ANY($1::int[])
+      GROUP BY C.level
+      ORDER BY C.level
+    `;
+    const result = await this.pool.query<{ level: number; numOccurrences: number }>(
+      sql,
+      [cohortIds],
+    );
+    return gameMode === "hardcore"
+      ? { hardcore: result.rows, softcore: [] }
+      : { hardcore: [], softcore: result.rows };
   }
 
   public async close(): Promise<void> {
