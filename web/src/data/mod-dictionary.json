@@ -1,0 +1,770 @@
+{
+  "all_attributes": {
+    "category": "stat",
+    "displayLabel": "+All Attributes"
+  },
+  "all_resist": {
+    "category": "resist",
+    "displayLabel": "All Resistances"
+  },
+  "armorclass": {
+    "category": "defense",
+    "displayLabel": "Defense"
+  },
+  "armorclass_vs_hth": {
+    "category": "defense",
+    "displayLabel": "Defense vs Melee"
+  },
+  "armorclass_vs_missile": {
+    "category": "defense",
+    "displayLabel": "Defense vs Missile"
+  },
+  "colddam": {
+    "category": "damage",
+    "displayLabel": "Cold  Damage"
+  },
+  "coldlength": {
+    "category": "damage",
+    "displayLabel": "Cold Duration"
+  },
+  "coldmindam": {
+    "category": "damage",
+    "displayLabel": "Cold Min Damage"
+  },
+  "coldresist": {
+    "category": "resist",
+    "displayLabel": "Cold Resist"
+  },
+  "corrupted": {
+    "category": "utility",
+    "displayLabel": "Corrupted"
+  },
+  "curse_effectiveness": {
+    "category": "utility",
+    "displayLabel": "Curse Effectiveness"
+  },
+  "curse_resistance": {
+    "category": "resist",
+    "displayLabel": "Curse Resistance"
+  },
+  "damageresist": {
+    "category": "resist",
+    "displayLabel": "Physical Damage Reduction %"
+  },
+  "deep_wounds": {
+    "category": "damage",
+    "displayLabel": "Deep Wounds"
+  },
+  "desecrated": {
+    "category": "utility",
+    "displayLabel": "Desecrated (Debuff)"
+  },
+  "desecrator": {
+    "category": "utility",
+    "displayLabel": "Desecrator (Source)"
+  },
+  "dexterity": {
+    "category": "stat",
+    "displayLabel": "+Dexterity"
+  },
+  "energy": {
+    "category": "stat",
+    "displayLabel": "+Energy"
+  },
+  "es_efficiency": {
+    "category": "utility",
+    "displayLabel": "Energy Shield Efficiency"
+  },
+  "extra_cold_arrows": {
+    "category": "skill",
+    "displayLabel": "+Extra Cold arrows"
+  },
+  "extra_golem": {
+    "category": "skill",
+    "displayLabel": "+Extra Golem"
+  },
+  "extra_grizzly": {
+    "category": "skill",
+    "displayLabel": "+Extra Grizzly"
+  },
+  "extra_hydra": {
+    "category": "skill",
+    "displayLabel": "+Extra Hydra"
+  },
+  "extra_revives": {
+    "category": "skill",
+    "displayLabel": "+Extra Revives"
+  },
+  "extra_shadow": {
+    "category": "skill",
+    "displayLabel": "+Extra Shadow"
+  },
+  "extra_skele_archer": {
+    "category": "skill",
+    "displayLabel": "+Extra Skele archer"
+  },
+  "extra_skele_mage": {
+    "category": "skill",
+    "displayLabel": "+Extra Skele mage"
+  },
+  "extra_spirits": {
+    "category": "skill",
+    "displayLabel": "+Extra Spirits"
+  },
+  "extra_spiritwolf": {
+    "category": "skill",
+    "displayLabel": "+Extra Spiritwolf"
+  },
+  "extra_valk": {
+    "category": "skill",
+    "displayLabel": "+Extra Valk"
+  },
+  "firedam": {
+    "category": "damage",
+    "displayLabel": "Fire  Damage"
+  },
+  "firemindam": {
+    "category": "damage",
+    "displayLabel": "Fire Min Damage"
+  },
+  "fireresist": {
+    "category": "resist",
+    "displayLabel": "Fire Resist"
+  },
+  "hpregen": {
+    "category": "stat",
+    "displayLabel": "Replenish Life"
+  },
+  "inc_splash_radius_permissinghp": {
+    "category": "damage",
+    "displayLabel": "Splash Radius Per Missing HP"
+  },
+  "item_absorbcold": {
+    "category": "resist",
+    "displayLabel": "Absorb Cold (Flat)"
+  },
+  "item_absorbcold_percent": {
+    "category": "resist",
+    "displayLabel": "Absorb Cold %"
+  },
+  "item_absorbfire": {
+    "category": "resist",
+    "displayLabel": "Absorb Fire (Flat)"
+  },
+  "item_absorbfire_percent": {
+    "category": "resist",
+    "displayLabel": "Absorb Fire %"
+  },
+  "item_absorblight": {
+    "category": "resist",
+    "displayLabel": "Absorb Lightning (Flat)"
+  },
+  "item_absorblight_percent": {
+    "category": "resist",
+    "displayLabel": "Absorb Lightning %"
+  },
+  "item_absorbmagic": {
+    "category": "resist",
+    "displayLabel": "Absorb Magic"
+  },
+  "item_addclassskills": {
+    "category": "skill",
+    "displayLabel": "+X to All Class Skills"
+  },
+  "item_addexperience": {
+    "category": "utility",
+    "displayLabel": "+Experience Gained"
+  },
+  "item_addskill_tab": {
+    "category": "skill",
+    "displayLabel": "+X to Skill Tab"
+  },
+  "item_allskills": {
+    "category": "skill",
+    "displayLabel": "+X to All Skills"
+  },
+  "item_armor_percent": {
+    "category": "defense",
+    "displayLabel": "Enhanced Defense %"
+  },
+  "item_armor_perlevel": {
+    "category": "defense",
+    "displayLabel": "+Defense Per Level"
+  },
+  "item_attackertakesdamage": {
+    "category": "leech",
+    "displayLabel": "Attacker Takes Damage (Flat)"
+  },
+  "item_attackertakeslightdamage": {
+    "category": "leech",
+    "displayLabel": "Attacker Takes Lightning Damage"
+  },
+  "item_aura": {
+    "category": "skill",
+    "displayLabel": "Aura When Equipped"
+  },
+  "item_cannotbefrozen": {
+    "category": "resist",
+    "displayLabel": "Cannot Be Frozen"
+  },
+  "item_charged_skill": {
+    "category": "skill",
+    "displayLabel": "Charged Skill"
+  },
+  "item_crit_chance": {
+    "category": "damage",
+    "displayLabel": "Critical Strike Chance"
+  },
+  "item_crit_multiplier": {
+    "category": "damage",
+    "displayLabel": "Critical Strike Multiplier"
+  },
+  "item_crushingblow": {
+    "category": "damage",
+    "displayLabel": "Crushing Blow"
+  },
+  "item_crushingblow_efficiency": {
+    "category": "damage",
+    "displayLabel": "Crushing Blow Efficiency"
+  },
+  "item_damage_undead_perlevel": {
+    "category": "damage",
+    "displayLabel": "+Damage to Undead Per Level"
+  },
+  "item_damagetargetac": {
+    "category": "damage",
+    "displayLabel": "Lower Enemy Defense"
+  },
+  "item_damagetomana": {
+    "category": "damage",
+    "displayLabel": "Damage Taken Goes to Mana"
+  },
+  "item_deadlystrike": {
+    "category": "damage",
+    "displayLabel": "Deadly Strike"
+  },
+  "item_deadlystrike_perlevel": {
+    "category": "damage",
+    "displayLabel": "Deadly Strike Per Level"
+  },
+  "item_demon_tohit": {
+    "category": "utility",
+    "displayLabel": "+Attack Rating vs Demons"
+  },
+  "item_demondamage_percent": {
+    "category": "damage",
+    "displayLabel": "Damage to Demons %"
+  },
+  "item_dexterity_perlevel": {
+    "category": "stat",
+    "displayLabel": "+Dexterity Per Level"
+  },
+  "item_dmgpercent_pereth": {
+    "category": "damage",
+    "displayLabel": "+Enhanced Damage Per Equipped Ethereal"
+  },
+  "item_ds_multiplier": {
+    "category": "damage",
+    "displayLabel": "Deadly Strike Multiplier"
+  },
+  "item_elemskill_cold": {
+    "category": "skill",
+    "displayLabel": "+X to Cold Skills"
+  },
+  "item_elemskill_fire": {
+    "category": "skill",
+    "displayLabel": "+X to Fire Skills"
+  },
+  "item_elemskill_lightning": {
+    "category": "skill",
+    "displayLabel": "+X to Lightning Skills"
+  },
+  "item_elemskill_magic": {
+    "category": "skill",
+    "displayLabel": "+X to Magic Skills"
+  },
+  "item_elemskill_poison": {
+    "category": "skill",
+    "displayLabel": "+X to Poison Skills"
+  },
+  "item_explosivearrow": {
+    "category": "damage",
+    "displayLabel": "Explosive Arrows/Bolts"
+  },
+  "item_extrablood": {
+    "category": "utility",
+    "displayLabel": "Extra Blood (Cosmetic)"
+  },
+  "item_fasterattackrate": {
+    "category": "speed",
+    "displayLabel": "Increased Attack Speed"
+  },
+  "item_fasterblockrate": {
+    "category": "speed",
+    "displayLabel": "Faster Block Rate"
+  },
+  "item_fastercastrate": {
+    "category": "speed",
+    "displayLabel": "Faster Cast Rate"
+  },
+  "item_fastergethitrate": {
+    "category": "speed",
+    "displayLabel": "Faster Hit Recovery"
+  },
+  "item_fastermovevelocity": {
+    "category": "speed",
+    "displayLabel": "Faster Run/Walk"
+  },
+  "item_find_gold_perlevel": {
+    "category": "utility",
+    "displayLabel": "Gold Find Per Level"
+  },
+  "item_find_magic_perlevel": {
+    "category": "utility",
+    "displayLabel": "Magic Find Per Level"
+  },
+  "item_fractionaltargetac": {
+    "category": "damage",
+    "displayLabel": "Lower Enemy Defense %"
+  },
+  "item_freeze": {
+    "category": "utility",
+    "displayLabel": "Freezes Target"
+  },
+  "item_goldbonus": {
+    "category": "utility",
+    "displayLabel": "Gold Find"
+  },
+  "item_halffreezeduration": {
+    "category": "resist",
+    "displayLabel": "Half Freeze Duration"
+  },
+  "item_healafterhit": {
+    "category": "leech",
+    "displayLabel": "Life After Each Hit"
+  },
+  "item_healafterkill": {
+    "category": "leech",
+    "displayLabel": "Life After Each Kill"
+  },
+  "item_howl": {
+    "category": "utility",
+    "displayLabel": "Hit Causes Monster to Flee"
+  },
+  "item_hp_perlevel": {
+    "category": "stat",
+    "displayLabel": "+Life Per Level"
+  },
+  "item_ignoretargetac": {
+    "category": "damage",
+    "displayLabel": "Ignore Target Defense"
+  },
+  "item_indesctructible": {
+    "category": "defense",
+    "displayLabel": "Indestructible"
+  },
+  "item_knockback": {
+    "category": "utility",
+    "displayLabel": "Knockback"
+  },
+  "item_leap_speed": {
+    "category": "speed",
+    "displayLabel": "Leap Speed Bonus"
+  },
+  "item_levelreq": {
+    "category": "utility",
+    "displayLabel": "Level Requirement Reduced By"
+  },
+  "item_lightradius": {
+    "category": "utility",
+    "displayLabel": "Light Radius"
+  },
+  "item_magicarrow": {
+    "category": "skill",
+    "displayLabel": "Fires Magic Arrows"
+  },
+  "item_magicbonus": {
+    "category": "utility",
+    "displayLabel": "Magic Find"
+  },
+  "item_mana_perlevel": {
+    "category": "stat",
+    "displayLabel": "+Mana Per Level"
+  },
+  "item_manaafterkill": {
+    "category": "leech",
+    "displayLabel": "Mana After Each Kill"
+  },
+  "item_maxdamage_percent": {
+    "category": "damage",
+    "displayLabel": "+Max Damage %"
+  },
+  "item_maxdamage_percent_perlevel": {
+    "category": "damage",
+    "displayLabel": "+Max Damage % Per Level"
+  },
+  "item_maxdamage_perlevel": {
+    "category": "damage",
+    "displayLabel": "+Max Damage Per Level"
+  },
+  "item_maxdeadlystrike": {
+    "category": "damage",
+    "displayLabel": "Max Deadly Strike"
+  },
+  "item_maxdurability_percent": {
+    "category": "defense",
+    "displayLabel": "+Max Durability %"
+  },
+  "item_maxhp_percent": {
+    "category": "stat",
+    "displayLabel": "+Life %"
+  },
+  "item_maxmana_percent": {
+    "category": "stat",
+    "displayLabel": "+Mana %"
+  },
+  "item_mindamage_energy": {
+    "category": "damage",
+    "displayLabel": "+Min Damage (Energy Factor)"
+  },
+  "item_mindamage_percent": {
+    "category": "damage",
+    "displayLabel": "+Min Damage %"
+  },
+  "item_nonclassskill": {
+    "category": "skill",
+    "displayLabel": "+X to Non-Class Skill"
+  },
+  "item_openwounds": {
+    "category": "damage",
+    "displayLabel": "Open Wounds"
+  },
+  "item_pierce": {
+    "category": "utility",
+    "displayLabel": "Piercing Attack"
+  },
+  "item_poisonlengthresist": {
+    "category": "resist",
+    "displayLabel": "Poison Length Reduced By"
+  },
+  "item_preventheal": {
+    "category": "utility",
+    "displayLabel": "Prevent Monster Heal"
+  },
+  "item_reanimate": {
+    "category": "proc",
+    "displayLabel": "Reanimate As"
+  },
+  "item_reducedprices": {
+    "category": "utility",
+    "displayLabel": "Reduced Vendor Prices"
+  },
+  "item_regenstamina_perlevel": {
+    "category": "stat",
+    "displayLabel": "+Stamina Regen Per Level"
+  },
+  "item_replenish_charges": {
+    "category": "utility",
+    "displayLabel": "Replenish Charges"
+  },
+  "item_replenish_durability": {
+    "category": "defense",
+    "displayLabel": "Replenish Durability"
+  },
+  "item_req_percent": {
+    "category": "utility",
+    "displayLabel": "Requirements %"
+  },
+  "item_restinpeace": {
+    "category": "utility",
+    "displayLabel": "Slain Monsters Rest in Peace"
+  },
+  "item_shiny_appearance": {
+    "category": "utility",
+    "displayLabel": "Shiny Appearance (Cosmetic)"
+  },
+  "item_singleskill": {
+    "category": "skill",
+    "displayLabel": "+X to Specific Skill"
+  },
+  "item_skillonattack": {
+    "category": "proc",
+    "displayLabel": "Proc On Attack"
+  },
+  "item_skillonblock": {
+    "category": "proc",
+    "displayLabel": "Proc On Block"
+  },
+  "item_skilloncast": {
+    "category": "proc",
+    "displayLabel": "Proc On Cast"
+  },
+  "item_skillondeath": {
+    "category": "proc",
+    "displayLabel": "Proc On Death"
+  },
+  "item_skillonequip": {
+    "category": "proc",
+    "displayLabel": "Proc On Equip"
+  },
+  "item_skillongethit": {
+    "category": "proc",
+    "displayLabel": "Proc On Getting Hit"
+  },
+  "item_skillonhit": {
+    "category": "proc",
+    "displayLabel": "Proc On Hit"
+  },
+  "item_skillonkill": {
+    "category": "proc",
+    "displayLabel": "Proc On Kill"
+  },
+  "item_skillonlevelup": {
+    "category": "proc",
+    "displayLabel": "Proc On Level Up"
+  },
+  "item_slow": {
+    "category": "utility",
+    "displayLabel": "Slows Target"
+  },
+  "item_splashonhit": {
+    "category": "damage",
+    "displayLabel": "Splash Damage On Hit"
+  },
+  "item_staminadrainpct": {
+    "category": "utility",
+    "displayLabel": "Less Stamina Drain %"
+  },
+  "item_strength_perlevel": {
+    "category": "stat",
+    "displayLabel": "+Strength Per Level"
+  },
+  "item_stupidity": {
+    "category": "utility",
+    "displayLabel": "Slows Target (Stupidity)"
+  },
+  "item_thorns_perlevel": {
+    "category": "leech",
+    "displayLabel": "Thorns Per Level"
+  },
+  "item_tohit_demon_perlevel": {
+    "category": "utility",
+    "displayLabel": "+Attack Rating vs Demons Per Level"
+  },
+  "item_tohit_percent": {
+    "category": "utility",
+    "displayLabel": "+Attack Rating %"
+  },
+  "item_tohit_perlevel": {
+    "category": "utility",
+    "displayLabel": "+Attack Rating Per Level"
+  },
+  "item_tohit_undead_perlevel": {
+    "category": "utility",
+    "displayLabel": "+Attack Rating vs Undead Per Level"
+  },
+  "item_undead_tohit": {
+    "category": "utility",
+    "displayLabel": "+Attack Rating vs Undead"
+  },
+  "item_undeaddamage_percent": {
+    "category": "damage",
+    "displayLabel": "Damage to Undead %"
+  },
+  "item_vitality_perlevel": {
+    "category": "stat",
+    "displayLabel": "+Vitality Per Level"
+  },
+  "joustreduction": {
+    "category": "defense",
+    "displayLabel": "Joust Reduction"
+  },
+  "joustreduction_leorics": {
+    "category": "defense",
+    "displayLabel": "Joust Reduction (Leoric)"
+  },
+  "lifedrain_percentcap": {
+    "category": "damage",
+    "displayLabel": "Life Drain % Cap"
+  },
+  "lifedrainmindam": {
+    "category": "damage",
+    "displayLabel": "Life Drain Min Damage"
+  },
+  "lightdam": {
+    "category": "damage",
+    "displayLabel": "Lightning  Damage"
+  },
+  "lightmindam": {
+    "category": "damage",
+    "displayLabel": "Lightning Min Damage"
+  },
+  "lightresist": {
+    "category": "resist",
+    "displayLabel": "Lightning Resist"
+  },
+  "magic_damage_reduction": {
+    "category": "resist",
+    "displayLabel": "Magic Damage Reduction"
+  },
+  "magicmaxdam": {
+    "category": "damage",
+    "displayLabel": "Magic Max Damage"
+  },
+  "magicmindam": {
+    "category": "damage",
+    "displayLabel": "Magic Min Damage"
+  },
+  "manadrainmindam": {
+    "category": "damage",
+    "displayLabel": "Mana Drain Min Damage"
+  },
+  "manarecoverybonus": {
+    "category": "stat",
+    "displayLabel": "Mana Recovery Bonus"
+  },
+  "max_curses": {
+    "category": "utility",
+    "displayLabel": "Max Curses"
+  },
+  "max_damage": {
+    "category": "damage",
+    "displayLabel": "+Max Physical Damage"
+  },
+  "maxcoldresist": {
+    "category": "resist",
+    "displayLabel": "Max Cold Resist"
+  },
+  "maxdamage": {
+    "category": "damage",
+    "displayLabel": "+Max Physical Damage"
+  },
+  "maxdamage_percent": {
+    "category": "damage",
+    "displayLabel": "+Max Damage %"
+  },
+  "maxdurability": {
+    "category": "defense",
+    "displayLabel": "+Max Durability"
+  },
+  "maxfireresist": {
+    "category": "resist",
+    "displayLabel": "Max Fire Resist"
+  },
+  "maxhp": {
+    "category": "stat",
+    "displayLabel": "+Life"
+  },
+  "maxlightresist": {
+    "category": "resist",
+    "displayLabel": "Max Lightning Resist"
+  },
+  "maxmana": {
+    "category": "stat",
+    "displayLabel": "+Mana"
+  },
+  "maxpoisonresist": {
+    "category": "resist",
+    "displayLabel": "Max Poison Resist"
+  },
+  "maxstamina": {
+    "category": "stat",
+    "displayLabel": "+Stamina"
+  },
+  "min_damage": {
+    "category": "damage",
+    "displayLabel": "+Min Physical Damage"
+  },
+  "mindamage": {
+    "category": "damage",
+    "displayLabel": "+Min Physical Damage"
+  },
+  "mirrored": {
+    "category": "utility",
+    "displayLabel": "Mirrored"
+  },
+  "no_wolves": {
+    "category": "skill",
+    "displayLabel": "No Wolves (Removes Wolves)"
+  },
+  "normal_damage_reduction": {
+    "category": "resist",
+    "displayLabel": "Physical Damage Reduction (Flat)"
+  },
+  "passive_cold_mastery": {
+    "category": "damage",
+    "displayLabel": "Cold Mastery"
+  },
+  "passive_cold_pierce": {
+    "category": "resist",
+    "displayLabel": "-Enemy Cold Pierce"
+  },
+  "passive_fire_mastery": {
+    "category": "damage",
+    "displayLabel": "Fire Mastery"
+  },
+  "passive_fire_pierce": {
+    "category": "resist",
+    "displayLabel": "-Enemy Fire Pierce"
+  },
+  "passive_ltng_mastery": {
+    "category": "damage",
+    "displayLabel": "Lightning Mastery"
+  },
+  "passive_ltng_pierce": {
+    "category": "resist",
+    "displayLabel": "-Enemy Lightning Pierce"
+  },
+  "passive_mag_mastery": {
+    "category": "damage",
+    "displayLabel": "Magic Mastery"
+  },
+  "passive_phys_pierce": {
+    "category": "damage",
+    "displayLabel": "Physical Pierce"
+  },
+  "passive_pois_mastery": {
+    "category": "damage",
+    "displayLabel": "Poison Mastery"
+  },
+  "passive_pois_pierce": {
+    "category": "resist",
+    "displayLabel": "-Enemy Poison Pierce"
+  },
+  "poisondam": {
+    "category": "damage",
+    "displayLabel": "Poison  Damage"
+  },
+  "poisonresist": {
+    "category": "resist",
+    "displayLabel": "Poison Resist"
+  },
+  "secondary_maxdamage": {
+    "category": "damage",
+    "displayLabel": "Secondary Max Damage"
+  },
+  "secondary_mindamage": {
+    "category": "damage",
+    "displayLabel": "Secondary Min Damage"
+  },
+  "staminarecoverybonus": {
+    "category": "stat",
+    "displayLabel": "Stamina Recovery Bonus"
+  },
+  "strength": {
+    "category": "stat",
+    "displayLabel": "+Strength"
+  },
+  "toblock": {
+    "category": "defense",
+    "displayLabel": "Chance to Block"
+  },
+  "tohit": {
+    "category": "utility",
+    "displayLabel": "+Attack Rating"
+  },
+  "vitality": {
+    "category": "stat",
+    "displayLabel": "+Vitality"
+  }
+}

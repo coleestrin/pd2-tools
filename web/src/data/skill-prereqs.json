@@ -1,0 +1,1885 @@
+{
+  "Amazon": {
+    "Jab": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Fend"
+      ]
+    },
+    "Poison Javelin": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Plague Javelin",
+        "Javelin and Spear Mastery"
+      ]
+    },
+    "Javelin and Spear Mastery": {
+      "prereqs": [
+        "Jab"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Power Strike": {
+      "prereqs": [
+        "Jab"
+      ],
+      "receivesBonusesFrom": [
+        "Lightning Strike",
+        "Lightning Bolt"
+      ]
+    },
+    "Lightning Bolt": {
+      "prereqs": [
+        "Jab",
+        "Poison Javelin",
+        "Power Strike"
+      ],
+      "receivesBonusesFrom": [
+        "Power Strike",
+        "Lightning Fury"
+      ]
+    },
+    "Fend": {
+      "prereqs": [
+        "Jab",
+        "Javelin and Spear Mastery"
+      ],
+      "receivesBonusesFrom": [
+        "Jab"
+      ]
+    },
+    "Charged Strike": {
+      "prereqs": [
+        "Jab",
+        "Power Strike"
+      ],
+      "receivesBonusesFrom": [
+        "Power Strike",
+        "Lightning Strike"
+      ]
+    },
+    "Plague Javelin": {
+      "prereqs": [
+        "Jab",
+        "Poison Javelin",
+        "Power Strike",
+        "Lightning Bolt"
+      ],
+      "receivesBonusesFrom": [
+        "Poison Javelin",
+        "Javelin and Spear Mastery"
+      ]
+    },
+    "Lightning Strike": {
+      "prereqs": [
+        "Jab",
+        "Power Strike",
+        "Charged Strike"
+      ],
+      "receivesBonusesFrom": [
+        "Power Strike",
+        "Charged Strike"
+      ]
+    },
+    "Lightning Fury": {
+      "prereqs": [
+        "Jab",
+        "Poison Javelin",
+        "Power Strike",
+        "Lightning Bolt",
+        "Plague Javelin"
+      ],
+      "receivesBonusesFrom": [
+        "Power Strike",
+        "Lightning Bolt"
+      ]
+    },
+    "Inner Sight": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Critical Strike": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Evade": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Slow Movement": {
+      "prereqs": [
+        "Inner Sight"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Pierce": {
+      "prereqs": [
+        "Critical Strike"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Dodge": {
+      "prereqs": [
+        "Inner Sight",
+        "Evade",
+        "Slow Movement"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Decoy": {
+      "prereqs": [
+        "Inner Sight",
+        "Slow Movement"
+      ],
+      "receivesBonusesFrom": [
+        "Strafe",
+        "Valkyrie"
+      ]
+    },
+    "Penetrate": {
+      "prereqs": [
+        "Critical Strike",
+        "Pierce"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Valkyrie": {
+      "prereqs": [
+        "Inner Sight",
+        "Slow Movement",
+        "Decoy"
+      ],
+      "receivesBonusesFrom": [
+        "Decoy",
+        "Pierce",
+        "Penetrate",
+        "Power Strike"
+      ]
+    },
+    "Magic Arrow": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Inner Sight",
+        "Slow Movement",
+        "Guided Arrow"
+      ]
+    },
+    "Multiple Shot": {
+      "prereqs": [
+        "Magic Arrow"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Fire Arrow": {
+      "prereqs": [
+        "Magic Arrow"
+      ],
+      "receivesBonusesFrom": [
+        "Magic Arrow",
+        "Immolation Arrow"
+      ]
+    },
+    "Cold Arrow": {
+      "prereqs": [
+        "Magic Arrow"
+      ],
+      "receivesBonusesFrom": [
+        "Magic Arrow",
+        "Ice Arrow"
+      ]
+    },
+    "Ice Arrow": {
+      "prereqs": [
+        "Magic Arrow",
+        "Cold Arrow"
+      ],
+      "receivesBonusesFrom": [
+        "Magic Arrow",
+        "Cold Arrow",
+        "Freezing Arrow"
+      ]
+    },
+    "Guided Arrow": {
+      "prereqs": [
+        "Magic Arrow",
+        "Multiple Shot"
+      ],
+      "receivesBonusesFrom": [
+        "Magic Arrow"
+      ]
+    },
+    "Exploding Arrow": {
+      "prereqs": [
+        "Magic Arrow",
+        "Fire Arrow"
+      ],
+      "receivesBonusesFrom": [
+        "Magic Arrow",
+        "Immolation Arrow"
+      ]
+    },
+    "Strafe": {
+      "prereqs": [
+        "Magic Arrow",
+        "Multiple Shot",
+        "Guided Arrow"
+      ],
+      "receivesBonusesFrom": [
+        "Penetrate"
+      ]
+    },
+    "Immolation Arrow": {
+      "prereqs": [
+        "Magic Arrow",
+        "Fire Arrow",
+        "Exploding Arrow"
+      ],
+      "receivesBonusesFrom": [
+        "Magic Arrow",
+        "Exploding Arrow",
+        "Fire Arrow"
+      ]
+    },
+    "Freezing Arrow": {
+      "prereqs": [
+        "Magic Arrow",
+        "Cold Arrow",
+        "Ice Arrow"
+      ],
+      "receivesBonusesFrom": [
+        "Cold Arrow",
+        "Ice Arrow"
+      ]
+    }
+  },
+  "Assassin": {
+    "Tiger Strike": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Dragon Talon": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Dragon Tail",
+        "Dragon Flight"
+      ]
+    },
+    "Dragon Claw": {
+      "prereqs": [
+        "Dragon Talon"
+      ],
+      "receivesBonusesFrom": [
+        "Claw and Dagger Mastery",
+        "Weapon Block"
+      ]
+    },
+    "Fists of Fire": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Tiger Strike",
+        "Dragon Flight"
+      ]
+    },
+    "Cobra Strike": {
+      "prereqs": [
+        "Tiger Strike"
+      ],
+      "receivesBonusesFrom": [
+        "Venom"
+      ]
+    },
+    "Claws of Thunder": {
+      "prereqs": [
+        "Fists of Fire"
+      ],
+      "receivesBonusesFrom": [
+        "Dragon Claw"
+      ]
+    },
+    "Dragon Tail": {
+      "prereqs": [
+        "Dragon Talon",
+        "Dragon Claw"
+      ],
+      "receivesBonusesFrom": [
+        "Dragon Talon",
+        "Dragon Flight"
+      ]
+    },
+    "Dragon Flight": {
+      "prereqs": [
+        "Dragon Talon",
+        "Dragon Claw",
+        "Dragon Tail"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Blades of Ice": {
+      "prereqs": [
+        "Fists of Fire",
+        "Claws of Thunder"
+      ],
+      "receivesBonusesFrom": [
+        "Tiger Strike"
+      ]
+    },
+    "Phoenix Strike": {
+      "prereqs": [
+        "Tiger Strike",
+        "Fists of Fire",
+        "Cobra Strike",
+        "Claws of Thunder",
+        "Blades of Ice"
+      ],
+      "receivesBonusesFrom": [
+        "Fists of Fire",
+        "Claws of Thunder",
+        "Blades of Ice"
+      ]
+    },
+    "Blade Dance": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Claw and Dagger Mastery": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Psychic Hammer": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Mind Blast",
+        "Cloak of Shadows",
+        "Shadow Warrior"
+      ]
+    },
+    "Burst of Speed": {
+      "prereqs": [
+        "Claw and Dagger Mastery"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Weapon Block": {
+      "prereqs": [
+        "Claw and Dagger Mastery"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Cloak of Shadows": {
+      "prereqs": [
+        "Psychic Hammer"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Mind Blast": {
+      "prereqs": [
+        "Psychic Hammer",
+        "Cloak of Shadows"
+      ],
+      "receivesBonusesFrom": [
+        "Psychic Hammer",
+        "Cloak of Shadows",
+        "Shadow Warrior"
+      ]
+    },
+    "Fade": {
+      "prereqs": [
+        "Claw and Dagger Mastery",
+        "Burst of Speed"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Shadow Warrior": {
+      "prereqs": [
+        "Claw and Dagger Mastery",
+        "Psychic Hammer",
+        "Weapon Block",
+        "Cloak of Shadows"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Shadow Master": {
+      "prereqs": [
+        "Claw and Dagger Mastery",
+        "Psychic Hammer",
+        "Weapon Block",
+        "Cloak of Shadows",
+        "Shadow Warrior"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Venom": {
+      "prereqs": [
+        "Claw and Dagger Mastery",
+        "Burst of Speed",
+        "Fade"
+      ],
+      "receivesBonusesFrom": [
+        "Cobra Strike"
+      ]
+    },
+    "Fire Blast": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Shock Web",
+        "Charged Bolt Sentry",
+        "Lightning Sentry",
+        "Chain Lightning Sentry",
+        "Wake of Fire",
+        "Wake of Inferno"
+      ]
+    },
+    "Shock Web": {
+      "prereqs": [
+        "Fire Blast"
+      ],
+      "receivesBonusesFrom": [
+        "Charged Bolt Sentry",
+        "Wake of Fire",
+        "Chain Lightning Sentry",
+        "Fire Blast",
+        "Lightning Sentry",
+        "Wake of Inferno"
+      ]
+    },
+    "Blade Sentinel": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Blade Fury",
+        "Blade Shield"
+      ]
+    },
+    "Charged Bolt Sentry": {
+      "prereqs": [
+        "Fire Blast",
+        "Shock Web"
+      ],
+      "receivesBonusesFrom": [
+        "Fire Blast",
+        "Lightning Sentry",
+        "Chain Lightning Sentry"
+      ]
+    },
+    "Wake of Fire": {
+      "prereqs": [
+        "Fire Blast"
+      ],
+      "receivesBonusesFrom": [
+        "Fire Blast",
+        "Wake of Inferno"
+      ]
+    },
+    "Blade Fury": {
+      "prereqs": [
+        "Blade Sentinel"
+      ],
+      "receivesBonusesFrom": [
+        "Blade Sentinel",
+        "Blade Shield"
+      ]
+    },
+    "Blade Shield": {
+      "prereqs": [
+        "Blade Sentinel",
+        "Blade Fury"
+      ],
+      "receivesBonusesFrom": [
+        "Blade Sentinel",
+        "Blade Fury"
+      ]
+    },
+    "Lightning Sentry": {
+      "prereqs": [
+        "Fire Blast",
+        "Shock Web",
+        "Charged Bolt Sentry"
+      ],
+      "receivesBonusesFrom": [
+        "Fire Blast",
+        "Charged Bolt Sentry",
+        "Chain Lightning Sentry"
+      ]
+    },
+    "Wake of Inferno": {
+      "prereqs": [
+        "Fire Blast",
+        "Wake of Fire"
+      ],
+      "receivesBonusesFrom": [
+        "Fire Blast",
+        "Wake of Fire"
+      ]
+    },
+    "Chain Lightning Sentry": {
+      "prereqs": [
+        "Fire Blast",
+        "Shock Web",
+        "Charged Bolt Sentry",
+        "Lightning Sentry"
+      ],
+      "receivesBonusesFrom": [
+        "Fire Blast",
+        "Charged Bolt Sentry",
+        "Lightning Sentry"
+      ]
+    },
+    "Death Sentry": {
+      "prereqs": [
+        "Fire Blast",
+        "Shock Web",
+        "Charged Bolt Sentry",
+        "Wake of Fire",
+        "Lightning Sentry",
+        "Wake of Inferno"
+      ],
+      "receivesBonusesFrom": [
+        "Wake of Inferno",
+        "Fire Blast"
+      ]
+    }
+  },
+  "Barbarian": {
+    "Howl": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Find Potion": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Shout": {
+      "prereqs": [
+        "Howl"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "War Cry": {
+      "prereqs": [
+        "Howl"
+      ],
+      "receivesBonusesFrom": [
+        "Howl",
+        "Battle Cry",
+        "Taunt",
+        "Shout",
+        "Battle Command",
+        "Battle Orders"
+      ]
+    },
+    "Find Item": {
+      "prereqs": [
+        "Find Potion"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Taunt": {
+      "prereqs": [
+        "Howl",
+        "War Cry"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Battle Orders": {
+      "prereqs": [
+        "Howl",
+        "Shout"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Grim Ward": {
+      "prereqs": [
+        "Howl",
+        "War Cry",
+        "Taunt"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Battle Command": {
+      "prereqs": [
+        "Howl",
+        "Shout",
+        "Battle Orders"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Battle Cry": {
+      "prereqs": [
+        "Howl",
+        "Shout",
+        "War Cry",
+        "Taunt",
+        "Battle Orders"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "One Handed Mastery": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Throwing Mastery": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Two Handed Mastery": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Combat Reflexes": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Iron Skin": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Increased Speed": {
+      "prereqs": [
+        "Combat Reflexes"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Natural Resistance": {
+      "prereqs": [
+        "Iron Skin"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Deep Wounds": {
+      "prereqs": [
+        "Combat Reflexes",
+        "Iron Skin",
+        "Increased Speed"
+      ],
+      "receivesBonusesFrom": [
+        "Grim Ward"
+      ]
+    },
+    "Bash": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Stun",
+        "Concentrate"
+      ]
+    },
+    "Double Swing": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Frenzy",
+        "Stun"
+      ]
+    },
+    "Frenzy": {
+      "prereqs": [
+        "Double Swing"
+      ],
+      "receivesBonusesFrom": [
+        "Double Swing",
+        "Stun"
+      ]
+    },
+    "Stun": {
+      "prereqs": [
+        "Bash"
+      ],
+      "receivesBonusesFrom": [
+        "Concentrate"
+      ]
+    },
+    "Concentrate": {
+      "prereqs": [
+        "Double Swing"
+      ],
+      "receivesBonusesFrom": [
+        "Bash",
+        "Battle Command"
+      ]
+    },
+    "Double Throw": {
+      "prereqs": [
+        "Double Swing",
+        "Frenzy"
+      ],
+      "receivesBonusesFrom": [
+        "Double Swing",
+        "Frenzy"
+      ]
+    },
+    "Leap": {
+      "prereqs": [
+        "Bash",
+        "Stun"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Split Throw": {
+      "prereqs": [
+        "Double Swing",
+        "Frenzy",
+        "Double Throw",
+        "Concentrate"
+      ],
+      "receivesBonusesFrom": [
+        "Concentrate",
+        "Increased Speed"
+      ]
+    },
+    "Leap Attack": {
+      "prereqs": [
+        "Bash",
+        "Double Swing",
+        "Stun",
+        "Leap",
+        "Concentrate"
+      ],
+      "receivesBonusesFrom": [
+        "Leap",
+        "Bash"
+      ]
+    },
+    "Berserk": {
+      "prereqs": [
+        "Double Swing",
+        "Concentrate"
+      ],
+      "receivesBonusesFrom": [
+        "Taunt",
+        "Combat Reflexes"
+      ]
+    },
+    "Whirlwind": {
+      "prereqs": [
+        "Double Swing",
+        "Concentrate",
+        "Berserk"
+      ],
+      "receivesBonusesFrom": []
+    }
+  },
+  "Druid": {
+    "Firestorm": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Molten Boulder",
+        "Fissure"
+      ]
+    },
+    "Arctic Blast": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Hurricane",
+        "Tornado",
+        "Cyclone Armor"
+      ]
+    },
+    "Molten Boulder": {
+      "prereqs": [
+        "Firestorm"
+      ],
+      "receivesBonusesFrom": [
+        "Fissure",
+        "Volcano",
+        "Armageddon"
+      ]
+    },
+    "Cyclone Armor": {
+      "prereqs": [
+        "Arctic Blast"
+      ],
+      "receivesBonusesFrom": [
+        "Twister",
+        "Tornado"
+      ]
+    },
+    "Fissure": {
+      "prereqs": [
+        "Firestorm",
+        "Molten Boulder"
+      ],
+      "receivesBonusesFrom": [
+        "Firestorm",
+        "Molten Boulder"
+      ]
+    },
+    "Twister": {
+      "prereqs": [
+        "Arctic Blast",
+        "Cyclone Armor"
+      ],
+      "receivesBonusesFrom": [
+        "Hurricane",
+        "Tornado",
+        "Arctic Blast"
+      ]
+    },
+    "Gust": {
+      "prereqs": [
+        "Arctic Blast",
+        "Cyclone Armor"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Volcano": {
+      "prereqs": [
+        "Firestorm",
+        "Molten Boulder",
+        "Fissure"
+      ],
+      "receivesBonusesFrom": [
+        "Molten Boulder",
+        "Fissure",
+        "Armageddon"
+      ]
+    },
+    "Tornado": {
+      "prereqs": [
+        "Arctic Blast",
+        "Cyclone Armor",
+        "Twister"
+      ],
+      "receivesBonusesFrom": [
+        "Arctic Blast",
+        "Twister",
+        "Hurricane"
+      ]
+    },
+    "Hurricane": {
+      "prereqs": [
+        "Arctic Blast",
+        "Cyclone Armor",
+        "Twister",
+        "Tornado"
+      ],
+      "receivesBonusesFrom": [
+        "Arctic Blast",
+        "Tornado"
+      ]
+    },
+    "Armageddon": {
+      "prereqs": [
+        "Firestorm",
+        "Molten Boulder",
+        "Fissure",
+        "Volcano"
+      ],
+      "receivesBonusesFrom": [
+        "Molten Boulder",
+        "Volcano",
+        "Fire Claws"
+      ]
+    },
+    "Werewolf": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Werebear": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Lycanthropy": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Feral Rage": {
+      "prereqs": [
+        "Werewolf"
+      ],
+      "receivesBonusesFrom": [
+        "Fury"
+      ]
+    },
+    "Maul": {
+      "prereqs": [
+        "Werebear"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Hunger": {
+      "prereqs": [
+        "Werebear",
+        "Maul"
+      ],
+      "receivesBonusesFrom": [
+        "Maul"
+      ]
+    },
+    "Rabies": {
+      "prereqs": [
+        "Werewolf",
+        "Feral Rage"
+      ],
+      "receivesBonusesFrom": [
+        "Poison Creeper",
+        "Feral Rage",
+        "Lycanthropy"
+      ]
+    },
+    "Shock Wave": {
+      "prereqs": [
+        "Werebear",
+        "Maul"
+      ],
+      "receivesBonusesFrom": [
+        "Werebear",
+        "Twister"
+      ]
+    },
+    "Fire Claws": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Molten Boulder",
+        "Armageddon"
+      ]
+    },
+    "Fury": {
+      "prereqs": [
+        "Werewolf",
+        "Feral Rage",
+        "Rabies"
+      ],
+      "receivesBonusesFrom": [
+        "Feral Rage"
+      ]
+    },
+    "Summon Ravens": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Summon Spirit Wolf",
+        "Summon Dire Wolf",
+        "Summon Grizzly"
+      ]
+    },
+    "Poison Creeper": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Carrion Vine",
+        "Solar Creeper",
+        "Rabies"
+      ]
+    },
+    "Heart of Wolverine": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Summon Spirit Wolf": {
+      "prereqs": [
+        "Summon Ravens",
+        "Heart of Wolverine"
+      ],
+      "receivesBonusesFrom": [
+        "Summon Ravens",
+        "Summon Dire Wolf"
+      ]
+    },
+    "Carrion Vine": {
+      "prereqs": [
+        "Poison Creeper"
+      ],
+      "receivesBonusesFrom": [
+        "Oak Sage",
+        "Solar Creeper"
+      ]
+    },
+    "Spirit of Barbs": {
+      "prereqs": [
+        "Heart of Wolverine"
+      ],
+      "receivesBonusesFrom": [
+        "Carrion Vine"
+      ]
+    },
+    "Summon Dire Wolf": {
+      "prereqs": [
+        "Summon Ravens",
+        "Heart of Wolverine",
+        "Summon Spirit Wolf"
+      ],
+      "receivesBonusesFrom": [
+        "Summon Ravens",
+        "Summon Spirit Wolf"
+      ]
+    },
+    "Solar Creeper": {
+      "prereqs": [
+        "Poison Creeper",
+        "Carrion Vine"
+      ],
+      "receivesBonusesFrom": [
+        "Oak Sage",
+        "Carrion Vine"
+      ]
+    },
+    "Oak Sage": {
+      "prereqs": [
+        "Heart of Wolverine",
+        "Spirit of Barbs"
+      ],
+      "receivesBonusesFrom": [
+        "Carrion Vine",
+        "Solar Creeper"
+      ]
+    },
+    "Summon Grizzly": {
+      "prereqs": [
+        "Summon Ravens",
+        "Heart of Wolverine",
+        "Summon Spirit Wolf",
+        "Summon Dire Wolf"
+      ],
+      "receivesBonusesFrom": [
+        "Summon Ravens",
+        "Summon Spirit Wolf"
+      ]
+    }
+  },
+  "Necromancer": {
+    "Raise Skeleton Warrior": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Skeleton Mastery",
+        "Raise Skeleton Archer"
+      ]
+    },
+    "Skeleton Mastery": {
+      "prereqs": [
+        "Raise Skeleton Warrior"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Clay Golem": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Golem Mastery",
+        "Blood Golem",
+        "Iron Golem",
+        "Fire Golem"
+      ]
+    },
+    "Raise Skeletal Mage": {
+      "prereqs": [
+        "Raise Skeleton Warrior"
+      ],
+      "receivesBonusesFrom": [
+        "Skeleton Mastery"
+      ]
+    },
+    "Golem Mastery": {
+      "prereqs": [
+        "Clay Golem"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Blood Golem": {
+      "prereqs": [
+        "Clay Golem"
+      ],
+      "receivesBonusesFrom": [
+        "Golem Mastery",
+        "Clay Golem",
+        "Iron Golem",
+        "Fire Golem"
+      ]
+    },
+    "Blood Warp": {
+      "prereqs": [
+        "Clay Golem",
+        "Blood Golem"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Iron Golem": {
+      "prereqs": [
+        "Clay Golem",
+        "Blood Golem"
+      ],
+      "receivesBonusesFrom": [
+        "Golem Mastery",
+        "Clay Golem",
+        "Blood Golem",
+        "Fire Golem"
+      ]
+    },
+    "Raise Skeleton Archer": {
+      "prereqs": [
+        "Raise Skeleton Warrior",
+        "Raise Skeletal Mage"
+      ],
+      "receivesBonusesFrom": [
+        "Skeleton Mastery",
+        "Raise Skeleton Warrior"
+      ]
+    },
+    "Fire Golem": {
+      "prereqs": [
+        "Clay Golem",
+        "Blood Golem",
+        "Iron Golem"
+      ],
+      "receivesBonusesFrom": [
+        "Golem Mastery",
+        "Clay Golem",
+        "Blood Golem",
+        "Iron Golem"
+      ]
+    },
+    "Revive": {
+      "prereqs": [
+        "Raise Skeleton Warrior",
+        "Raise Skeletal Mage",
+        "Raise Skeleton Archer"
+      ],
+      "receivesBonusesFrom": [
+        "Desecrate"
+      ]
+    },
+    "Teeth": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Bone Armor",
+        "Bone Spear",
+        "Bone Spirit"
+      ]
+    },
+    "Poison Strike": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Desecrate",
+        "Bone Armor"
+      ]
+    },
+    "Bone Armor": {
+      "prereqs": [
+        "Teeth"
+      ],
+      "receivesBonusesFrom": [
+        "Bone Wall",
+        "Bone Prison"
+      ]
+    },
+    "Corpse Explosion": {
+      "prereqs": [
+        "Poison Strike"
+      ],
+      "receivesBonusesFrom": [
+        "Amplify Damage",
+        "Desecrate",
+        "Revive"
+      ]
+    },
+    "Bone Wall": {
+      "prereqs": [
+        "Teeth",
+        "Bone Armor"
+      ],
+      "receivesBonusesFrom": [
+        "Bone Armor",
+        "Bone Prison"
+      ]
+    },
+    "Desecrate": {
+      "prereqs": [
+        "Poison Strike",
+        "Corpse Explosion"
+      ],
+      "receivesBonusesFrom": [
+        "Poison Strike",
+        "Poison Nova"
+      ]
+    },
+    "Bone Spear": {
+      "prereqs": [
+        "Teeth"
+      ],
+      "receivesBonusesFrom": [
+        "Teeth",
+        "Bone Spirit",
+        "Bone Armor"
+      ]
+    },
+    "Bone Prison": {
+      "prereqs": [
+        "Teeth",
+        "Bone Armor",
+        "Bone Wall",
+        "Bone Spear"
+      ],
+      "receivesBonusesFrom": [
+        "Bone Armor",
+        "Bone Wall"
+      ]
+    },
+    "Poison Nova": {
+      "prereqs": [
+        "Poison Strike",
+        "Corpse Explosion",
+        "Desecrate"
+      ],
+      "receivesBonusesFrom": [
+        "Poison Strike",
+        "Desecrate"
+      ]
+    },
+    "Bone Spirit": {
+      "prereqs": [
+        "Teeth",
+        "Bone Spear"
+      ],
+      "receivesBonusesFrom": [
+        "Teeth",
+        "Bone Spear",
+        "Bone Armor"
+      ]
+    },
+    "Amplify Damage": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Curse Mastery"
+      ]
+    },
+    "Curse Mastery": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Dim Vision": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Curse Mastery"
+      ]
+    },
+    "Dark Pact": {
+      "prereqs": [
+        "Amplify Damage"
+      ],
+      "receivesBonusesFrom": [
+        "Curse Mastery",
+        "Iron Maiden"
+      ]
+    },
+    "Iron Maiden": {
+      "prereqs": [
+        "Amplify Damage",
+        "Dark Pact"
+      ],
+      "receivesBonusesFrom": [
+        "Curse Mastery"
+      ]
+    },
+    "Life Tap": {
+      "prereqs": [
+        "Amplify Damage"
+      ],
+      "receivesBonusesFrom": [
+        "Curse Mastery"
+      ]
+    },
+    "Terror": {
+      "prereqs": [
+        "Dim Vision"
+      ],
+      "receivesBonusesFrom": [
+        "Curse Mastery"
+      ]
+    },
+    "Weaken": {
+      "prereqs": [
+        "Amplify Damage",
+        "Life Tap"
+      ],
+      "receivesBonusesFrom": [
+        "Curse Mastery"
+      ]
+    },
+    "Confuse": {
+      "prereqs": [
+        "Dim Vision",
+        "Terror"
+      ],
+      "receivesBonusesFrom": [
+        "Curse Mastery"
+      ]
+    },
+    "Attract": {
+      "prereqs": [
+        "Dim Vision",
+        "Terror",
+        "Confuse"
+      ],
+      "receivesBonusesFrom": [
+        "Curse Mastery"
+      ]
+    },
+    "Decrepify": {
+      "prereqs": [
+        "Amplify Damage",
+        "Life Tap",
+        "Weaken"
+      ],
+      "receivesBonusesFrom": [
+        "Curse Mastery"
+      ]
+    },
+    "Lower Resist": {
+      "prereqs": [
+        "Amplify Damage",
+        "Life Tap",
+        "Weaken"
+      ],
+      "receivesBonusesFrom": [
+        "Curse Mastery"
+      ]
+    }
+  },
+  "Paladin": {
+    "Prayer": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Resist Fire": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Resist Cold": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Resist Lightning": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Defiance": {
+      "prereqs": [
+        "Prayer"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Cleansing": {
+      "prereqs": [
+        "Prayer"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Vigor": {
+      "prereqs": [
+        "Prayer",
+        "Defiance"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Meditation": {
+      "prereqs": [
+        "Prayer",
+        "Cleansing"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Redemption": {
+      "prereqs": [
+        "Prayer",
+        "Defiance",
+        "Vigor"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Salvation": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Might": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Holy Fire": {
+      "prereqs": [
+        "Might"
+      ],
+      "receivesBonusesFrom": [
+        "Resist Fire",
+        "Salvation",
+        "Blessed Aim"
+      ]
+    },
+    "Thorns": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Might",
+        "Defiance"
+      ]
+    },
+    "Blessed Aim": {
+      "prereqs": [
+        "Might"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Concentration": {
+      "prereqs": [
+        "Might",
+        "Blessed Aim"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Holy Freeze": {
+      "prereqs": [
+        "Might",
+        "Holy Fire"
+      ],
+      "receivesBonusesFrom": [
+        "Resist Cold",
+        "Salvation",
+        "Blessed Aim"
+      ]
+    },
+    "Holy Shock": {
+      "prereqs": [
+        "Might",
+        "Holy Fire",
+        "Holy Freeze"
+      ],
+      "receivesBonusesFrom": [
+        "Resist Lightning",
+        "Salvation",
+        "Blessed Aim"
+      ]
+    },
+    "Sanctuary": {
+      "prereqs": [
+        "Might",
+        "Holy Fire",
+        "Thorns",
+        "Holy Freeze"
+      ],
+      "receivesBonusesFrom": [
+        "Might",
+        "Blessed Aim",
+        "Holy Sword"
+      ]
+    },
+    "Fanaticism": {
+      "prereqs": [
+        "Might",
+        "Blessed Aim",
+        "Concentration"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Conviction": {
+      "prereqs": [
+        "Might",
+        "Thorns",
+        "Holy Fire",
+        "Holy Freeze",
+        "Sanctuary"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Zeal": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Sacrifice"
+      ]
+    },
+    "Holy Bolt": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Holy Light",
+        "Fist of the Heavens",
+        "Holy Nova",
+        "Prayer"
+      ]
+    },
+    "Smite": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Sacrifice": {
+      "prereqs": [
+        "Zeal"
+      ],
+      "receivesBonusesFrom": [
+        "Redemption",
+        "Fanaticism"
+      ]
+    },
+    "Holy Light": {
+      "prereqs": [
+        "Holy Bolt"
+      ],
+      "receivesBonusesFrom": [
+        "Holy Bolt",
+        "Fist of the Heavens",
+        "Prayer"
+      ]
+    },
+    "Charge": {
+      "prereqs": [
+        "Smite"
+      ],
+      "receivesBonusesFrom": [
+        "Vigor",
+        "Might"
+      ]
+    },
+    "Vengeance": {
+      "prereqs": [
+        "Sacrifice",
+        "Zeal"
+      ],
+      "receivesBonusesFrom": [
+        "Holy Fire",
+        "Holy Freeze",
+        "Holy Shock",
+        "Conviction"
+      ]
+    },
+    "Blessed Hammer": {
+      "prereqs": [
+        "Holy Bolt",
+        "Holy Light"
+      ],
+      "receivesBonusesFrom": [
+        "Blessed Aim",
+        "Vigor"
+      ]
+    },
+    "Holy Shield": {
+      "prereqs": [
+        "Smite",
+        "Charge"
+      ],
+      "receivesBonusesFrom": [
+        "Smite",
+        "Defiance"
+      ]
+    },
+    "Joust": {
+      "prereqs": [
+        "Sacrifice",
+        "Zeal",
+        "Vengeance"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Fist of the Heavens": {
+      "prereqs": [
+        "Holy Bolt",
+        "Holy Light",
+        "Blessed Hammer"
+      ],
+      "receivesBonusesFrom": [
+        "Holy Bolt",
+        "Holy Light",
+        "Holy Nova"
+      ]
+    },
+    "Holy Sword": {
+      "prereqs": [
+        "Smite",
+        "Charge"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Holy Nova": {
+      "prereqs": [
+        "Holy Bolt",
+        "Smite",
+        "Holy Light",
+        "Charge",
+        "Blessed Hammer",
+        "Holy Shield",
+        "Fist of the Heavens",
+        "Holy Sword"
+      ],
+      "receivesBonusesFrom": [
+        "Prayer",
+        "Holy Light",
+        "Holy Bolt",
+        "Fist of the Heavens"
+      ]
+    }
+  },
+  "Sorceress": {
+    "Ice Bolt": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Ice Blast",
+        "Glacial Spike"
+      ]
+    },
+    "Cold Enchant": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Chilling Armor"
+      ]
+    },
+    "Frost Nova": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Ice Bolt",
+        "Shiver Armor"
+      ]
+    },
+    "Ice Blast": {
+      "prereqs": [
+        "Ice Bolt"
+      ],
+      "receivesBonusesFrom": [
+        "Ice Bolt",
+        "Glacial Spike"
+      ]
+    },
+    "Shiver Armor": {
+      "prereqs": [
+        "Cold Enchant",
+        "Ice Bolt"
+      ],
+      "receivesBonusesFrom": [
+        "Cold Enchant"
+      ]
+    },
+    "Glacial Spike": {
+      "prereqs": [
+        "Ice Bolt",
+        "Ice Blast"
+      ],
+      "receivesBonusesFrom": [
+        "Ice Bolt",
+        "Ice Blast",
+        "Blizzard"
+      ]
+    },
+    "Chilling Armor": {
+      "prereqs": [
+        "Cold Enchant",
+        "Ice Bolt",
+        "Ice Blast",
+        "Shiver Armor"
+      ],
+      "receivesBonusesFrom": [
+        "Cold Enchant"
+      ]
+    },
+    "Ice Barrage": {
+      "prereqs": [
+        "Ice Bolt",
+        "Ice Blast",
+        "Glacial Spike"
+      ],
+      "receivesBonusesFrom": [
+        "Ice Bolt",
+        "Glacial Spike"
+      ]
+    },
+    "Blizzard": {
+      "prereqs": [
+        "Ice Bolt",
+        "Ice Blast",
+        "Frost Nova",
+        "Glacial Spike"
+      ],
+      "receivesBonusesFrom": [
+        "Ice Bolt",
+        "Ice Blast"
+      ]
+    },
+    "Frozen Orb": {
+      "prereqs": [
+        "Ice Bolt",
+        "Ice Blast",
+        "Frost Nova",
+        "Glacial Spike",
+        "Blizzard"
+      ],
+      "receivesBonusesFrom": [
+        "Ice Bolt",
+        "Frost Nova"
+      ]
+    },
+    "Cold Mastery": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Charged Bolt": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Telekinesis",
+        "Lightning"
+      ]
+    },
+    "Telekinesis": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Charged Bolt",
+        "Nova"
+      ]
+    },
+    "Static Field": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Lightning Mastery"
+      ]
+    },
+    "Nova": {
+      "prereqs": [
+        "Charged Bolt"
+      ],
+      "receivesBonusesFrom": [
+        "Charged Bolt",
+        "Telekinesis"
+      ]
+    },
+    "Lightning": {
+      "prereqs": [
+        "Charged Bolt"
+      ],
+      "receivesBonusesFrom": [
+        "Charged Bolt",
+        "Chain Lightning"
+      ]
+    },
+    "Teleport": {
+      "prereqs": [
+        "Telekinesis"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Chain Lightning": {
+      "prereqs": [
+        "Charged Bolt",
+        "Lightning"
+      ],
+      "receivesBonusesFrom": [
+        "Charged Bolt",
+        "Lightning"
+      ]
+    },
+    "Thunder Storm": {
+      "prereqs": [
+        "Charged Bolt",
+        "Lightning",
+        "Nova"
+      ],
+      "receivesBonusesFrom": [
+        "Charged Bolt",
+        "Nova"
+      ]
+    },
+    "Energy Shield": {
+      "prereqs": [
+        "Charged Bolt",
+        "Telekinesis",
+        "Lightning",
+        "Teleport",
+        "Chain Lightning"
+      ],
+      "receivesBonusesFrom": []
+    },
+    "Lightning Mastery": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Fire Bolt": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Fire Ball",
+        "Combustion"
+      ]
+    },
+    "Warmth": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    },
+    "Inferno": {
+      "prereqs": [],
+      "receivesBonusesFrom": [
+        "Blaze",
+        "Fire Wall"
+      ]
+    },
+    "Blaze": {
+      "prereqs": [
+        "Inferno"
+      ],
+      "receivesBonusesFrom": [
+        "Fire Wall"
+      ]
+    },
+    "Fire Wall": {
+      "prereqs": [
+        "Inferno",
+        "Blaze"
+      ],
+      "receivesBonusesFrom": [
+        "Blaze"
+      ]
+    },
+    "Fire Ball": {
+      "prereqs": [
+        "Fire Bolt"
+      ],
+      "receivesBonusesFrom": [
+        "Fire Bolt",
+        "Combustion"
+      ]
+    },
+    "Lesser Hydra": {
+      "prereqs": [
+        "Warmth"
+      ],
+      "receivesBonusesFrom": [
+        "Fire Bolt",
+        "Hydra"
+      ]
+    },
+    "Enchant Fire": {
+      "prereqs": [
+        "Fire Bolt",
+        "Warmth",
+        "Fire Ball",
+        "Lesser Hydra"
+      ],
+      "receivesBonusesFrom": [
+        "Warmth"
+      ]
+    },
+    "Meteor": {
+      "prereqs": [
+        "Fire Bolt",
+        "Inferno",
+        "Blaze",
+        "Fire Wall",
+        "Fire Ball"
+      ],
+      "receivesBonusesFrom": [
+        "Fire Ball",
+        "Blaze",
+        "Inferno"
+      ]
+    },
+    "Combustion": {
+      "prereqs": [
+        "Fire Bolt",
+        "Fire Ball"
+      ],
+      "receivesBonusesFrom": [
+        "Fire Bolt",
+        "Fire Ball"
+      ]
+    },
+    "Hydra": {
+      "prereqs": [
+        "Fire Bolt",
+        "Warmth",
+        "Fire Ball",
+        "Lesser Hydra",
+        "Enchant Fire"
+      ],
+      "receivesBonusesFrom": [
+        "Fire Bolt",
+        "Lesser Hydra"
+      ]
+    },
+    "Fire Mastery": {
+      "prereqs": [],
+      "receivesBonusesFrom": []
+    }
+  }
+}
