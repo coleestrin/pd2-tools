@@ -21,7 +21,7 @@ export interface IMetaQuery {
   gameMode: GameMode;
   className: string;
   minLevel: number;
-  /** Empty array allowed — returns class-only cohort. */
+  /** Empty array allowed: returns class-only cohort. */
   skills: ISkillRequirement[];
 }
 
@@ -54,7 +54,7 @@ export interface ISkillUsageRow {
 }
 
 /**
- * Classified skill-usage row — extends the simple ISkillUsageRow with
+ * Classified skill-usage row: extends the simple ISkillUsageRow with
  * prereq/build breakdown. Returned by aggregateSkillUsageClassified.
  *
  * numAsBuild + numAsPrereq === numOccurrences for every row.
@@ -73,9 +73,9 @@ export interface IClassifiedSkillRow {
   /** Characters where the skill is 1pt and only present to
    *  unlock another skill they've actually invested in. */
   numAsPrereq: number;
-  /** Characters with base_level >= 20 hard points in the skill —
-   *  matches pd2.tools/builds' `analyzeSkillUsage` threshold and is the
-   *  cleanest "is this the build's focus skill?" signal. */
+  /** Characters with base_level >= 20 hard points in the skill. Matches
+   *  pd2.tools/builds' `analyzeSkillUsage` threshold; cleanest "is this
+   *  the build's focus skill?" signal. */
   numAtTwenty: number;
   totalSample: number;
   /** numOccurrences / totalSample * 100 */
@@ -101,7 +101,7 @@ export interface ILevelDistribution {
 /**
  * One row in the affix-mod frequency table.
  *
- * `modKey` is an opaque bucket key — for most mods it equals the modifier
+ * `modKey` is an opaque bucket key: for most mods it equals the modifier
  * `name` (e.g. "item_fastercastrate"). For `item_addskill_tab` entries it
  * is suffixed with the tab name:
  *   "item_addskill_tab|Combat Skills (Paladin Only)"
@@ -135,7 +135,7 @@ export interface IAvgStatRow {
 export interface IMetaResponse {
   cohortSize: number;
   itemUsage: IItemUsageRow[];
-  /** Classified skill usage — prereq/build breakdown per skill, sorted by pctBuild desc. */
+  /** Classified skill usage: prereq/build breakdown per skill, sorted by pctBuild desc. */
   skillUsage: IClassifiedSkillRow[];
   mercTypeUsage: IMercTypeUsageRow[];
   mercItemUsage: IItemUsageRow[];

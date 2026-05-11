@@ -1,7 +1,7 @@
 /**
  * Request + response types for the /api/v1/meta endpoint.
  *
- * Intentionally mirrored from api/src/types/meta.ts — web/ and api/ are
+ * Intentionally mirrored from api/src/types/meta.ts: web/ and api/ are
  * independent npm packages with no shared types module. Keep in sync with
  * the backend's IMetaResponse / IMetaQuery / friends.
  *
@@ -21,7 +21,7 @@ export interface IMetaQuery {
   gameMode: GameMode;
   className: string;
   minLevel: number;
-  /** Empty array allowed — returns class-only cohort. */
+  /** Empty array allowed: returns class-only cohort. */
   skills: ISkillRequirement[];
   season?: number;
 }
@@ -50,7 +50,7 @@ export interface ISkillUsageRow {
 }
 
 /**
- * Classified skill-usage row — mirrors api/src/types/meta.ts IClassifiedSkillRow.
+ * Classified skill-usage row: mirrors api/src/types/meta.ts IClassifiedSkillRow.
  * numAsBuild + numAsPrereq === numOccurrences for every row.
  * numAtTwenty <= numOccurrences (hard-points threshold subset).
  */
@@ -59,9 +59,9 @@ export interface IClassifiedSkillRow {
   numOccurrences: number;
   numAsBuild: number;
   numAsPrereq: number;
-  /** Characters with base_level >= 20 hard points in the skill —
-   *  matches pd2.tools/builds' threshold. The cleanest "is this the
-   *  build's focus skill?" signal. */
+  /** Characters with base_level >= 20 hard points in the skill. Matches
+   *  pd2.tools/builds' threshold; cleanest "is this the build's focus
+   *  skill?" signal. */
   numAtTwenty: number;
   totalSample: number;
   pct: number;
@@ -90,7 +90,7 @@ export interface ILevelDistribution {
 /**
  * One row in the affix-mod frequency table.
  *
- * `modKey` is an opaque bucket key — for most mods it equals the modifier
+ * `modKey` is an opaque bucket key: for most mods it equals the modifier
  * `name` (e.g. "item_fastercastrate"). For `item_addskill_tab` entries it
  * is suffixed with the tab name:
  *   "item_addskill_tab|Combat Skills (Paladin Only)"

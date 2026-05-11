@@ -118,7 +118,7 @@ export function DiffView({ characterName, meta, gameMode = "softcore" }: Props) 
           <Text component="span" c="dimmed" size="sm">
             {" "}({diff.accountName})
           </Text>
-          {" — "}
+          {", "}
           <Text component="span" fw={600}>
             L{diff.characterLevel}
           </Text>{" "}
@@ -134,7 +134,7 @@ export function DiffView({ characterName, meta, gameMode = "softcore" }: Props) 
           </Text>
           {diff.mercTypeMatchesPool === null ? (
             <Text size="sm" c="dimmed" fs="italic">
-              — No merc data —
+              No merc data
             </Text>
           ) : diff.mercTypeMatchesPool ? (
             <Group gap="xs">
@@ -146,7 +146,7 @@ export function DiffView({ characterName, meta, gameMode = "softcore" }: Props) 
             <Group gap="xs">
               <Badge color="red" variant="light">mismatch</Badge>
               <Text size="sm">{diff.userMercType ?? "(none)"}</Text>
-              <Text size="xs" c="dimmed">— pool top: {diff.poolMercType}</Text>
+              <Text size="xs" c="dimmed">pool top: {diff.poolMercType}</Text>
             </Group>
           )}
         </Group>
@@ -170,7 +170,7 @@ export function DiffView({ characterName, meta, gameMode = "softcore" }: Props) 
                 <Text size="sm" fw={500}>
                   {s.poolTopItemName ?? (
                     <Text component="span" c="dimmed" fs="italic">
-                      —
+                      -
                     </Text>
                   )}
                 </Text>

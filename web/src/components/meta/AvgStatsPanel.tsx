@@ -22,7 +22,7 @@ export function AvgStatsPanel({ rows }: Props) {
   if (rows.length === 0) {
     return (
       <Text size="sm" c="dimmed" fs="italic">
-        — no stats data for this cohort —
+        No stats data for this cohort
       </Text>
     );
   }

@@ -13,7 +13,7 @@ import type {
 } from "../../types/meta";
 
 // ---------------------------------------------------------------------------
-// Skill-prereqs helpers (ported from PD2/src/lib/aggregate/skillUsage.ts)
+// Skill-prereqs helpers
 // ---------------------------------------------------------------------------
 
 type ClassSkillMap = Record<string, { prereqs: string[]; receivesBonusesFrom: string[] }>;
@@ -23,7 +23,7 @@ const SKILL_PREREQS = skillPrereqsRaw as SkillPrereqs;
 /**
  * Returns true if `skillName` is at exactly base level 1 for this character AND
  * some OTHER skill on the same character (at base level > 1) lists it as a
- * prerequisite. Ported verbatim from PD2/src/lib/aggregate/skillUsage.ts.
+ * prerequisite. Ported verbatim
  */
 function isPrereqOnly(
   skillName: string,
@@ -41,7 +41,7 @@ function isPrereqOnly(
 }
 
 // ---------------------------------------------------------------------------
-// Affix-mod helpers (ported from PD2/src/lib/aggregate/affixMods.ts + slot.ts)
+// Affix-mod helpers
 // ---------------------------------------------------------------------------
 
 /** Raw item shape as stored in Characters.full_response_json->'items'[] */
@@ -54,8 +54,8 @@ interface RawItemJson {
 }
 
 /**
- * Slot mapping — mirrors SLOT_BY_EQUIPMENT in PD2/src/lib/slot.ts.
- * Only "Equipped" zone items are included (zone gate applied before this call).
+ * Slot mapping. Only "Equipped"-zone items reach this lookup; the zone gate
+ * is applied by the caller.
  */
 const SLOT_BY_EQUIPMENT: Record<string, string> = {
   Helm: "helm",
@@ -81,9 +81,9 @@ function inferSlot(
 }
 
 /**
- * Skill-tab modifier key — strips leading magnitude so "+1 to Combat Skills"
+ * Skill-tab modifier key: strips leading magnitude so "+1 to Combat Skills"
  * and "+3 to Combat Skills" collapse to the same bucket.
- * Mirrors skillTabBucketKey in PD2/src/lib/aggregate/affixMods.ts.
+ * Mirrors skillTabBucketKey
  */
 const SKILL_TAB_MOD = "item_addskill_tab";
 const SINGLE_SKILL_MOD = "item_singleskill";
@@ -122,7 +122,7 @@ export interface ICohortFilter {
   className: string;
   minLevel: number;
   skills: ISkillRequirement[];
-  /** Season number — always passed in from the route (config.currentSeason or req.query.season). */
+  /** Season number: always passed in from the route (config.currentSeason or req.query.season). */
   season: number;
 }
 
@@ -156,10 +156,10 @@ export class MetaDB_Postgres {
    */
   public async findCohort(filter: ICohortFilter): Promise<number[]> {
     const params: any[] = [
-      filter.gameMode,   // $1 — resolved via subquery in GameModes
+      filter.gameMode,   // $1: resolved via subquery in GameModes
       filter.season,     // $2
       filter.minLevel,   // $3
-      filter.className,  // $4 — matched via Classes join
+      filter.className,  // $4: matched via Classes join
     ];
     let paramIndex = 5;
 
@@ -198,9 +198,9 @@ export class MetaDB_Postgres {
    * Aggregate equipped-item usage across the given cohort.
    *
    * Counts how many characters wear each named item. Only Unique / Set /
-   * Runeword qualities are included — Rare / Magic / Crafted items have
+   * Runeword qualities are included: Rare / Magic / Crafted items have
    * unique random names and can't be name-aggregated (those are handled
-   * by the affix-mods aggregation in Task 17).
+   * by the affix-mods aggregation in ).
    *
    * Mirrors the existing analyzeItemUsage CASE logic for item-type
    * classification (see CharacterDB_Postgres for reference), including
@@ -289,7 +289,7 @@ export class MetaDB_Postgres {
    * Falls back gracefully when the className has no entry in skill-prereqs.json
    * (classMap = undefined): every skill is treated as a build skill.
    *
-   * Returns rows sorted by pctBuild desc (same ranking as the PD2 standalone).
+   * Returns rows sorted by pctBuild desc (same ranking as the aggregator).
    */
   public async aggregateSkillUsageClassified(
     cohortIds: number[],
@@ -407,7 +407,7 @@ export class MetaDB_Postgres {
    *
    * Same CASE-based classification as aggregateItemUsage (Unique / Set /
    * Runeword) and uses the same IGNORED_UNIQUES_ARRAY exclusion. MercenaryItems
-   * joins directly via character_db_id (no separate merc_id — one merc per
+   * joins directly via character_db_id (no separate merc_id: one merc per
    * character). Mirrors analyzeMercItemUsage's table/JOIN structure.
    *
    * Returns rows sorted by numOccurrences desc.
@@ -451,7 +451,7 @@ export class MetaDB_Postgres {
   }
 
   /**
-   * Level distribution buckets — counts of characters at each integer level
+   * Level distribution buckets: counts of characters at each integer level
    * within the cohort. The pd2.tools level-distribution endpoint returns both
    * hardcore and softcore sides; the /meta cohort is already filtered to one
    * gameMode, so only the matching side is populated and the other is empty.
@@ -459,7 +459,7 @@ export class MetaDB_Postgres {
   public async aggregateLevelDistribution(
     cohortIds: number[],
     /** Selects which side of the response shape to populate.
-     *  Not used in the SQL — the cohort is already mode-filtered by findCohort. */
+     *  Not used in the SQL: the cohort is already mode-filtered by findCohort. */
     gameMode: GameMode,
   ): Promise<ILevelDistribution> {
     if (cohortIds.length === 0) return { hardcore: [], softcore: [] };
@@ -484,13 +484,9 @@ export class MetaDB_Postgres {
    * Aggregate affix modifiers from Rare/Magic/Crafted equipped items across
    * the cohort.
    *
-   * Strategy (Node-side parsing, Approach B):
-   *   - SQL: pull full items array from each character's full_response_json.
-   *   - Node: iterate items, check quality + zone, bucket modifiers by
-   *     (slot, mod.name / skill-tab key), compute count / avg / median / p75.
-   *
-   * Parsing logic is ported verbatim from PD2/src/lib/aggregate/affixMods.ts
-   * so numbers line up with the standalone's parity test corpus.
+   * SQL pulls the full items array per character; Node iterates, filters by
+   * quality + zone, buckets modifiers by (slot, mod.name), and computes
+   * count / avg / median / p75 per bucket.
    */
   public async aggregateAffixMods(
     cohortIds: number[],
@@ -512,7 +508,7 @@ export class MetaDB_Postgres {
 
     // slot -> modKey -> values[]
     const grouped = new Map<string, Map<string, number[]>>();
-    // slot -> number of eligible items (denominator for pct — mirrors standalone)
+    // slot -> number of eligible items (denominator for pct: mirrors standalone)
     const itemCountBySlot = new Map<string, number>();
 
     for (const row of rows) {
@@ -526,7 +522,6 @@ export class MetaDB_Postgres {
       // Zone gate: must be equipped (location.zone === "Equipped")
       if (item.location?.zone !== "Equipped") continue;
 
-      // Slot resolution — mirrors slotFromRawItem in PD2/src/lib/slot.ts
       const slot = inferSlot(item.location);
       if (!slot) continue;
 
@@ -547,9 +542,9 @@ export class MetaDB_Postgres {
         // For mods that target a specific skill / tab / class, bucket by the
         // label content so different targets stay in separate rows but
         // different magnitudes (+1 / +3) collapse together.
-        //   "item_addskill_tab|Combat Skills"     (was: collapsed to a single row)
-        //   "item_singleskill|Ice Blast"          (was: all single-skill bonuses merged)
-        //   "item_addclassskills|Sorceress Skills"
+        // "item_addskill_tab|Combat Skills"     (was: collapsed to a single row)
+        // "item_singleskill|Ice Blast"          (was: all single-skill bonuses merged)
+        // "item_addclassskills|Sorceress Skills"
         const bucketKey =
           mod.name === SKILL_TAB_MOD ||
           mod.name === SINGLE_SKILL_MOD ||
@@ -602,7 +597,7 @@ export class MetaDB_Postgres {
       }
     }
 
-    // Sort by slot asc, then pct desc (mirrors standalone)
+    // Sort by slot asc, then pct desc
     out.sort((a, b) =>
       a.slot === b.slot ? b.pct - a.pct : a.slot.localeCompare(b.slot),
     );

@@ -1,7 +1,7 @@
 import type { Character, Slot } from "./types";
 import type { TopItemsBySlot } from "./shape/topItems";
 
-// Minimal AffixMod / AffixModsBySlot types — defined here because
+// Minimal AffixMod / AffixModsBySlot types: defined here because
 // aggregate/affixMods.ts is not ported (aggregation runs on the backend).
 export type AffixMod = {
   modName: string;

@@ -1,18 +1,17 @@
 // @ts-nocheck
 /**
- * /api/v1/meta — Jest + supertest integration tests
+ * /api/v1/meta: Jest + supertest integration tests
  *
- * Sprint 2.3 Task 10: parity tests against the live Express app + dev Postgres.
  *
  * Strategy:
  *   - Build a minimal Express app inline (matches routes.test.ts style).
- *   - Mount metaRoutes directly — real MetaDB_Postgres connects via env vars
+ *   - Mount metaRoutes directly: real MetaDB_Postgres connects via env vars
  *     that the Docker container already has set.
  *   - Mock utils/cache to bypass Redis (same pattern as routes.test.ts).
  *   - Mock config logger so the named-logger factory doesn't crash in test env.
  *
  * 7 canonical builds × 6 parity sub-tests = 42, plus 4 validation tests = 46 total.
- * All parity assertions are SHAPE checks — they pass regardless of how much
+ * All parity assertions are SHAPE checks: they pass regardless of how much
  * ladder data the dev DB has (empty cohort satisfies all 6 as conditional on length > 0).
  */
 
@@ -22,7 +21,7 @@ import metaRoutes from "./meta";
 import type { IMetaResponse } from "../types/meta";
 
 // ---------------------------------------------------------------------------
-// Mock Redis cache — avoids needing a Redis connection during tests
+// Mock Redis cache: avoids needing a Redis connection during tests
 // ---------------------------------------------------------------------------
 jest.mock("../utils/cache", () => ({
   getCacheValue: jest.fn(() => Promise.resolve(undefined)),
@@ -34,7 +33,7 @@ jest.mock("../utils/cache", () => ({
 }));
 
 // ---------------------------------------------------------------------------
-// Mock config — provide a working logger and currentSeason for the route.
+// Mock config: provide a working logger and currentSeason for the route.
 // We do NOT mock the DB config (MetaDB_Postgres reads process.env directly).
 // ---------------------------------------------------------------------------
 jest.mock("../config", () => ({
@@ -57,7 +56,7 @@ jest.mock("../config", () => ({
 }));
 
 // ---------------------------------------------------------------------------
-// App factory — one app instance shared across all tests
+// App factory: one app instance shared across all tests
 // ---------------------------------------------------------------------------
 let app: Application;
 
@@ -67,9 +66,7 @@ beforeAll(() => {
   app.use("/api/v1/meta", metaRoutes);
 });
 
-// ---------------------------------------------------------------------------
-// Canonical builds — same 7 as the standalone parity.test.ts (Sprint 2.2)
-// ---------------------------------------------------------------------------
+// One canonical build per class. Used by the parity assertions below.
 interface CanonicalBuild {
   slug: string;
   className: string;

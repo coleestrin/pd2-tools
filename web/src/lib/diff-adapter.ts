@@ -1,24 +1,12 @@
 /**
- * diff-adapter.ts
+ * Adapts FullCharacterResponse (from charactersAPI.getCharacter) into the
+ * Character shape that diffCharacter expects, and builds a GuideSlice from
+ * IMetaResponse for the cohort comparison.
  *
- * Converts the fork's FullCharacterResponse (returned by charactersAPI.getCharacter)
- * into the PD2 Character shape that diffCharacter expects.
- *
- * Key shape differences:
- *   - Fork IItem: name, quality.name, location.equipment, runeword (boolean), properties[]
- *   - PD2 Item:   name, quality.name, location.equipment, is_runeword, base.name, modifiers[].name
- *
- * diffCharacter only reads: item.name, item.is_runeword, item.base.name,
- * item.quality.name, item.modifiers[].name (for affix-mod userHas check),
- * and location.equipment (via slotFromRawItem).
- *
- * We cannot recover modifiers[] from the fork response (IItem only stores
- * human-readable property strings), so modifiers is set to [] — this means
- * the "affix mod userHas" column will always be false, but the item-match
- * comparison still works correctly.
- *
- * Also builds a GuideSlice from IMetaResponse so diffCharacter can compare
- * the character against the cohort.
+ * IItem only stores human-readable property strings, not the structured
+ * modifiers[] array, so modifiers is set to [] in the adapted Item. The
+ * "affix mod userHas" column always reports false as a result; the
+ * item-match comparison still works.
  */
 
 import type { Character, Item, Slot } from "./types";
@@ -57,7 +45,7 @@ function adaptItem(raw: IItem): Item {
     requirements: {},
     position: { row: 0, column: 0 },
     properties: raw.properties ?? [],
-    modifiers: [], // IItem has no modifiers array — affix-mod "userHas" will be false
+    modifiers: [], // IItem has no modifiers array: affix-mod "userHas" will be false
     // Name: IItem.name is only set on named items; otherwise undefined
     name: raw.name ?? undefined,
     // Quality
@@ -65,9 +53,9 @@ function adaptItem(raw: IItem): Item {
       id: 0,
       name: (raw.quality?.name ?? "Normal") as Item["quality"]["name"],
     },
-    // is_runeword — fork calls it `runeword`
+    // is_runeword: fork calls it `runeword`
     is_runeword: raw.runeword ?? false,
-    // base — diffCharacter reads base.name for display fallback
+    // base: diffCharacter reads base.name for display fallback
     base: {
       id: "",
       name: "",
@@ -79,7 +67,7 @@ function adaptItem(raw: IItem): Item {
       stackable: false,
       requirements: {},
     },
-    // location — slotFromRawItem reads location.equipment
+    // location: slotFromRawItem reads location.equipment
     location: {
       zone: "Equipped",
       storage: "Unknown",
@@ -148,7 +136,7 @@ export function adaptForkCharacter(raw: FullCharacterResponse): Character | null
 }
 
 // ---------------------------------------------------------------------------
-// GuideSlice builder — converts IMetaResponse into what diffCharacter expects
+// GuideSlice builder: converts IMetaResponse into what diffCharacter expects
 // ---------------------------------------------------------------------------
 
 const SLOTS: Slot[] = [
@@ -171,10 +159,10 @@ const SLOTS: Slot[] = [
  * poolMercType is the top-1 merc type from mercTypeUsage.
  */
 export function buildGuideSlice(meta: IMetaResponse): GuideSlice {
-  // topItemsBySlot — reuse existing shaper
+  // topItemsBySlot: reuse existing shaper
   const topItemsBySlot = shapeTopItemsBySlot(meta.itemUsage);
 
-  // affixModsBySlot — group IAffixModRow[] by slot
+  // affixModsBySlot: group IAffixModRow[] by slot
   const bySlot: Partial<Record<Slot, AffixMod[]>> = {};
   for (const slot of SLOTS) {
     bySlot[slot] = [];

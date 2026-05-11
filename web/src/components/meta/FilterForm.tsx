@@ -48,7 +48,7 @@ function SkillIcon({ name, size = 32 }: { name: string; size?: number }) {
   );
 }
 
-// Section label — uppercase tracking matches the PD2 standalone vibe.
+// Section label with uppercase tracking.
 function SectionLabel({
   children,
   ta,
@@ -133,14 +133,8 @@ export function FilterForm({ initial, onSubmit }: Props) {
     skills: [],
   });
 
-  // Merge: source of truth for "which skills are pickable" = prereq JSON.
-  // Source of truth for "% of cohort with this as a focus skill" =
-  // classOnlyMeta.skillUsage[].pctAtTwenty — characters with >= 20 hard
-  // points (matches pd2.tools/builds' threshold; same numbers /builds shows).
-  // Skills not in the response get pct=0.
-  //
-  // Selected skills float to the top so clicking a skill (or a preset) gives
-  // immediate visual feedback; within each group rows stay sorted by pct desc.
+  // pctAtTwenty is the focus-skill signal (20+ hard points). Selected skills
+  // float to the top; the rest stays sorted by pct desc.
   const selectedSkillNames = useMemo(
     () => new Set(s.skills.map((sk) => sk.name)),
     [s.skills],
@@ -205,7 +199,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
           </Tabs.List>
         </Tabs>
 
-        {/* Diff character name — only visible in diff mode */}
+        {/* Diff character name: only visible in diff mode */}
         {s.mode === "diff" && (
           <TextInput
             placeholder="Character name or account name"
@@ -261,7 +255,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
           </Group>
         </Stack>
 
-        {/* Build presets — conditional on class having presets.
+        {/* Build presets: conditional on class having presets.
             Intentionally smaller than class buttons (visual hierarchy:
             class is the primary axis, presets are a shortcut on top). */}
         {s.filter.className && BUILD_PRESETS[s.filter.className] && (
@@ -366,7 +360,7 @@ export function FilterForm({ initial, onSubmit }: Props) {
             </Group>
           )}
 
-          {/* Scrollable available skill list — pd2.tools /builds SkillCard
+          {/* Scrollable available skill list: pd2.tools /builds SkillCard
               style: each row a top-bordered Paper so stacked rows form
               dividers. Unselected rows: purple percentage-width fill bar
               behind the content. Selected rows: solid darker-green row,

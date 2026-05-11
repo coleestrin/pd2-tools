@@ -5,7 +5,7 @@ export type UiState = {
   filter: CommonFilter;
   mode: "guide" | "diff";
   diffName: string;
-  // Phase 2 — read but not applied yet.
+  // Phase 2: read but not applied yet.
   skills: Array<{ name: string; minLevel: number }>;
 };
 

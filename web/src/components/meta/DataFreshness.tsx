@@ -26,7 +26,7 @@ export function DataFreshness({ cohortSize, fetchedAt }: Props) {
 
   if (!fetchedAt) return null;
 
-  // Clamp to >= 0 — defensive against any residual clock drift.
+  // Clamp to >= 0: defensive against any residual clock drift.
   const ageSec = Math.max(0, Math.floor((now - fetchedAt.getTime()) / 1000));
   const ageLabel =
     ageSec < 60 ? `${ageSec}s ago` : `${Math.floor(ageSec / 60)}m ago`;

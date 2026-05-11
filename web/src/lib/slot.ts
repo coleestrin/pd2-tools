@@ -28,7 +28,7 @@ export function slotFromRawItem(item: {
 }): Slot | null {
   // The pd2.tools API leaves `location.equipment` populated with phantom
   // gear-slot names ("Helm", "Right Hand", "Armor", "Left Ring", …) on items
-  // that aren't equipped — most visibly on charms sitting in inventory.
+  // that aren't equipped: most visibly on charms sitting in inventory.
   // The authoritative signal is `location.zone`, which is "Equipped" only
   // for actually-equipped gear. Without this gate, the diff view buckets
   // inventory charms into gear slots and the affix-mods aggregator includes

@@ -3,7 +3,7 @@ import type { IAffixModRow } from "../../types/meta";
 import modDictionaryRaw from "../../data/mod-dictionary.json";
 
 // ---------------------------------------------------------------------------
-// Slot ordering — matches ItemFrequencyTable / PD2 standalone's SLOT_ORDER
+// Slot ordering: matches ItemFrequencyTable / aggregator's SLOT_ORDER
 // ---------------------------------------------------------------------------
 
 const SLOTS = [
@@ -49,7 +49,7 @@ function aggregateAcrossSlots(
 }
 
 // ---------------------------------------------------------------------------
-// Mod dictionary — maps mod key → { displayLabel, category }
+// Mod dictionary: maps mod key → { displayLabel, category }
 // ---------------------------------------------------------------------------
 
 type ModDictionaryEntry = { displayLabel?: string; category?: string };
@@ -61,10 +61,10 @@ const DICT = modDictionaryRaw as ModDictionary;
  * Resolve a human-readable label for a mod bucket key.
  *
  * Mod keys are one of:
- *   - "item_fastercastrate" — single-value mod, looked up in mod-dictionary
- *   - "item_addskill_tab|Combat Skills" — bucketed by tab; show the tab name
- *   - "item_singleskill|Ice Blast"      — bucketed by skill; show the skill name
- *   - "item_addclassskills|Sorceress Skills" — show the class-skills name
+ *   - "item_fastercastrate": single-value mod, looked up in mod-dictionary
+ *   - "item_addskill_tab|Combat Skills": bucketed by tab; show the tab name
+ *   - "item_singleskill|Ice Blast": bucketed by skill; show the skill name
+ *   - "item_addclassskills|Sorceress Skills": show the class-skills name
  * For any "<name>|<label>" form the label after "|" is used directly.
  */
 function resolveLabel(modKey: string): string {

@@ -11,12 +11,11 @@ import {
 } from "@mantine/core";
 import { CollapsibleSection } from "./CollapsibleSection";
 import skillClassificationRaw from "../../data/skill-classification.json";
+import type { IClassifiedSkillRow, ILevelDistribution } from "../../types/meta";
 
 type SkillRole = "core" | "synergy";
 type SkillClassification = Record<string, Record<string, SkillRole>>;
 const SKILL_CLASSIFICATION = skillClassificationRaw as SkillClassification;
-import type { IClassifiedSkillRow } from "../../types/meta";
-import type { ILevelDistribution } from "../../types/meta";
 
 // ---------------------------------------------------------------------------
 // Level distribution mini-chart (Mantine Box bars, no extra chart library)
@@ -24,15 +23,14 @@ import type { ILevelDistribution } from "../../types/meta";
 
 function LevelDistributionChart({ dist }: { dist: ILevelDistribution }) {
   // The cohort is always one game mode, so exactly one side is non-empty.
-  // Drop empty buckets so we only render levels that actually have data —
-  // gives every bar room to breathe regardless of how wide the level range is.
+  // Empty buckets get filtered so every bar has room regardless of range.
   const buckets = (dist.softcore.length > 0 ? dist.softcore : dist.hardcore)
     .filter((b) => b.numOccurrences > 0);
 
   if (buckets.length === 0) {
     return (
       <Text size="sm" c="dimmed" fs="italic">
-        — no level data —
+        No level data
       </Text>
     );
   }
@@ -165,7 +163,7 @@ export function BuildSheet({ skillUsage, levelDistribution, className }: Props) 
 
           {display.length === 0 ? (
             <Text size="sm" c="dimmed" fs="italic">
-              — no skill data —
+              No skill data
             </Text>
           ) : (
         <Table striped highlightOnHover withColumnBorders={false} fz="sm">
