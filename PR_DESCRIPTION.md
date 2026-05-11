@@ -47,6 +47,15 @@ with direct Postgres aggregations via a new Express route + autoCache.
 - Frontend tsc + eslint: clean (`cd web && npx tsc --noEmit && npm run lint`)
 - Manual smoke test: cohort lookup + 7 aggregations return correctly across 7 canonical builds (Hammerdin, Blizz Sorc, WW Barb, Bone Spear Necro, Wind Druid, Trapsin, LF Zon)
 - Tested at mobile width (375px) — tables wrap in ScrollArea, button rows reflow
+- Live click-through validated against the dev stack with a 73-Paladin softcore cohort: FilterForm renders class-only baseline percentages, BuildSheet's `Hard %` column matches the `>= 20 hard points` threshold that `analyzeSkillUsage` in `CharacterDB_Postgres` uses, affix table shows real magnitudes (avg/median/p75 of the rolled value, not the skill-ID index)
+
+## Notes on the iteration
+
+After the initial implementation we ran the live stack and tightened a few things based on what we saw:
+- `aggregateSkillUsageClassified` now exposes `pctAtTwenty` alongside the existing `pct` and `pctBuild`. FilterForm + BuildSheet's primary column use `pctAtTwenty` so the numbers match what `/builds` shows.
+- Affix magnitude bug: was averaging `values[0]` which is the skill/tab/class ID for two-value mods (`item_singleskill`, `item_addskill_tab`, `item_addclassskills`); now uses `values[values.length-1]` which is always the magnitude. Bucketing also extended so `+3 to Ice Blast` and `+3 to Meteor` no longer collapse into the same row.
+- Build presets fleshed out from 1-skill to 3-skill signatures (Hammerdin = Blessed Hammer + Concentration + Vigor, etc.) so cohorts actually match the build identity instead of just one skill.
+- Smaller UX bits: level distribution chart no longer has a stray scrollbar, selected skill rows use a single solid green (was a two-tone overlap), selected skills float to the top of the picker, table section headers explain "Top items: Unique/Set/Runeword" vs "Affix patterns: Rare/Magic/Crafted only" so the differing tab counts make sense.
 
 ## Open follow-ups (not in this PR)
 
