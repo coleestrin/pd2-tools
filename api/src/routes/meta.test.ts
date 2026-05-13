@@ -131,8 +131,6 @@ describe("/api/v1/meta", () => {
     });
   });
 
-  // ---- Parity assertions per canonical build --------------------------------
-
   describe("Parity assertions per canonical build", () => {
     for (const build of CANONICAL_BUILDS) {
       describe(build.slug, () => {
@@ -144,7 +142,6 @@ describe("/api/v1/meta", () => {
           resp = body as IMetaResponse;
         });
 
-        // Test 1: cohortSize and all 6 aggregation arrays/objects exist
         it("returns cohortSize >= 0 and all 6 aggregation arrays/objects", () => {
           expect(typeof resp.cohortSize).toBe("number");
           expect(resp.cohortSize).toBeGreaterThanOrEqual(0);
@@ -158,14 +155,12 @@ describe("/api/v1/meta", () => {
           expect(Array.isArray(resp.affixMods)).toBe(true);
         });
 
-        // Test 2: totalSample matches cohortSize on first item-usage row (if any)
         it("totalSample matches cohortSize on first item-usage row (if any)", () => {
           if (resp.itemUsage.length > 0) {
             expect(resp.itemUsage[0].totalSample).toBe(resp.cohortSize);
           }
         });
 
-        // Test 3: totalSample consistent across aggregations
         it("totalSample agrees between itemUsage and skillUsage (if both non-empty)", () => {
           if (resp.itemUsage.length > 0 && resp.skillUsage.length > 0) {
             expect(resp.skillUsage[0].totalSample).toBe(
@@ -174,7 +169,6 @@ describe("/api/v1/meta", () => {
           }
         });
 
-        // Test 3b: classified skill rows have the correct shape
         it("skillUsage rows have classified shape (numAsBuild, numAsPrereq, numAtTwenty, pctBuild, pctAtTwenty)", () => {
           for (const r of resp.skillUsage) {
             expect(typeof r.numAsBuild).toBe("number");
@@ -182,12 +176,9 @@ describe("/api/v1/meta", () => {
             expect(typeof r.numAtTwenty).toBe("number");
             expect(typeof r.pctBuild).toBe("number");
             expect(typeof r.pctAtTwenty).toBe("number");
-            // Invariant: numAsBuild + numAsPrereq === numOccurrences
             expect(r.numAsBuild + r.numAsPrereq).toBe(r.numOccurrences);
-            // Invariant: numAtTwenty is a subset of numOccurrences
             expect(r.numAtTwenty).toBeGreaterThanOrEqual(0);
             expect(r.numAtTwenty).toBeLessThanOrEqual(r.numOccurrences);
-            // Percentages must be in [0, 100]
             expect(r.pctBuild).toBeGreaterThanOrEqual(0);
             expect(r.pctBuild).toBeLessThanOrEqual(100);
             expect(r.pctAtTwenty).toBeGreaterThanOrEqual(0);
@@ -195,7 +186,6 @@ describe("/api/v1/meta", () => {
           }
         });
 
-        // Test 4: No duplicate (item, itemType) rows
         it("no duplicate (item, itemType) rows", () => {
           const seen = new Set<string>();
           for (const r of resp.itemUsage) {
@@ -205,7 +195,6 @@ describe("/api/v1/meta", () => {
           }
         });
 
-        // Test 5: All pct values in [0, 100]
         it("all pct values are in [0, 100]", () => {
           for (const r of resp.itemUsage) {
             expect(r.pct).toBeGreaterThanOrEqual(0);
@@ -217,7 +206,6 @@ describe("/api/v1/meta", () => {
           }
         });
 
-        // Test 6: pct math is correct (pct = numOccurrences / totalSample * 100)
         it("pct math is correct (within float tolerance)", () => {
           for (const r of resp.itemUsage) {
             const expected = (r.numOccurrences / r.totalSample) * 100;
@@ -225,7 +213,6 @@ describe("/api/v1/meta", () => {
           }
         });
 
-        // Test 7: affixMods rows have valid shape and numeric stats
         it("affixMods rows have valid shape (if any)", () => {
           for (const r of resp.affixMods) {
             expect(typeof r.slot).toBe("string");
@@ -236,9 +223,8 @@ describe("/api/v1/meta", () => {
             expect(r.numOccurrences).toBeGreaterThan(0);
             expect(typeof r.totalSample).toBe("number");
             expect(r.totalSample).toBeGreaterThan(0);
-            // pct = numOccurrences / slotItemCount * 100.
-            // A single item can carry the same mod multiple times (e.g. corruption
-            // stacks), so pct CAN exceed 100. We only require it to be non-negative.
+            // A single item can carry the same mod multiple times (e.g.
+            // corruption stacks), so pct CAN exceed 100.
             expect(r.pct).toBeGreaterThanOrEqual(0);
             expect(Number.isFinite(r.avg)).toBe(true);
             expect(Number.isFinite(r.median)).toBe(true);
@@ -246,7 +232,6 @@ describe("/api/v1/meta", () => {
           }
         });
 
-        // Test 8: affixMods pct math is correct
         it("affixMods pct math is correct (within float tolerance)", () => {
           for (const r of resp.affixMods) {
             const expected = (r.numOccurrences / r.totalSample) * 100;

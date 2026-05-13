@@ -32,7 +32,7 @@ export function ItemFrequencyTable({ rows }: Props) {
         for (const it of items) m.set(it.gearId.name, it);
         setItemsData(m);
       })
-      .catch(() => {});
+      .catch((err) => console.error("ItemFrequencyTable: failed to load /items.json:", err));
   }, []);
 
   return (
@@ -101,12 +101,6 @@ function rarityColor(itemType: string): string {
       return "green";
     case "Runeword":
       return "orange";
-    case "Rare":
-      return "yellow";
-    case "Magic":
-      return "blue";
-    case "Crafted":
-      return "violet";
     default:
       return "gray";
   }

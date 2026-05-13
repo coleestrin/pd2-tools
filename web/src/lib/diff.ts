@@ -5,6 +5,10 @@ import type {
   Slot,
 } from "../types";
 import { shapeTopItemsBySlot, type TopItemsBySlot } from "./shape/topItems";
+import modDictionaryRaw from "../data/mod-dictionary.json";
+
+type ModDictEntry = { displayLabel?: string; category?: string };
+const MOD_DICT = modDictionaryRaw as Record<string, ModDictEntry>;
 
 const SLOTS: Slot[] = [
   "helm",
@@ -18,13 +22,15 @@ const SLOTS: Slot[] = [
   "ring",
 ];
 
+// Diff considers the active loadout only — weapon-swap positions are
+// excluded so a character's secondary set doesn't confuse the comparison.
+// Both ring positions still map to "ring"; the diff just shows whichever
+// the character wears first.
 const SLOT_BY_EQUIPMENT: Record<string, Slot> = {
   Helm: "helm",
   Armor: "armor",
   "Right Hand": "weapon",
-  "Right Hand Switch": "weapon",
   "Left Hand": "offhand",
-  "Left Hand Switch": "offhand",
   Gloves: "gloves",
   Belt: "belt",
   Boots: "boots",
@@ -38,10 +44,8 @@ const SLOT_BY_EQUIPMENT: Record<string, Slot> = {
 function slotForItem(item: IItem): Slot | null {
   const loc = item.location;
   if (!loc) return null;
-  const zone = (loc as { zone?: string }).zone;
-  if (zone !== undefined && zone !== "Equipped") return null;
-  const equipment = loc.equipment ?? "";
-  return SLOT_BY_EQUIPMENT[equipment] ?? null;
+  if (loc.zone !== undefined && loc.zone !== "Equipped") return null;
+  return SLOT_BY_EQUIPMENT[loc.equipment ?? ""] ?? null;
 }
 
 export type SlotDiff = {
@@ -76,15 +80,34 @@ function bucketAffixModsBySlot(meta: IMetaResponse): Record<Slot, IMetaResponse[
     IMetaResponse["affixMods"]
   >;
   for (const row of meta.affixMods) {
-    const slot = row.slot as Slot;
-    if (bySlot[slot]) bySlot[slot].push(row);
+    if (bySlot[row.slot]) bySlot[row.slot].push(row);
   }
   for (const s of SLOTS) bySlot[s].sort((a, b) => b.pct - a.pct);
   return bySlot;
 }
 
+// Resolve a modKey to a human-readable label. Pipe-suffixed keys
+// (item_addskill_tab|Combat Skills, item_singleskill|Ice Blast,
+// item_addclassskills|Sorceress Skills) carry the label after the pipe.
+// Everything else looks up in mod-dictionary.json; falls back to the raw key.
 function affixLabel(modKey: string): string {
-  return modKey.includes("|") ? modKey.split("|")[1] ?? modKey : modKey;
+  if (modKey.includes("|")) return modKey.split("|")[1] ?? modKey;
+  return MOD_DICT[modKey]?.displayLabel ?? modKey;
+}
+
+// Word-boundary match: avoids false positives where "Resist" matches every
+// elemental resistance line. Falls back to substring match if the regex
+// can't be built (label contains only special chars).
+function userHasAffix(userProps: string[], label: string): boolean {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").trim();
+  if (!escaped) return false;
+  try {
+    const re = new RegExp(`\\b${escaped}\\b`, "i");
+    return userProps.some((p) => re.test(p));
+  } catch {
+    const lower = label.toLowerCase();
+    return userProps.some((p) => p.toLowerCase().includes(lower));
+  }
 }
 
 export function diffCharacter(
@@ -131,7 +154,7 @@ export function diffCharacter(
           modName: m.modKey,
           displayLabel: label,
           pct: m.pct,
-          userHas: userProps.some((p) => p.toLowerCase().includes(label.toLowerCase())),
+          userHas: userHasAffix(userProps, label),
         };
       }),
     };

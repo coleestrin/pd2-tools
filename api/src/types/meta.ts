@@ -12,13 +12,7 @@ export interface IMetaQuery {
   skills: ISkillRequirement[];
 }
 
-export type ItemType =
-  | "Unique"
-  | "Set"
-  | "Runeword"
-  | "Rare"
-  | "Magic"
-  | "Crafted";
+export type ItemType = "Unique" | "Set" | "Runeword";
 
 export type Slot =
   | "helm"
@@ -76,12 +70,12 @@ export interface ILevelDistribution {
   softcore: ILevelBucket[];
 }
 
-// modKey: bucket key. For most mods equals the modifier `name`
-// (e.g. "item_fastercastrate"). For `item_addskill_tab` entries it
-// is suffixed with the tab name: "item_addskill_tab|Combat Skills".
-// Resolve to displayLabel via mod-dictionary.json on the FE.
+// modKey is either the raw mod name (e.g. "item_fastercastrate", look up
+// in mod-dictionary.json) or "<name>|<label>" for the three bucketed mods:
+// item_addskill_tab, item_singleskill, item_addclassskills. For piped keys
+// the label after "|" is the display text directly.
 export interface IAffixModRow {
-  slot: string;
+  slot: Slot;
   modKey: string;
   numOccurrences: number;
   totalSample: number;

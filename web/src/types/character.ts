@@ -38,6 +38,7 @@ export interface IItem {
   runeword?: boolean;
   location?: {
     equipment?: string;
+    zone?: string;
     x?: number;
     y?: number;
   };
@@ -82,12 +83,13 @@ export interface CharacterListResponse {
 
 export interface ItemUsageStats {
   item: string;
-  itemType: "Unique" | "Set" | "Runeword" | "Rare" | "Magic" | "Crafted";
+  itemType: "Unique" | "Set" | "Runeword";
   numOccurrences: number;
   totalSample: number;
   pct: number;
   // Populated by /meta; legacy /stats endpoints leave it undefined.
-  slot?: Slot;
+  // null when the item's base.type isn't equippable gear (e.g. charms).
+  slot?: Slot | null;
 }
 
 export interface SkillUsageStats {
@@ -239,11 +241,11 @@ export interface IClassifiedSkillRow {
   pctAtTwenty: number;
 }
 
-// modKey: bucket key. For `item_addskill_tab` entries it is suffixed with the
-// tab name ("item_addskill_tab|Combat Skills"). Resolve to a label via
-// mod-dictionary.json on the FE.
+// modKey is either the raw mod name (look up in mod-dictionary.json) or
+// "<name>|<label>" for the three bucketed mods: item_addskill_tab,
+// item_singleskill, item_addclassskills. Label after "|" is display text.
 export interface IAffixModRow {
-  slot: string;
+  slot: Slot;
   modKey: string;
   numOccurrences: number;
   totalSample: number;

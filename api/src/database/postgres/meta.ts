@@ -13,19 +13,13 @@ import type {
   Slot,
 } from "../../types/meta";
 
-// ---------------------------------------------------------------------------
-// Skill-prereqs helpers
-// ---------------------------------------------------------------------------
-
 type ClassSkillMap = Record<string, { prereqs: string[]; receivesBonusesFrom: string[] }>;
 type SkillPrereqs = Record<string, ClassSkillMap>;
 const SKILL_PREREQS = skillPrereqsRaw as SkillPrereqs;
 
-/**
- * Returns true if `skillName` is at exactly base level 1 for this character AND
- * some OTHER skill on the same character (at base level > 1) lists it as a
- * prerequisite. Ported verbatim
- */
+// True when `skillName` is at base level 1 AND another skill on the same
+// character (base > 1) lists it as a prereq — i.e. the point was spent
+// purely to unlock something else, not as a real investment.
 function isPrereqOnly(
   skillName: string,
   baseLevel: number,
@@ -41,11 +35,7 @@ function isPrereqOnly(
   return false;
 }
 
-// ---------------------------------------------------------------------------
-// Affix-mod helpers
-// ---------------------------------------------------------------------------
-
-/** Raw item shape as stored in Characters.full_response_json->'items'[] */
+// Raw item shape as stored in Characters.full_response_json->'items'[]
 interface RawItemJson {
   name?: string;
   quality?: { name?: string };
@@ -54,11 +44,8 @@ interface RawItemJson {
   modifiers?: Array<{ name?: string; label?: string; values?: number[] }>;
 }
 
-/**
- * Slot mapping. Only "Equipped"-zone items reach this lookup; the zone gate
- * is applied by the caller.
- */
-const SLOT_BY_EQUIPMENT: Record<string, string> = {
+// Caller applies the "Equipped"-zone gate; this map is just the slot resolver.
+const SLOT_BY_EQUIPMENT: Record<string, Slot> = {
   Helm: "helm",
   Armor: "armor",
   "Right Hand": "weapon",
@@ -75,23 +62,18 @@ const SLOT_BY_EQUIPMENT: Record<string, string> = {
 
 function inferSlot(
   location: { zone?: string; equipment?: string } | undefined,
-): string | null {
+): Slot | null {
   if (!location) return null;
-  const equipment = location.equipment ?? "";
-  return SLOT_BY_EQUIPMENT[equipment] ?? null;
+  return SLOT_BY_EQUIPMENT[location.equipment ?? ""] ?? null;
 }
 
-/**
- * Skill-tab modifier key: strips leading magnitude so "+1 to Combat Skills"
- * and "+3 to Combat Skills" collapse to the same bucket.
- * Mirrors skillTabBucketKey
- */
 const SKILL_TAB_MOD = "item_addskill_tab";
 const SINGLE_SKILL_MOD = "item_singleskill";
 const CLASS_SKILLS_MOD = "item_addclassskills";
-// Strips the leading "+N to" magnitude AND the trailing "(<Class> Only)" suffix
-// so "+1 to Combat Skills (Paladin Only)" and "+3 to Combat Skills (Paladin Only)"
-// collapse to the same bucket label "Combat Skills".
+
+// Used by bucketKeyFromLabel to collapse magnitude variants:
+// "+1 to Combat Skills (Paladin Only)" and "+3 to Combat Skills (Paladin Only)"
+// both become "item_addskill_tab|Combat Skills".
 const MAGNITUDE_PREFIX_RE = /^\+?\d+(?:\.\d+)?\s+(?:to\s+)?/i;
 const CLASS_SUFFIX_RE = /\s*\([^)]*Only\)\s*$/i;
 
@@ -103,14 +85,8 @@ function bucketKeyFromLabel(modName: string, label: string): string {
   return `${modName}|${stripped}`;
 }
 
-// ---------------------------------------------------------------------------
-
-/**
- * Items excluded from Unique/Runeword aggregation because they are
- * universal (nearly every character carries them) and would dominate
- * the frequency table. Mirrors IGNORED_UNIQUES_ARRAY in
- * CharacterDB_Postgres (postgres/index.ts).
- */
+// Excluded from Unique/Runeword aggregation: universal items that nearly
+// every character carries and would dominate the frequency table.
 const IGNORED_UNIQUES_ARRAY = [
   "Hellfire Torch",
   "Annihilus",
@@ -178,7 +154,10 @@ export interface ICohortFilter {
 export class MetaDB_Postgres {
   private pool: Pool;
   private readonly dbConfig: PoolConfig;
-  private slotByItemName: Map<string, Slot> | null = null;
+  // Cache the Promise (not the resolved Map) so concurrent first callers
+  // share a single in-flight scan instead of each issuing the JSONB query.
+  // Lifetime is the process; restart required after PD2 patches add items.
+  private slotMapPromise: Promise<Map<string, Slot>> | null = null;
 
   constructor() {
     this.dbConfig = {
@@ -193,11 +172,12 @@ export class MetaDB_Postgres {
     this.pool = new Pool(this.dbConfig);
   }
 
-  // Slot per item-name (Unique/Set/Runeword), derived from item.base.type in
-  // each character's JSON. Built lazily on first call; not invalidated — the
-  // mapping is fixed per PD2 patch.
   private async ensureSlotMap(): Promise<Map<string, Slot>> {
-    if (this.slotByItemName) return this.slotByItemName;
+    if (!this.slotMapPromise) this.slotMapPromise = this.loadSlotMap();
+    return this.slotMapPromise;
+  }
+
+  private async loadSlotMap(): Promise<Map<string, Slot>> {
     const sql = `
       SELECT DISTINCT
         item->>'name' AS name,
@@ -217,27 +197,17 @@ export class MetaDB_Postgres {
       const slot = slotFromBaseType(row.base_type);
       if (slot) map.set(row.name, slot);
     }
-    this.slotByItemName = map;
     return map;
   }
 
-  /**
-   * Find the cohort of character_db_ids matching the filter.
-   *
-   * Mirrors buildFilterCTE / getFilteredCharacters: resolves game_mode_id via
-   * inline subquery, joins Classes for className, EXISTS-clause per required
-   * skill against CharacterSkills joined to SkillsDefinitions.
-   *
-   * Returns an array of character_db_id values. Empty array if nothing matches.
-   * All downstream aggregation queries (Tasks 7-8) take this list as their
-   * starting set.
-   */
+  // Returns character_db_ids matching the filter. Empty array if nothing
+  // matches; all aggregation queries take this list as their starting set.
   public async findCohort(filter: ICohortFilter): Promise<number[]> {
     const params: any[] = [
-      filter.gameMode,   // $1: resolved via subquery in GameModes
-      filter.season,     // $2
-      filter.minLevel,   // $3
-      filter.className,  // $4: matched via Classes join
+      filter.gameMode,
+      filter.season,
+      filter.minLevel,
+      filter.className,
     ];
     let paramIndex = 5;
 
@@ -316,15 +286,8 @@ export class MetaDB_Postgres {
     return result.rows.map((r) => ({ ...r, slot: slotMap.get(r.item) ?? null }));
   }
 
-  /**
-   * Aggregate skill usage across the cohort: for each skill, how many
-   * cohort members have base level >= 1 in it.
-   *
-   * Mirrors analyzeSkillUsage's JOIN structure (CharacterSkills JOIN
-   * SkillsDefinitions). Returns rows sorted by numOccurrences desc.
-   * Skills with zero cohort members do not appear. Uses base skill_level
-   * from CharacterSkills (not item-boosted effective level).
-   */
+  // Uses base skill_level from CharacterSkills (not item-boosted effective
+  // level). Skills with zero cohort members are omitted.
   public async aggregateSkillUsage(
     cohortIds: number[],
   ): Promise<ISkillUsageRow[]> {
@@ -442,13 +405,8 @@ export class MetaDB_Postgres {
     return out;
   }
 
-  /**
-   * Aggregate mercenary types across the cohort. CharacterMercenaries
-   * stores one row per character with the merc type in `description`.
-   *
-   * Mirrors analyzeMercTypeUsage's GROUP BY CM.description pattern.
-   * Returns rows sorted by numOccurrences desc.
-   */
+  // CharacterMercenaries stores one row per character with the merc type
+  // in `description` ("Holy Freeze Merc" etc).
   public async aggregateMercType(
     cohortIds: number[],
   ): Promise<IMercTypeUsageRow[]> {
@@ -566,9 +524,9 @@ export class MetaDB_Postgres {
     );
 
     // slot -> modKey -> values[]
-    const grouped = new Map<string, Map<string, number[]>>();
-    // slot -> number of eligible items (denominator for pct: mirrors standalone)
-    const itemCountBySlot = new Map<string, number>();
+    const grouped = new Map<Slot, Map<string, number[]>>();
+    // slot -> number of eligible items (denominator for pct)
+    const itemCountBySlot = new Map<Slot, number>();
 
     for (const row of rows) {
       const item = row.item_json;

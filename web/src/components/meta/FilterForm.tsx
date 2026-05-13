@@ -173,7 +173,6 @@ export function FilterForm({ initial, onSubmit }: Props) {
       }}
     >
       <Stack gap="md">
-        {/* Mode toggle */}
         <Tabs
           value={s.mode}
           onChange={(v) => v && setS({ ...s, mode: v as "guide" | "diff" })}
@@ -184,7 +183,6 @@ export function FilterForm({ initial, onSubmit }: Props) {
           </Tabs.List>
         </Tabs>
 
-        {/* Diff character name: only visible in diff mode */}
         {s.mode === "diff" && (
           <TextInput
             placeholder="Character name or account name"
@@ -194,7 +192,6 @@ export function FilterForm({ initial, onSubmit }: Props) {
           />
         )}
 
-        {/* Game mode pills */}
         <Stack gap={6}>
           <SectionLabel ta="center">Game mode</SectionLabel>
           <Group gap="sm" wrap="wrap" justify="center">
@@ -214,7 +211,6 @@ export function FilterForm({ initial, onSubmit }: Props) {
           </Group>
         </Stack>
 
-        {/* Class selector */}
         <Stack gap={6}>
           <SectionLabel ta="center">Class</SectionLabel>
           <Group gap="xs" wrap="nowrap" justify="center">
@@ -230,7 +226,8 @@ export function FilterForm({ initial, onSubmit }: Props) {
                   setS({
                     ...s,
                     filter: { ...s.filter, className: c },
-                    skills: [], // reset skills when switching class
+                    // Skills are class-scoped — drop selection when switching class.
+            skills: [],
                   })
                 }
               >
@@ -240,9 +237,6 @@ export function FilterForm({ initial, onSubmit }: Props) {
           </Group>
         </Stack>
 
-        {/* Build presets: conditional on class having presets.
-            Intentionally smaller than class buttons (visual hierarchy:
-            class is the primary axis, presets are a shortcut on top). */}
         {s.filter.className && BUILD_PRESETS[s.filter.className] && (
           <Stack gap={6}>
             <SectionLabel ta="center">Build preset</SectionLabel>
@@ -276,7 +270,6 @@ export function FilterForm({ initial, onSubmit }: Props) {
           </Stack>
         )}
 
-        {/* Min character level slider */}
         <Stack gap={6}>
           <Group justify="space-between" align="baseline">
             <SectionLabel>Min character level</SectionLabel>
@@ -301,7 +294,6 @@ export function FilterForm({ initial, onSubmit }: Props) {
           />
         </Stack>
 
-        {/* Skill picker */}
         <Stack gap={6}>
           <Group justify="center" align="center" gap={6}>
             <SectionLabel>Skills</SectionLabel>
@@ -312,7 +304,6 @@ export function FilterForm({ initial, onSubmit }: Props) {
             </Tooltip>
           </Group>
 
-          {/* Selected skill chips with level input */}
           {s.skills.length > 0 && (
             <Group gap="sm" wrap="wrap" justify="center">
               {s.skills.map((sk) => (
@@ -345,11 +336,6 @@ export function FilterForm({ initial, onSubmit }: Props) {
             </Group>
           )}
 
-          {/* Scrollable available skill list: pd2.tools /builds SkillCard
-              style: each row a top-bordered Paper so stacked rows form
-              dividers. Unselected rows: purple percentage-width fill bar
-              behind the content. Selected rows: solid darker-green row,
-              no fill bar (clear single-tone affordance). */}
           {skillRows.length > 0 ? (
             <ScrollArea h={220} type="auto" style={{ backgroundColor: "rgba(0,0,0,0.15)" }}>
               <Stack gap={0}>

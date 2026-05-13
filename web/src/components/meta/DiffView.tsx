@@ -49,7 +49,7 @@ export function DiffView({ characterName, meta, gameMode = "softcore" }: Props) 
         for (const it of items) m.set(it.gearId.name, it);
         setItemsData(m);
       })
-      .catch(() => {});
+      .catch((err) => console.error("DiffView: failed to load /items.json:", err));
   }, []);
 
   useEffect(() => {
@@ -245,7 +245,7 @@ export function DiffView({ characterName, meta, gameMode = "softcore" }: Props) 
                       </Text>
                       <Text size="xs">{m.displayLabel}</Text>
                       <Text size="xs" c="dimmed">
-                        ({(m.pct * 100).toFixed(0)}% of pool)
+                        ({m.pct.toFixed(0)}% of pool)
                       </Text>
                     </Group>
                   ))}
