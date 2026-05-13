@@ -1,20 +1,10 @@
-import type { Character, Slot } from "./types";
-import type { TopItemsBySlot } from "./shape/topItems";
-
-// Minimal AffixMod / AffixModsBySlot types: defined here because
-// aggregate/affixMods.ts is not ported (aggregation runs on the backend).
-export type AffixMod = {
-  modName: string;
-  displayLabel: string;
-  category: string;
-  count: number;
-  pct: number;
-  medianValue: number;
-  p75Value: number;
-};
-
-export type AffixModsBySlot = Record<Slot, AffixMod[]>;
-import { slotFromRawItem } from "./slot";
+import type {
+  FullCharacterResponse,
+  IItem,
+  IMetaResponse,
+  Slot,
+} from "../types";
+import { shapeTopItemsBySlot, type TopItemsBySlot } from "./shape/topItems";
 
 const SLOTS: Slot[] = [
   "helm",
@@ -28,9 +18,36 @@ const SLOTS: Slot[] = [
   "ring",
 ];
 
+const SLOT_BY_EQUIPMENT: Record<string, Slot> = {
+  Helm: "helm",
+  Armor: "armor",
+  "Right Hand": "weapon",
+  "Right Hand Switch": "weapon",
+  "Left Hand": "offhand",
+  "Left Hand Switch": "offhand",
+  Gloves: "gloves",
+  Belt: "belt",
+  Boots: "boots",
+  Amulet: "amulet",
+  "Left Ring": "ring",
+  "Right Ring": "ring",
+};
+
+// location.equipment is populated with phantom slot names even on inventory
+// items (notably charms). Only "Equipped"-zone items map to a real slot.
+function slotForItem(item: IItem): Slot | null {
+  const loc = item.location;
+  if (!loc) return null;
+  const zone = (loc as { zone?: string }).zone;
+  if (zone !== undefined && zone !== "Equipped") return null;
+  const equipment = loc.equipment ?? "";
+  return SLOT_BY_EQUIPMENT[equipment] ?? null;
+}
+
 export type SlotDiff = {
   slot: Slot;
   poolTopItemName: string | null;
+  poolTopItemType: string | null;
   userItemName: string | null;
   userItemQuality: string | null;
   userMatchesPoolTop: boolean;
@@ -47,115 +64,96 @@ export type CharacterDiff = {
   accountName: string;
   characterLevel: number;
   className: string;
-  /** null if no merc data on either side */
   mercTypeMatchesPool: boolean | null;
   poolMercType: string | null;
   userMercType: string | null;
   slots: Record<Slot, SlotDiff>;
 };
 
-export type GuideSlice = {
-  topItemsBySlot: TopItemsBySlot;
-  affixModsBySlot: AffixModsBySlot;
-  poolMercType: string | null;
-};
+function bucketAffixModsBySlot(meta: IMetaResponse): Record<Slot, IMetaResponse["affixMods"]> {
+  const bySlot = Object.fromEntries(SLOTS.map((s) => [s, [] as IMetaResponse["affixMods"]])) as Record<
+    Slot,
+    IMetaResponse["affixMods"]
+  >;
+  for (const row of meta.affixMods) {
+    const slot = row.slot as Slot;
+    if (bySlot[slot]) bySlot[slot].push(row);
+  }
+  for (const s of SLOTS) bySlot[s].sort((a, b) => b.pct - a.pct);
+  return bySlot;
+}
 
-export function diffCharacter(c: Character, g: GuideSlice): CharacterDiff {
+function affixLabel(modKey: string): string {
+  return modKey.includes("|") ? modKey.split("|")[1] ?? modKey : modKey;
+}
+
+export function diffCharacter(
+  raw: FullCharacterResponse,
+  meta: IMetaResponse,
+): CharacterDiff | null {
+  if (!raw || !raw.character) return null;
+
+  const topItemsBySlot: TopItemsBySlot = shapeTopItemsBySlot(meta.itemUsage);
+  const affixModsBySlot = bucketAffixModsBySlot(meta);
+  const items = raw.items ?? [];
+
   const slots = {} as Record<Slot, SlotDiff>;
 
   for (const slot of SLOTS) {
-    // Find an equipped item in this slot
-    const item = (c.items ?? []).find((it) => slotFromRawItem(it) === slot) ?? null;
+    const item = items.find((it) => slotForItem(it) === slot) ?? null;
+    const poolTop = topItemsBySlot[slot]?.[0] ?? null;
+    const poolTopMods = affixModsBySlot[slot].slice(0, 5);
 
-    const poolTop = g.topItemsBySlot[slot]?.[0] ?? null;
-    // Top 5 affix mods for this slot (may be empty for slots with no rare/magic/crafted data)
-    const poolTopMods = (g.affixModsBySlot[slot] ?? []).slice(0, 5);
+    const userProps = item?.properties ?? [];
 
-    // Build a set of modifier names the user actually has on this item
-    const userMods = new Set((item?.modifiers ?? []).map((m) => m.name));
-
-    // Determine display name for the user's item
     let userItemName: string | null = null;
     if (item) {
       if (item.name) {
         userItemName = item.name;
-      } else if (item.is_runeword) {
-        userItemName = `Runeword (${item.base?.name ?? "?"})`;
+      } else if (item.runeword) {
+        userItemName = "Runeword";
       } else {
-        const quality = item.quality?.name ?? "Unknown";
-        userItemName = `${quality} ${item.base?.name ?? "Item"}`;
+        userItemName = item.quality?.name ?? "Item";
       }
     }
 
     slots[slot] = {
       slot,
       poolTopItemName: poolTop?.itemName ?? null,
+      poolTopItemType: poolTop?.itemType ?? null,
       userItemName,
       userItemQuality: item?.quality?.name ?? null,
       userMatchesPoolTop:
         !!poolTop && !!userItemName && userItemName === poolTop.itemName,
-      poolTopAffixMods: poolTopMods.map((m) => ({
-        modName: m.modName,
-        displayLabel: m.displayLabel,
-        pct: m.pct,
-        userHas: userMods.has(m.modName),
-      })),
+      poolTopAffixMods: poolTopMods.map((m) => {
+        const label = affixLabel(m.modKey);
+        return {
+          modName: m.modKey,
+          displayLabel: label,
+          pct: m.pct,
+          userHas: userProps.some((p) => p.toLowerCase().includes(label.toLowerCase())),
+        };
+      }),
     };
   }
 
-  // Mercenary comparison. The character's merc `description` field (e.g. "Might Merc")
-  // matches the MercTypeUsageRow `mercType` field (also "Might Merc"). The poolMercType
-  // coming from buildSheet.mercenary.topType should be in the same format.
-  const userMercType =
-    (c.mercenary as { description?: string } | null)?.description ?? null;
-  const poolMercType = g.poolMercType || null;
+  const mercDesc =
+    typeof raw.mercenary === "object" && raw.mercenary !== null
+      ? (raw.mercenary as { description?: string; type?: string }).description ??
+        (raw.mercenary as { description?: string; type?: string }).type ??
+        null
+      : null;
+  const poolMercType = meta.mercTypeUsage?.[0]?.mercType ?? null;
 
   return {
-    characterName: c.character.name,
-    accountName: c.accountName,
-    characterLevel: c.character.level,
-    className: c.character.class.name,
+    characterName: raw.character.name,
+    accountName: raw.accountName ?? "",
+    characterLevel: raw.character.level,
+    className: raw.character.class?.name ?? "",
     mercTypeMatchesPool:
-      poolMercType && userMercType ? poolMercType === userMercType : null,
+      poolMercType && mercDesc ? poolMercType === mercDesc : null,
     poolMercType,
-    userMercType,
+    userMercType: mercDesc,
     slots,
   };
-}
-
-/**
- * Find a character in a sampled raw set by name. Case-insensitive match
- * against character.character.name OR character.accountName.
- */
-export function findCharacterInSample(
-  name: string,
-  sample: Character[],
-): Character | null {
-  const needle = name.toLowerCase();
-  return (
-    sample.find(
-      (c) =>
-        c.character.name.toLowerCase() === needle ||
-        c.accountName.toLowerCase() === needle,
-    ) ?? null
-  );
-}
-
-/**
- * Pull a Character out of the per-account API response.
- * The API returns `{ characters: Character[] }`.
- * Returns the first character whose character.name matches `name`
- * (case-insensitive), else the first character, else null.
- */
-export function pickCharacterFromAccountResponse(
-  name: string,
-  response: unknown,
-): Character | null {
-  if (!response || typeof response !== "object") return null;
-  const obj = response as Record<string, unknown>;
-  if (!Array.isArray(obj.characters) || obj.characters.length === 0) return null;
-  const list = obj.characters as Character[];
-  const needle = name.toLowerCase();
-  const exact = list.find((c) => c.character?.name?.toLowerCase() === needle);
-  return exact ?? list[0];
 }

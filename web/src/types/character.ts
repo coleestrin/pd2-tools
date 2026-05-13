@@ -1,3 +1,14 @@
+export type Slot =
+  | "helm"
+  | "armor"
+  | "weapon"
+  | "offhand"
+  | "gloves"
+  | "belt"
+  | "boots"
+  | "amulet"
+  | "ring";
+
 export interface ICharacter {
   name: string;
   level: number;
@@ -71,10 +82,12 @@ export interface CharacterListResponse {
 
 export interface ItemUsageStats {
   item: string;
-  itemType: "Unique" | "Set" | "Runeword";
+  itemType: "Unique" | "Set" | "Runeword" | "Rare" | "Magic" | "Crafted";
   numOccurrences: number;
   totalSample: number;
   pct: number;
+  // Populated by /meta; legacy /stats endpoints leave it undefined.
+  slot?: Slot;
 }
 
 export interface SkillUsageStats {
@@ -197,4 +210,63 @@ export interface CharacterSnapshotListItem {
 export interface CharacterSnapshotsResponse {
   snapshots: CharacterSnapshotListItem[];
   total: number;
+}
+
+export type GameMode = "hardcore" | "softcore";
+
+export interface ISkillRequirement {
+  name: string;
+  minLevel: number;
+}
+
+export interface IMetaQuery {
+  gameMode: GameMode;
+  className: string;
+  minLevel: number;
+  skills: ISkillRequirement[];
+  season?: number;
+}
+
+export interface IClassifiedSkillRow {
+  name: string;
+  numOccurrences: number;
+  numAsBuild: number;
+  numAsPrereq: number;
+  numAtTwenty: number;
+  totalSample: number;
+  pct: number;
+  pctBuild: number;
+  pctAtTwenty: number;
+}
+
+// modKey: bucket key. For `item_addskill_tab` entries it is suffixed with the
+// tab name ("item_addskill_tab|Combat Skills"). Resolve to a label via
+// mod-dictionary.json on the FE.
+export interface IAffixModRow {
+  slot: string;
+  modKey: string;
+  numOccurrences: number;
+  totalSample: number;
+  pct: number;
+  avg: number;
+  median: number;
+  p75: number;
+}
+
+export interface IAvgStatRow {
+  modName: string;
+  avgValue: number;
+  charsWithMod: number;
+  pctOfChars: number;
+}
+
+export interface IMetaResponse {
+  cohortSize: number;
+  itemUsage: ItemUsageStats[];
+  skillUsage: IClassifiedSkillRow[];
+  mercTypeUsage: MercTypeStats[];
+  mercItemUsage: ItemUsageStats[];
+  levelDistribution: LevelDistributionData;
+  affixMods: IAffixModRow[];
+  avgStats: IAvgStatRow[];
 }

@@ -1,10 +1,6 @@
 import { Tabs, Table, Text, ScrollArea } from "@mantine/core";
-import type { IAffixModRow } from "../../types/meta";
+import type { IAffixModRow } from "../../types";
 import modDictionaryRaw from "../../data/mod-dictionary.json";
-
-// ---------------------------------------------------------------------------
-// Slot ordering: matches ItemFrequencyTable / aggregator's SLOT_ORDER
-// ---------------------------------------------------------------------------
 
 const SLOTS = [
   "weapon",
@@ -48,25 +44,14 @@ function aggregateAcrossSlots(
   return { totalItems, mods };
 }
 
-// ---------------------------------------------------------------------------
-// Mod dictionary: maps mod key → { displayLabel, category }
-// ---------------------------------------------------------------------------
-
 type ModDictionaryEntry = { displayLabel?: string; category?: string };
 type ModDictionary = Record<string, ModDictionaryEntry>;
 
 const DICT = modDictionaryRaw as ModDictionary;
 
-/**
- * Resolve a human-readable label for a mod bucket key.
- *
- * Mod keys are one of:
- *   - "item_fastercastrate": single-value mod, looked up in mod-dictionary
- *   - "item_addskill_tab|Combat Skills": bucketed by tab; show the tab name
- *   - "item_singleskill|Ice Blast": bucketed by skill; show the skill name
- *   - "item_addclassskills|Sorceress Skills": show the class-skills name
- * For any "<name>|<label>" form the label after "|" is used directly.
- */
+// modKey is either "item_<name>" (look up in DICT) or "<name>|<label>" where
+// the label after the pipe is the display text (skill-tab / single-skill /
+// class-skills buckets).
 function resolveLabel(modKey: string): string {
   const pipe = modKey.indexOf("|");
   if (pipe !== -1) {
@@ -75,10 +60,6 @@ function resolveLabel(modKey: string): string {
   return DICT[modKey]?.displayLabel ?? modKey;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 interface Props {
   rows: IAffixModRow[];
 }
@@ -86,7 +67,6 @@ interface Props {
 const TOP_N = 20;
 
 export function AffixFrequencyTable({ rows }: Props) {
-  // Group rows by slot
   const bySlot: Partial<Record<Slot, IAffixModRow[]>> = {};
   for (const slot of SLOTS) {
     bySlot[slot] = [];

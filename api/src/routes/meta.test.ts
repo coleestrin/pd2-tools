@@ -1,28 +1,9 @@
 // @ts-nocheck
-/**
- * /api/v1/meta: Jest + supertest integration tests
- *
- *
- * Strategy:
- *   - Build a minimal Express app inline (matches routes.test.ts style).
- *   - Mount metaRoutes directly: real MetaDB_Postgres connects via env vars
- *     that the Docker container already has set.
- *   - Mock utils/cache to bypass Redis (same pattern as routes.test.ts).
- *   - Mock config logger so the named-logger factory doesn't crash in test env.
- *
- * 7 canonical builds × 6 parity sub-tests = 42, plus 4 validation tests = 46 total.
- * All parity assertions are SHAPE checks: they pass regardless of how much
- * ladder data the dev DB has (empty cohort satisfies all 6 as conditional on length > 0).
- */
-
 import request from "supertest";
 import express, { Application } from "express";
 import metaRoutes from "./meta";
 import type { IMetaResponse } from "../types/meta";
 
-// ---------------------------------------------------------------------------
-// Mock Redis cache: avoids needing a Redis connection during tests
-// ---------------------------------------------------------------------------
 jest.mock("../utils/cache", () => ({
   getCacheValue: jest.fn(() => Promise.resolve(undefined)),
   setCacheValue: jest.fn(() => Promise.resolve(true)),
@@ -32,10 +13,6 @@ jest.mock("../utils/cache", () => ({
   closeRedis: jest.fn(() => Promise.resolve()),
 }));
 
-// ---------------------------------------------------------------------------
-// Mock config: provide a working logger and currentSeason for the route.
-// We do NOT mock the DB config (MetaDB_Postgres reads process.env directly).
-// ---------------------------------------------------------------------------
 jest.mock("../config", () => ({
   config: {
     currentSeason: 13,
@@ -55,9 +32,6 @@ jest.mock("../config", () => ({
   },
 }));
 
-// ---------------------------------------------------------------------------
-// App factory: one app instance shared across all tests
-// ---------------------------------------------------------------------------
 let app: Application;
 
 beforeAll(() => {
@@ -66,7 +40,6 @@ beforeAll(() => {
   app.use("/api/v1/meta", metaRoutes);
 });
 
-// One canonical build per class. Used by the parity assertions below.
 interface CanonicalBuild {
   slug: string;
   className: string;
@@ -125,13 +98,7 @@ async function fetchMeta(
   return { status: res.status, body: res.body };
 }
 
-// ---------------------------------------------------------------------------
-// Test suite
-// ---------------------------------------------------------------------------
-
 describe("/api/v1/meta", () => {
-  // ---- Validation errors --------------------------------------------------
-
   describe("Validation errors (400)", () => {
     it("rejects missing className", async () => {
       const res = await request(app).get("/api/v1/meta");

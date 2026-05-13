@@ -12,13 +12,9 @@ import {
   Title,
 } from "@mantine/core";
 import { charactersAPI } from "../../api";
-import {
-  adaptForkCharacter,
-  buildGuideSlice,
-} from "../../lib/diff-adapter";
 import { diffCharacter, type CharacterDiff } from "../../lib/diff";
-import type { IMetaResponse } from "../../types";
-import type { Slot } from "../../lib/types";
+import type { IMetaResponse, Slot } from "../../types";
+import { ItemTooltip, type ItemData } from "../builds/shared/ItemHelpers";
 
 interface Props {
   characterName: string;
@@ -43,6 +39,18 @@ export function DiffView({ characterName, meta, gameMode = "softcore" }: Props) 
   const [diff, setDiff] = useState<CharacterDiff | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [itemsData, setItemsData] = useState<Map<string, ItemData>>(new Map());
+
+  useEffect(() => {
+    fetch("/items.json")
+      .then((r) => r.json())
+      .then((items: ItemData[]) => {
+        const m = new Map<string, ItemData>();
+        for (const it of items) m.set(it.gearId.name, it);
+        setItemsData(m);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!characterName) return;
@@ -60,13 +68,12 @@ export function DiffView({ characterName, meta, gameMode = "softcore" }: Props) 
           setError(`Character "${characterName}" not found.`);
           return;
         }
-        const char = adaptForkCharacter(raw);
-        if (!char) {
+        const result = diffCharacter(raw, meta);
+        if (!result) {
           setError(`Character "${characterName}" has no data.`);
           return;
         }
-        const guide = buildGuideSlice(meta);
-        setDiff(diffCharacter(char, guide));
+        setDiff(result);
       })
       .catch((e: unknown) => {
         if (cancelled) return;
@@ -168,7 +175,15 @@ export function DiffView({ characterName, meta, gameMode = "softcore" }: Props) 
                   Pool top
                 </Text>
                 <Text size="sm" fw={500}>
-                  {s.poolTopItemName ?? (
+                  {s.poolTopItemName ? (
+                    <ItemTooltip
+                      itemData={itemsData.get(s.poolTopItemName)}
+                      itemType={s.poolTopItemType ?? "Unique"}
+                      itemName={s.poolTopItemName}
+                    >
+                      <span>{s.poolTopItemName}</span>
+                    </ItemTooltip>
+                  ) : (
                     <Text component="span" c="dimmed" fs="italic">
                       -
                     </Text>
@@ -186,7 +201,13 @@ export function DiffView({ characterName, meta, gameMode = "softcore" }: Props) 
                       fw={s.userMatchesPoolTop ? 700 : 400}
                       c={s.userMatchesPoolTop ? "green" : undefined}
                     >
-                      {s.userItemName}
+                      <ItemTooltip
+                        itemData={itemsData.get(s.userItemName)}
+                        itemType={s.userItemQuality ?? "Unique"}
+                        itemName={s.userItemName}
+                      >
+                        <span>{s.userItemName}</span>
+                      </ItemTooltip>
                     </Text>
                     {s.userItemQuality && !s.userMatchesPoolTop && (
                       <Text size="xs" c="dimmed">

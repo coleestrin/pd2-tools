@@ -1,5 +1,5 @@
 import { Paper, SimpleGrid, Stack, Text } from "@mantine/core";
-import type { IAvgStatRow } from "../../types/meta";
+import type { IAvgStatRow } from "../../types";
 
 const CORE_STAT_LABELS: Record<string, string> = {
   strength: "Strength",

@@ -1,5 +1,5 @@
 import { Paper, SimpleGrid, Stack, Text } from "@mantine/core";
-import type { IAffixModRow } from "../../types/meta";
+import type { IAffixModRow } from "../../types";
 import modDictionaryRaw from "../../data/mod-dictionary.json";
 
 type ModDictEntry = { displayLabel?: string };

@@ -1,11 +1,15 @@
-import type { CommonFilter, GameMode } from "./api";
+import type { GameMode } from "../types";
 
-// What the UI tracks beyond CommonFilter (mode toggle, diff name, future skills).
+type CommonFilter = {
+  gameMode: GameMode;
+  className?: string;
+  minLevel?: number;
+};
+
 export type UiState = {
   filter: CommonFilter;
   mode: "guide" | "diff";
   diffName: string;
-  // Phase 2: read but not applied yet.
   skills: Array<{ name: string; minLevel: number }>;
 };
 

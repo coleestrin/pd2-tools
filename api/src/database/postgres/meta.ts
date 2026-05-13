@@ -10,6 +10,7 @@ import type {
   IMercTypeUsageRow,
   ISkillRequirement,
   ISkillUsageRow,
+  Slot,
 } from "../../types/meta";
 
 // ---------------------------------------------------------------------------
@@ -117,6 +118,54 @@ const IGNORED_UNIQUES_ARRAY = [
   "Lidless Wall",
 ];
 
+// Maps the item.base.type values seen in the API's per-item JSON to slot
+// categories. Anything not listed (charms, jewels, runes) → null.
+const SLOT_BY_BASE_TYPE: Record<string, Slot> = {
+  Helm: "helm",
+  Circlet: "helm",
+  "Primal Helm": "helm",
+  Pelt: "helm",
+  Armor: "armor",
+  Belt: "belt",
+  Boots: "boots",
+  Gloves: "gloves",
+  Amulet: "amulet",
+  Ring: "ring",
+  Shield: "offhand",
+  "Auric Shields": "offhand",
+  "Voodoo Heads": "offhand",
+  "Bow Quiver": "offhand",
+  "Crossbow Quiver": "offhand",
+  Sword: "weapon",
+  Mace: "weapon",
+  Axe: "weapon",
+  Hammer: "weapon",
+  Bow: "weapon",
+  Crossbow: "weapon",
+  Spear: "weapon",
+  Javelin: "weapon",
+  Staff: "weapon",
+  Wand: "weapon",
+  Scepter: "weapon",
+  Orb: "weapon",
+  "Hand to Hand": "weapon",
+  "Hand to Hand 2": "weapon",
+  Polearm: "weapon",
+  "Scythe Type": "weapon",
+  "Throwing Axe": "weapon",
+  "Throwing Knife": "weapon",
+  "Amazon Bow": "weapon",
+  "Amazon Javelin": "weapon",
+  "Amazon Spear": "weapon",
+  Club: "weapon",
+  Knife: "weapon",
+};
+
+function slotFromBaseType(baseType: string | undefined | null): Slot | null {
+  if (!baseType) return null;
+  return SLOT_BY_BASE_TYPE[baseType] ?? null;
+}
+
 export interface ICohortFilter {
   gameMode: GameMode;
   className: string;
@@ -129,6 +178,7 @@ export interface ICohortFilter {
 export class MetaDB_Postgres {
   private pool: Pool;
   private readonly dbConfig: PoolConfig;
+  private slotByItemName: Map<string, Slot> | null = null;
 
   constructor() {
     this.dbConfig = {
@@ -141,6 +191,34 @@ export class MetaDB_Postgres {
     };
 
     this.pool = new Pool(this.dbConfig);
+  }
+
+  // Slot per item-name (Unique/Set/Runeword), derived from item.base.type in
+  // each character's JSON. Built lazily on first call; not invalidated — the
+  // mapping is fixed per PD2 patch.
+  private async ensureSlotMap(): Promise<Map<string, Slot>> {
+    if (this.slotByItemName) return this.slotByItemName;
+    const sql = `
+      SELECT DISTINCT
+        item->>'name' AS name,
+        item->'base'->>'type' AS base_type
+      FROM Characters,
+           LATERAL jsonb_array_elements(full_response_json->'items') AS item
+      WHERE item->>'name' IS NOT NULL
+        AND item->'base'->>'type' IS NOT NULL
+        AND (
+          item->'quality'->>'name' IN ('Unique', 'Set')
+          OR (item->>'is_runeword')::boolean = true
+        )
+    `;
+    const r = await this.pool.query<{ name: string; base_type: string }>(sql);
+    const map = new Map<string, Slot>();
+    for (const row of r.rows) {
+      const slot = slotFromBaseType(row.base_type);
+      if (slot) map.set(row.name, slot);
+    }
+    this.slotByItemName = map;
+    return map;
   }
 
   /**
@@ -194,21 +272,10 @@ export class MetaDB_Postgres {
     return result.rows.map((r) => r.character_db_id);
   }
 
-  /**
-   * Aggregate equipped-item usage across the given cohort.
-   *
-   * Counts how many characters wear each named item. Only Unique / Set /
-   * Runeword qualities are included: Rare / Magic / Crafted items have
-   * unique random names and can't be name-aggregated (those are handled
-   * by the affix-mods aggregation in ).
-   *
-   * Mirrors the existing analyzeItemUsage CASE logic for item-type
-   * classification (see CharacterDB_Postgres for reference), including
-   * the IGNORED_UNIQUES_ARRAY exclusion for ubiquitous items (Torch,
-   * Annihilus, Call to Arms, Lidless Wall).
-   *
-   * Returns rows sorted by numOccurrences desc.
-   */
+  // Counts how many characters wear each named item across the cohort.
+  // Only Unique / Set / Runeword qualities; the random-name qualities
+  // (Rare / Magic / Crafted) are covered by aggregateAffixMods instead.
+  // IGNORED_UNIQUES_ARRAY excludes Torch / Anni / CtA / Lidless.
   public async aggregateItemUsage(
     cohortIds: number[],
   ): Promise<IItemUsageRow[]> {
@@ -240,12 +307,13 @@ export class MetaDB_Postgres {
       ORDER BY "numOccurrences" DESC
     `;
 
-    const result = await this.pool.query<IItemUsageRow>(sql, [
+    const result = await this.pool.query<Omit<IItemUsageRow, "slot">>(sql, [
       cohortIds,
       cohortIds.length,
       IGNORED_UNIQUES_ARRAY,
     ]);
-    return result.rows;
+    const slotMap = await this.ensureSlotMap();
+    return result.rows.map((r) => ({ ...r, slot: slotMap.get(r.item) ?? null }));
   }
 
   /**
@@ -402,16 +470,6 @@ export class MetaDB_Postgres {
     return result.rows;
   }
 
-  /**
-   * Aggregate equipped items on mercenaries across the cohort.
-   *
-   * Same CASE-based classification as aggregateItemUsage (Unique / Set /
-   * Runeword) and uses the same IGNORED_UNIQUES_ARRAY exclusion. MercenaryItems
-   * joins directly via character_db_id (no separate merc_id: one merc per
-   * character). Mirrors analyzeMercItemUsage's table/JOIN structure.
-   *
-   * Returns rows sorted by numOccurrences desc.
-   */
   public async aggregateMercItems(
     cohortIds: number[],
   ): Promise<IItemUsageRow[]> {
@@ -442,12 +500,13 @@ export class MetaDB_Postgres {
       GROUP BY BI.name, "itemType"
       ORDER BY "numOccurrences" DESC
     `;
-    const result = await this.pool.query<IItemUsageRow>(sql, [
+    const result = await this.pool.query<Omit<IItemUsageRow, "slot">>(sql, [
       cohortIds,
       cohortIds.length,
       IGNORED_UNIQUES_ARRAY,
     ]);
-    return result.rows;
+    const slotMap = await this.ensureSlotMap();
+    return result.rows.map((r) => ({ ...r, slot: slotMap.get(r.item) ?? null }));
   }
 
   /**
@@ -465,13 +524,13 @@ export class MetaDB_Postgres {
     if (cohortIds.length === 0) return { hardcore: [], softcore: [] };
 
     const sql = `
-      SELECT C.level, COUNT(*)::int AS "numOccurrences"
+      SELECT C.level, COUNT(*)::int AS "count"
       FROM Characters C
       WHERE C.character_db_id = ANY($1::int[])
       GROUP BY C.level
       ORDER BY C.level
     `;
-    const result = await this.pool.query<{ level: number; numOccurrences: number }>(
+    const result = await this.pool.query<{ level: number; count: number }>(
       sql,
       [cohortIds],
     );

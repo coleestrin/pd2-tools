@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Tabs, Table, Text, Badge, ScrollArea } from "@mantine/core";
 import { shapeTopItemsBySlot } from "../../lib/shape/topItems";
 import type { TopItemsBySlot } from "../../lib/shape/topItems";
-import type { IItemUsageRow } from "../../types/meta";
+import type { ItemUsageStats } from "../../types";
 import { ItemTooltip, type ItemData } from "../builds/shared/ItemHelpers";
 
 const SLOTS: Array<keyof TopItemsBySlot> = [
@@ -18,13 +18,11 @@ const SLOTS: Array<keyof TopItemsBySlot> = [
 ];
 
 interface Props {
-  rows: IItemUsageRow[];
+  rows: ItemUsageStats[];
 }
 
 export function ItemFrequencyTable({ rows }: Props) {
   const bySlot = shapeTopItemsBySlot(rows);
-  // Same items.json the /builds page loads. Lookup by item name powers
-  // the hover tooltip (image, required level, attribute lines).
   const [itemsData, setItemsData] = useState<Map<string, ItemData>>(new Map());
   useEffect(() => {
     fetch("/items.json")
@@ -34,9 +32,7 @@ export function ItemFrequencyTable({ rows }: Props) {
         for (const it of items) m.set(it.gearId.name, it);
         setItemsData(m);
       })
-      .catch(() => {
-        // Tooltip is non-critical; rows stay clickable without it.
-      });
+      .catch(() => {});
   }, []);
 
   return (

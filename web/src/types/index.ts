@@ -3,4 +3,3 @@ export * from "./economy";
 export * from "./statistics";
 export * from "./constants";
 export * from "./ui";
-export * from "./meta";

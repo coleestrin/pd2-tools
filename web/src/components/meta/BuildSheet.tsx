@@ -11,21 +11,15 @@ import {
 } from "@mantine/core";
 import { CollapsibleSection } from "./CollapsibleSection";
 import skillClassificationRaw from "../../data/skill-classification.json";
-import type { IClassifiedSkillRow, ILevelDistribution } from "../../types/meta";
+import type { IClassifiedSkillRow, LevelDistributionData } from "../../types";
 
 type SkillRole = "core" | "synergy";
 type SkillClassification = Record<string, Record<string, SkillRole>>;
 const SKILL_CLASSIFICATION = skillClassificationRaw as SkillClassification;
 
-// ---------------------------------------------------------------------------
-// Level distribution mini-chart (Mantine Box bars, no extra chart library)
-// ---------------------------------------------------------------------------
-
-function LevelDistributionChart({ dist }: { dist: ILevelDistribution }) {
-  // The cohort is always one game mode, so exactly one side is non-empty.
-  // Empty buckets get filtered so every bar has room regardless of range.
+function LevelDistributionChart({ dist }: { dist: LevelDistributionData }) {
   const buckets = (dist.softcore.length > 0 ? dist.softcore : dist.hardcore)
-    .filter((b) => b.numOccurrences > 0);
+    .filter((b) => b.count > 0);
 
   if (buckets.length === 0) {
     return (
@@ -35,9 +29,7 @@ function LevelDistributionChart({ dist }: { dist: ILevelDistribution }) {
     );
   }
 
-  const maxCount = Math.max(...buckets.map((b) => b.numOccurrences));
-  // Reserve a fixed area for bars + labels so the chart's height is
-  // predictable and the page above doesn't reflow when the cohort changes.
+  const maxCount = Math.max(...buckets.map((b) => b.count));
   const BAR_AREA_HEIGHT = 96;
 
   return (
@@ -48,11 +40,11 @@ function LevelDistributionChart({ dist }: { dist: ILevelDistribution }) {
       style={{ height: BAR_AREA_HEIGHT + 22 }}
     >
       {buckets.map((b) => {
-        const barHeight = maxCount > 0 ? (b.numOccurrences / maxCount) * BAR_AREA_HEIGHT : 0;
+        const barHeight = maxCount > 0 ? (b.count / maxCount) * BAR_AREA_HEIGHT : 0;
         return (
           <Tooltip
             key={b.level}
-            label={`L${b.level}: ${b.numOccurrences.toLocaleString()}`}
+            label={`L${b.level}: ${b.count.toLocaleString()}`}
             position="top"
             withArrow
           >
@@ -87,13 +79,9 @@ function LevelDistributionChart({ dist }: { dist: ILevelDistribution }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// BuildSheet
-// ---------------------------------------------------------------------------
-
 interface Props {
   skillUsage: IClassifiedSkillRow[];
-  levelDistribution?: ILevelDistribution;
+  levelDistribution?: LevelDistributionData;
   className: string;
 }
 

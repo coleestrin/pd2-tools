@@ -5,9 +5,6 @@ interface Props {
   className: string;
 }
 
-/**
- * Single-line header: "N Paladin characters match this filter".
- */
 export function MatchBanner({ cohortSize, className }: Props) {
   return (
     <Title order={4}>

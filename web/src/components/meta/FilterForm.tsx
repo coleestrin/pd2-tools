@@ -48,7 +48,6 @@ function SkillIcon({ name, size = 32 }: { name: string; size?: number }) {
   );
 }
 
-// Section label with uppercase tracking.
 function SectionLabel({
   children,
   ta,
@@ -70,8 +69,6 @@ function SectionLabel({
   );
 }
 
-// Loaded for the per-class skill list (Object.keys). Role values aren't used
-// here; BuildSheet reads them separately.
 const SKILLS_BY_CLASS = skillClassificationRaw as Record<string, Record<string, string>>;
 
 const CLASSES = [
@@ -84,9 +81,6 @@ const CLASSES = [
   "Sorceress",
 ];
 
-// Three-tier responsive labels. Full names fit at ≥ md breakpoint;
-// shortened ones fit on sub-tablet widths; single-letter fallback for
-// anything below ~mobile so the row never wraps or overflows.
 const CLASS_SHORT: Record<string, string> = {
   Amazon: "Ama",
   Assassin: "Assa",
@@ -114,18 +108,11 @@ interface Props {
 export function FilterForm({ initial, onSubmit }: Props) {
   const [s, setS] = useState<UiState>(initial);
 
-  // Pick the class-label tier based on viewport. The form has nowrap on the
-  // class row, so labels must shrink (not wrap) once the row stops fitting.
   const isNarrow = useMediaQuery("(max-width: 576px)");
-  const isMedium = useMediaQuery("(max-width: 768px)");
+  const isMedium = useMediaQuery("(max-width: 992px)");
   const classLabel = (c: string) =>
     isNarrow ? CLASS_INITIAL[c] : isMedium ? CLASS_SHORT[c] : c;
 
-  // Fetch class-only baseline skill usage so we can show "X% of all <Class>s
-  // who use this skill in their build" next to each entry. minLevel=80 keeps
-  // the cohort to end-game characters (matches the convention pd2.tools/builds
-  // uses); 15-min Redis cache shared with the main fetch. The hook itself
-  // guards on empty className so this is safe when no class is picked.
   const classOnlyMeta = useMetaData({
     gameMode: s.filter.gameMode,
     className: s.filter.className ?? "",
@@ -133,8 +120,6 @@ export function FilterForm({ initial, onSubmit }: Props) {
     skills: [],
   });
 
-  // pctAtTwenty is the focus-skill signal (20+ hard points). Selected skills
-  // float to the top; the rest stays sorted by pct desc.
   const selectedSkillNames = useMemo(
     () => new Set(s.skills.map((sk) => sk.name)),
     [s.skills],
