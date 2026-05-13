@@ -41,18 +41,23 @@ export default function SkillCard({ data, filters, updateFilters }: Props) {
     return data.skillUsage
       .reduce(
         (acc, skill) => {
+          // The PD2 game API returns "Berserker" for the skill whose
+          // canonical name is "Berserk".
+          const name =
+            skill.name === "Berserker" ? "Berserk" : skill.name;
+
           // Early return if it doesn't match search
           if (
             searchQuery &&
-            !skill.name.toLowerCase().startsWith(searchQuery)
+            !name.toLowerCase().startsWith(searchQuery)
           ) {
             return acc;
           }
 
           acc.push({
-            name: skill.name,
+            name,
             percentage: skill.pct,
-            isSelected: selectedSkillsSet.has(skill.name),
+            isSelected: selectedSkillsSet.has(name),
           });
           return acc;
         },
