@@ -1,0 +1,67 @@
+{
+  "Amazon": [
+    { "name": "Multishot", "skills": ["Multiple Shot", "Strafe", "Magic Arrow"] },
+    { "name": "Strafe", "skills": ["Strafe", "Multiple Shot", "Penetrate"] },
+    { "name": "Freezing Arrow", "skills": ["Freezing Arrow", "Ice Arrow", "Cold Arrow"] },
+    { "name": "Immolation Arrow", "skills": ["Immolation Arrow", "Fire Arrow", "Exploding Arrow"] },
+    { "name": "Lightning Fury", "skills": ["Lightning Fury", "Charged Strike", "Lightning Bolt"] },
+    { "name": "Lightning Strike", "skills": ["Lightning Strike", "Charged Strike", "Lightning Bolt"] },
+    { "name": "Plague Javelin", "skills": ["Plague Javelin", "Poison Javelin", "Lightning Bolt"] }
+  ],
+  "Assassin": [
+    { "name": "Lightning Trapsin", "skills": ["Lightning Sentry", "Death Sentry", "Charged Bolt Sentry"] },
+    { "name": "Fire Trapsin", "skills": ["Wake of Fire", "Wake of Inferno", "Fire Blast"] },
+    { "name": "Phoenix Strike", "skills": ["Phoenix Strike", "Burst of Speed", "Claws of Thunder"] },
+    { "name": "Kicksin", "skills": ["Dragon Talon", "Dragon Tail", "Burst of Speed"] },
+    { "name": "Blade Fury", "skills": ["Blade Fury", "Blade Shield", "Blade Sentinel"] },
+    { "name": "Death Sentry", "skills": ["Death Sentry", "Lightning Sentry", "Fire Blast"] }
+  ],
+  "Barbarian": [
+    { "name": "Whirlwind", "skills": ["Whirlwind", "Battle Orders", "Sword Mastery"] },
+    { "name": "Frenzy", "skills": ["Frenzy", "Double Swing", "Battle Orders"] },
+    { "name": "Concentrate", "skills": ["Concentrate", "Battle Orders", "Sword Mastery"] },
+    { "name": "Berserk", "skills": ["Berserk", "Howl", "Battle Orders"] },
+    { "name": "War Cry", "skills": ["War Cry", "Battle Cry", "Battle Orders"] },
+    { "name": "Double Throw", "skills": ["Double Throw", "Throwing Mastery", "Battle Orders"] },
+    { "name": "Leap Attack", "skills": ["Leap Attack", "Leap", "Battle Orders"] }
+  ],
+  "Druid": [
+    { "name": "Wind (Tornado)", "skills": ["Tornado", "Hurricane", "Cyclone Armor"] },
+    { "name": "Hurricane", "skills": ["Hurricane", "Tornado", "Twister"] },
+    { "name": "Armageddon", "skills": ["Armageddon", "Volcano", "Fissure"] },
+    { "name": "Fissure", "skills": ["Fissure", "Volcano", "Molten Boulder"] },
+    { "name": "Fury Werewolf", "skills": ["Fury", "Lycanthropy", "Feral Rage"] },
+    { "name": "Maul Werebear", "skills": ["Maul", "Lycanthropy", "Werebear"] },
+    { "name": "Rabies", "skills": ["Rabies", "Lycanthropy", "Poison Creeper"] },
+    { "name": "Summoner", "skills": ["Summon Grizzly", "Summon Dire Wolf", "Summon Spirit Wolf"] }
+  ],
+  "Necromancer": [
+    { "name": "Bone Spear", "skills": ["Bone Spear", "Bone Spirit", "Bone Wall"] },
+    { "name": "Bone Spirit", "skills": ["Bone Spirit", "Bone Spear", "Bone Wall"] },
+    { "name": "Summoner", "skills": ["Raise Skeleton", "Skeleton Mastery", "Raise Skeletal Mage"] },
+    { "name": "Poison Nova", "skills": ["Poison Nova", "Poison Strike", "Lower Resist"] },
+    { "name": "Daggermancer", "skills": ["Poison Strike", "Poison Nova", "Lower Resist"] },
+    { "name": "Dark Pact", "skills": ["Dark Pact", "Bone Spirit", "Bone Spear"] }
+  ],
+  "Paladin": [
+    { "name": "Hammerdin", "skills": ["Blessed Hammer", "Concentration", "Vigor"] },
+    { "name": "Smiter", "skills": ["Smite", "Holy Shield", "Fanaticism"] },
+    { "name": "FoH", "skills": ["Fist of the Heavens", "Holy Bolt", "Conviction"] },
+    { "name": "Holy Bolt", "skills": ["Holy Bolt", "Fist of the Heavens", "Prayer"] },
+    { "name": "Auradin (Fire)", "skills": ["Holy Fire", "Resist Fire", "Salvation"] },
+    { "name": "Auradin (Shock)", "skills": ["Holy Shock", "Resist Lightning", "Conviction"] },
+    { "name": "Zealot", "skills": ["Zeal", "Sacrifice", "Fanaticism"] },
+    { "name": "Charger", "skills": ["Charge", "Holy Shield", "Might"] }
+  ],
+  "Sorceress": [
+    { "name": "Blizzard", "skills": ["Blizzard", "Ice Blast", "Cold Mastery"] },
+    { "name": "Frozen Orb", "skills": ["Frozen Orb", "Cold Mastery", "Ice Bolt"] },
+    { "name": "Meteor", "skills": ["Meteor", "Fire Bolt", "Fire Mastery"] },
+    { "name": "Fire Ball", "skills": ["Fire Ball", "Fire Bolt", "Fire Mastery"] },
+    { "name": "Hydra", "skills": ["Hydra", "Fire Mastery", "Fire Bolt"] },
+    { "name": "Lightning", "skills": ["Lightning", "Charged Bolt", "Lightning Mastery"] },
+    { "name": "Chain Lightning", "skills": ["Chain Lightning", "Lightning", "Lightning Mastery"] },
+    { "name": "Nova", "skills": ["Nova", "Lightning Mastery", "Static Field"] },
+    { "name": "Enchantress", "skills": ["Enchant", "Fire Mastery", "Warmth"] }
+  ]
+}

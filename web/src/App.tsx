@@ -9,6 +9,7 @@ import { Footer } from "./components/layout/Footer";
 // Pages
 import Home from "./pages/Home";
 import Builds from "./pages/Builds";
+import Meta from "./pages/Meta";
 import Character from "./pages/Character";
 import Account from "./pages/Account";
 import Economy from "./pages/Economy";
@@ -81,6 +82,9 @@ function App() {
                     path="/builds/account/:accountName"
                     element={<Account />}
                   />
+
+                  {/* Meta */}
+                  <Route path="/meta" element={<Meta />} />
 
                   {/* Economy */}
                   <Route path="/economy/:category" element={<Economy />} />

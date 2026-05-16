@@ -1,3 +1,14 @@
+export type Slot =
+  | "helm"
+  | "armor"
+  | "weapon"
+  | "offhand"
+  | "gloves"
+  | "belt"
+  | "boots"
+  | "amulet"
+  | "ring";
+
 export interface ICharacter {
   name: string;
   level: number;
@@ -27,6 +38,7 @@ export interface IItem {
   runeword?: boolean;
   location?: {
     equipment?: string;
+    zone?: string;
     x?: number;
     y?: number;
   };
@@ -75,6 +87,9 @@ export interface ItemUsageStats {
   numOccurrences: number;
   totalSample: number;
   pct: number;
+  // Populated by /meta; legacy /stats endpoints leave it undefined.
+  // null when the item's base.type isn't equippable gear (e.g. charms).
+  slot?: Slot | null;
 }
 
 export interface SkillUsageStats {
@@ -197,4 +212,63 @@ export interface CharacterSnapshotListItem {
 export interface CharacterSnapshotsResponse {
   snapshots: CharacterSnapshotListItem[];
   total: number;
+}
+
+export type GameMode = "hardcore" | "softcore";
+
+export interface ISkillRequirement {
+  name: string;
+  minLevel: number;
+}
+
+export interface IMetaQuery {
+  gameMode: GameMode;
+  className: string;
+  minLevel: number;
+  skills: ISkillRequirement[];
+  season?: number;
+}
+
+export interface IClassifiedSkillRow {
+  name: string;
+  numOccurrences: number;
+  numAsBuild: number;
+  numAsPrereq: number;
+  numAtTwenty: number;
+  totalSample: number;
+  pct: number;
+  pctBuild: number;
+  pctAtTwenty: number;
+}
+
+// modKey is either the raw mod name (look up in mod-dictionary.json) or
+// "<name>|<label>" for the three bucketed mods: item_addskill_tab,
+// item_singleskill, item_addclassskills. Label after "|" is display text.
+export interface IAffixModRow {
+  slot: Slot;
+  modKey: string;
+  numOccurrences: number;
+  totalSample: number;
+  pct: number;
+  avg: number;
+  median: number;
+  p75: number;
+}
+
+export interface IAvgStatRow {
+  modName: string;
+  avgValue: number;
+  charsWithMod: number;
+  pctOfChars: number;
+}
+
+export interface IMetaResponse {
+  cohortSize: number;
+  itemUsage: ItemUsageStats[];
+  skillUsage: IClassifiedSkillRow[];
+  mercTypeUsage: MercTypeStats[];
+  mercItemUsage: ItemUsageStats[];
+  levelDistribution: LevelDistributionData;
+  affixMods: IAffixModRow[];
+  avgStats: IAvgStatRow[];
 }

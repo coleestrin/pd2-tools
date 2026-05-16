@@ -1,4 +1,4 @@
-import { IconAlarm, IconChevronDown, IconDownload } from "@tabler/icons-react";
+import { IconAlarm, IconChartBar, IconChevronDown, IconDownload } from "@tabler/icons-react";
 import { GitHubStarsButton } from "../GitHubStarsButton";
 import { DiscordOnlineButton } from "../DiscordOnlineButton";
 import {
@@ -25,6 +25,21 @@ const links = [
   {
     label: "Tools",
     subLinks: [
+      {
+        link: "/meta",
+        label: (
+          <span style={{ display: "flex", alignItems: "center" }}>
+            <IconChartBar
+              style={{
+                width: rem(16),
+                height: rem(16),
+                marginRight: rem(12),
+              }}
+            />
+            Meta
+          </span>
+        ),
+      },
       {
         link: "/tools/character-export",
         label: (
