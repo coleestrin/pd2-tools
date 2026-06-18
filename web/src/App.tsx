@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { MantineProvider, createTheme } from "@mantine/core";
+import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Layout
@@ -17,10 +17,12 @@ import Statistics from "./pages/Statistics";
 import Leaderboard from "./pages/Leaderboard";
 import CharacterExport from "./pages/CharacterExport";
 import CorruptedZoneTracker from "./pages/CorruptedZoneTracker";
+import DamageCalculator from "./pages/DamageCalculator";
 import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "./components/shared";
+import { customDarkTheme } from "./theme";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,25 +32,6 @@ const queryClient = new QueryClient({
       retry: 1,
     },
   },
-});
-
-const customDarkTheme = createTheme({
-  colorScheme: "dark",
-  colors: {
-    dark: [
-      "#C1C2C5",
-      "#A6A7AB",
-      "#909296",
-      "#5C5F66",
-      "#373A40",
-      "#2C2E33",
-      "#25262B",
-      "#1A1B1E",
-      "#141517",
-      "#101113",
-    ],
-  },
-  primaryColor: "blue",
 });
 
 function App() {
@@ -103,6 +86,10 @@ function App() {
                   <Route
                     path="/tools/corrupted-zone-tracker"
                     element={<CorruptedZoneTracker />}
+                  />
+                  <Route
+                    path="/tools/damage-calculator"
+                    element={<DamageCalculator />}
                   />
 
                   {/* Info Pages */}

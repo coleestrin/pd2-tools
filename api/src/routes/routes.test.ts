@@ -7,6 +7,19 @@ import statisticsRoutes from "./statistics";
 import healthRoutes from "./health";
 import leaderboardRoutes from "./leaderboard";
 import { characterDB, economyDB } from "../database";
+import { calculateDamage } from "../utils/damage-calculator";
+
+jest.mock("../utils/damage-calculator", () => ({
+  calculateDamage: jest.fn(() => ({
+    weaponOptions: [],
+    skillOptions: [],
+    playerAuraOptions: [],
+    transformationOptions: [],
+    alwaysActiveAuras: [],
+    profiles: [],
+    notes: [],
+  })),
+}));
 
 jest.mock("../utils/cache", () => ({
   getCacheValue: jest.fn(() => Promise.resolve(undefined)), // Default: no cache hit
@@ -291,7 +304,7 @@ describe("API Routes", () => {
         expect(characterDB.getCharacterByName).toHaveBeenCalledWith(
           "softcore",
           "TestChar",
-          12
+          undefined
         );
       });
 
@@ -306,7 +319,7 @@ describe("API Routes", () => {
         expect(characterDB.getCharacterByName).toHaveBeenCalledWith(
           "hardcore",
           "TestChar",
-          12
+          undefined
         );
       });
 
@@ -349,6 +362,33 @@ describe("API Routes", () => {
         expect(response.body).toEqual({
           error: { message: "Failed to fetch character" },
         });
+      });
+
+      it("should return character data when damage calculation fails", async () => {
+        const mockCharacter = {
+          character: {
+            name: "TestChar",
+            level: 90,
+            class: { name: "Druid" },
+            attributes: {},
+            skills: [],
+          },
+          items: [],
+        };
+
+        (characterDB.getCharacterByName as jest.Mock).mockResolvedValue(
+          mockCharacter
+        );
+        (calculateDamage as jest.Mock).mockImplementationOnce(() => {
+          throw new Error("Damage calculation error");
+        });
+
+        const response = await request(app)
+          .get("/api/v1/characters/TestChar")
+          .expect(200);
+
+        expect(response.body).toEqual(mockCharacter);
+        expect(calculateDamage).toHaveBeenCalled();
       });
     });
 

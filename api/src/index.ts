@@ -1,18 +1,23 @@
 import { createServer, startServer } from "./server";
-import { closeAllDatabases } from "./database";
+import { characterDB, closeAllDatabases, economyDB } from "./database";
 import { initializeRedis, closeRedis } from "./utils/cache";
 import { logger as mainLogger } from "./config";
 
 const logger = mainLogger.createNamedLogger("API");
 
-// Initialize Redis
-initializeRedis().catch((err) => {
-  logger.error("Failed to initialize Redis on startup", { error: err });
-});
+async function main(): Promise<void> {
+  try {
+    await Promise.all([characterDB.ready, economyDB.ready, initializeRedis()]);
 
-// Create and start the server
-const app = createServer();
-startServer(app);
+    const app = createServer();
+    startServer(app);
+  } catch (error) {
+    logger.error("Failed to initialize API", { error });
+    process.exit(1);
+  }
+}
+
+void main();
 
 // Graceful shutdown
 process.on("SIGTERM", async () => {

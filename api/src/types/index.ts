@@ -24,3 +24,6 @@ export * from "./stats";
 
 // Service types
 export * from "./services";
+
+// Damage types
+export * from "./damage";

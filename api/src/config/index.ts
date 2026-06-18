@@ -3,6 +3,20 @@ import logger from "node-color-log";
 
 dotenv.config();
 
+const defaultCorsOrigins = [
+  "http://localhost:4173",
+  "http://127.0.0.1:4173",
+  "http://localhost:4174",
+  "http://127.0.0.1:4174",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+];
+
+const corsOrigins = (process.env.CORS_ORIGIN || defaultCorsOrigins.join(","))
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 export const config = {
   // Node environment
   nodeEnv: process.env.NODE_ENV || "development",
@@ -33,7 +47,7 @@ export const config = {
   currentSeason: parseInt(process.env.CURRENT_SEASON || "13", 10),
 
   // CORS
-  corsOrigin: process.env.CORS_ORIGIN || "http://localhost:5173",
+  corsOrigin: corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins,
 
   // Rate limiting
   rateLimit: {

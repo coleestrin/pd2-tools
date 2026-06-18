@@ -1,4 +1,9 @@
-import { IconAlarm, IconChevronDown, IconDownload } from "@tabler/icons-react";
+import {
+  IconAlarm,
+  IconCalculator,
+  IconChevronDown,
+  IconDownload,
+} from "@tabler/icons-react";
 import { GitHubStarsButton } from "../GitHubStarsButton";
 import { DiscordOnlineButton } from "../DiscordOnlineButton";
 import {
@@ -25,6 +30,21 @@ const links = [
   {
     label: "Tools",
     subLinks: [
+      {
+        link: "/tools/damage-calculator",
+        label: (
+          <span style={{ display: "flex", alignItems: "center" }}>
+            <IconCalculator
+              style={{
+                width: rem(16),
+                height: rem(16),
+                marginRight: rem(12),
+              }}
+            />
+            Damage Calculator
+          </span>
+        ),
+      },
       {
         link: "/tools/character-export",
         label: (

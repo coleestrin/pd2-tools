@@ -17,9 +17,36 @@ import { useMediaQuery } from "@mantine/hooks";
 import { Helmet } from "react-helmet";
 import { IconUser } from "@tabler/icons-react";
 import RelativeTime from "@yaireo/relative-time";
-import type { FullCharacterResponse } from "../types";
+import {
+  DEFAULT_VIEW_SEASON,
+  GAME_MODES,
+  type FullCharacterResponse,
+} from "../types";
 
 const relativeTime = new RelativeTime();
+
+function getCharacterHref(char: FullCharacterResponse) {
+  const name = char.character?.name;
+  if (!name) {
+    return "/builds";
+  }
+
+  const params = new URLSearchParams();
+  const isHardcore = char.character.status?.is_hardcore;
+  const season = char.character.season;
+
+  if (isHardcore) {
+    params.set("gameMode", GAME_MODES.HARDCORE);
+  }
+  if (season && season !== DEFAULT_VIEW_SEASON) {
+    params.set("season", String(season));
+  }
+
+  const queryString = params.toString();
+  const path = `/builds/character/${encodeURIComponent(name)}`;
+
+  return queryString ? `${path}?${queryString}` : path;
+}
 
 export default function Account() {
   const { accountName } = useParams<{ accountName: string }>();
@@ -139,7 +166,7 @@ export default function Account() {
                       withBorder
                       padding="lg"
                       component="a"
-                      href={`/builds/character/${char.character.name}`}
+                      href={getCharacterHref(char)}
                       style={{
                         cursor: "pointer",
                         textDecoration: "none",

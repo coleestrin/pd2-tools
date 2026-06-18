@@ -11,11 +11,45 @@ import {
   deleteCachePattern,
 } from "../utils/cache";
 import { calculateTotalSkills } from "../utils/skill-calculator";
-import { CharacterResponse } from "../types";
+import { CharacterResponse, CharacterData } from "../types";
 import fetch from "node-fetch";
+import { calculateDamage } from "../utils/damage-calculator";
+import { enrichArmoryPayload } from "../utils/armory-payload";
 
 const logger = mainLogger.createNamedLogger("API");
 const router = Router();
+
+function hasDamageCalculatorInput(
+  data: Partial<CharacterData> | null | undefined
+): data is CharacterData {
+  const character = data?.character;
+
+  return Boolean(
+    character &&
+      Array.isArray(data?.items) &&
+      Array.isArray(character.skills) &&
+      character.class?.name &&
+      character.attributes
+  );
+}
+
+function attachDamageCalculation(
+  data: Partial<CharacterData> | null | undefined
+) {
+  if (!hasDamageCalculatorInput(data)) {
+    return;
+  }
+
+  try {
+    enrichArmoryPayload(data);
+    data.damageCalculation = calculateDamage(data);
+  } catch (error: unknown) {
+    logger.warn("Damage calculation failed", {
+      character: data.character?.name,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
 
 const characterRefreshLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
@@ -122,9 +156,7 @@ router.get(
       const { name } = req.params;
       const { gameMode = "softcore", season } = req.query;
 
-      const seasonNumber = season
-        ? parseInt(season as string, 10)
-        : config.currentSeason;
+      const seasonNumber = season ? parseInt(season as string, 10) : undefined;
       const MODES = ["hardcore", "softcore"];
 
       let character = await characterDB.getCharacterByName(
@@ -146,8 +178,8 @@ router.get(
         }
       }
 
-      //TODO: pass season param and remove this
-      if (!character) {
+      // Keep explicit-season links tolerant of the previous default-season behavior.
+      if (!character && seasonNumber !== undefined) {
         for (const gm of MODES) {
           character = await characterDB.getCharacterByName(
             gm,
@@ -164,11 +196,14 @@ router.get(
       }
 
       // Calculate realStats from items before returning
+      enrichArmoryPayload(character as unknown as Partial<CharacterData>);
       if (character.items && character.items.length > 0) {
         // @ts-expect-error - character structure is validated by DB
         const statParser = new CharacterStatParser(character);
         character.realStats = statParser.parseAndGetCharStats();
       }
+
+      attachDamageCalculation(character as unknown as Partial<CharacterData>);
 
       res.json(character);
     } catch (error: unknown) {
@@ -293,11 +328,14 @@ router.get(
       }
 
       // Calculate realStats from items before returning
+      enrichArmoryPayload(snapshot as unknown as Partial<CharacterData>);
       if (snapshot.items && snapshot.items.length > 0) {
         // @ts-expect-error - snapshot structure is validated by DB
         const statParser = new CharacterStatParser(snapshot);
         snapshot.realStats = statParser.parseAndGetCharStats();
       }
+
+      attachDamageCalculation(snapshot as unknown as Partial<CharacterData>);
 
       res.json(snapshot);
     } catch (error: unknown) {
@@ -724,6 +762,7 @@ router.post("/:name/refresh", characterRefreshLimiter, async (req: Request, res:
 
     // Set lastUpdated and calculate realSkills (same as scraper does)
     charData.lastUpdated = now;
+    enrichArmoryPayload(charData as unknown as Partial<CharacterData>);
     charData.realSkills = calculateTotalSkills(
       charData as unknown as CharacterResponse
     );
@@ -754,11 +793,14 @@ router.post("/:name/refresh", characterRefreshLimiter, async (req: Request, res:
     }
 
     // Calculate realStats from items (same as GET endpoint does)
+    enrichArmoryPayload(updatedChar as unknown as Partial<CharacterData>);
     if (updatedChar.items && updatedChar.items.length > 0) {
       // @ts-expect-error - character structure is validated by DB
       const statParser = new CharacterStatParser(updatedChar);
       updatedChar.realStats = statParser.parseAndGetCharStats();
     }
+
+    attachDamageCalculation(updatedChar as unknown as Partial<CharacterData>);
 
     logger.info(`Character ${name} successfully refreshed`);
 

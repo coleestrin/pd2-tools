@@ -1,28 +1,54 @@
 import { useState, useMemo } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { Container, Skeleton, Grid } from "@mantine/core";
+import { Container, Grid, Skeleton } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@mantine/hooks";
 import { Helmet } from "react-helmet";
 import { charactersAPI } from "../api";
 import {
   CharacterHeader,
+  DamageCalculatorSection,
   EquipmentSection,
   SkillsSection,
   StatsSection,
   LevelProgressChart,
 } from "../components/character";
-import type { PlayerToggle, SkillsView } from "../types";
+import {
+  DEFAULT_VIEW_SEASON,
+  GAME_MODES,
+  type GameMode,
+  type PlayerToggle,
+  type SkillsView,
+} from "../types";
 
 interface NavContext {
   list: string[];
   currentIndex: number;
 }
 
+function getGameMode(value: string | null): GameMode {
+  return value === GAME_MODES.HARDCORE
+    ? GAME_MODES.HARDCORE
+    : GAME_MODES.SOFTCORE;
+}
+
+function getSeason(value: string | null): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
 export default function Character() {
   const { name } = useParams<{ name: string }>();
   const [searchParams] = useSearchParams();
   const characterName = name;
+  const requestedGameMode = getGameMode(
+    searchParams.get("gameMode") ?? searchParams.get("mode")
+  );
+  const requestedSeason = getSeason(searchParams.get("season"));
   const isMobile = useMediaQuery("(max-width: 767px)");
   const [playerToggle, setPlayerToggle] = useState<PlayerToggle>("player");
   const [skillsView, setSkillsView] = useState<SkillsView>("text");
@@ -57,12 +83,13 @@ export default function Character() {
   }, [characterName, navId]);
 
   const charQuery = useQuery({
-    queryKey: ["character", characterName],
+    queryKey: ["character", characterName, requestedGameMode, requestedSeason],
     queryFn: async () => {
       try {
         const data = await charactersAPI.getCharacter(
           characterName || "",
-          "softcore"
+          requestedGameMode,
+          requestedSeason
         );
         if (!data) {
           setDidError(true);
@@ -79,12 +106,18 @@ export default function Character() {
 
   // Fetch snapshot list for dropdown
   const snapshotsListQuery = useQuery({
-    queryKey: ["character-snapshots", characterName],
+    queryKey: [
+      "character-snapshots",
+      characterName,
+      requestedGameMode,
+      requestedSeason,
+    ],
     queryFn: async () => {
       try {
         return await charactersAPI.getCharacterSnapshots(
           characterName || "",
-          "softcore"
+          requestedGameMode,
+          requestedSeason
         );
       } catch {
         // No snapshots yet, return empty array
@@ -113,6 +146,28 @@ export default function Character() {
   const displayData = selectedSnapshot
     ? snapshotDataQuery.data
     : charQuery.data;
+  const damageCalculatorGameMode: GameMode = displayData?.character?.status
+    ?.is_hardcore
+    ? GAME_MODES.HARDCORE
+    : GAME_MODES.SOFTCORE;
+  const damageCalculatorSeason =
+    displayData?.character?.season ?? DEFAULT_VIEW_SEASON;
+  const damageCalculatorUrl = useMemo(() => {
+    if (!displayData?.character?.name) {
+      return "/tools/damage-calculator";
+    }
+
+    const params = new URLSearchParams({
+      character: displayData.character.name,
+      mode: damageCalculatorGameMode,
+    });
+
+    if (damageCalculatorSeason !== DEFAULT_VIEW_SEASON) {
+      params.set("season", String(damageCalculatorSeason));
+    }
+
+    return `/tools/damage-calculator?${params.toString()}`;
+  }, [damageCalculatorGameMode, damageCalculatorSeason, displayData]);
 
   return (
     <>
@@ -173,6 +228,14 @@ export default function Character() {
                 attributes={displayData.character.attributes}
                 stats={displayData.character}
                 realStats={displayData.realStats}
+              />
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, sm: 12 }}>
+              <DamageCalculatorSection
+                damageCalculation={displayData.damageCalculation}
+                variant="compact"
+                fullCalculatorUrl={damageCalculatorUrl}
               />
             </Grid.Col>
 
