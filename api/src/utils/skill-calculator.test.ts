@@ -114,6 +114,26 @@ describe("D2SkillParser", () => {
       );
     });
 
+    it("should apply direct skill bonus to Split Throw", () => {
+      const char = createMockCharacter(
+        "Barbarian",
+        [{ name: "Split Throw", level: 10 }],
+        [{ name: "Item", properties: ["+2 to Split Throw"] }]
+      );
+
+      const result = parser.calculateTotalSkills(char);
+
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            skill: "Split Throw",
+            level: 12,
+            baseLevel: 10,
+          }),
+        ])
+      );
+    });
+
     it("should apply multiple direct skill bonuses", () => {
       const char = createMockCharacter(
         "Sorceress",
@@ -672,7 +692,7 @@ describe("D2SkillParser", () => {
     });
   });
 
-describe("Oskill Capping", () => {
+  describe("Oskill Capping", () => {
     it("should cap native class direct skill bonus at +3 when from item", () => {
       const char = createMockCharacter(
         "Sorceress",

@@ -86,6 +86,7 @@ const skillCategories = new Map([
   ["Double Swing", "Combat Skills"],
   ["Stun", "Combat Skills"],
   ["Double Throw", "Combat Skills"],
+  ["Split Throw", "Combat Skills"],
   ["Leap Attack", "Combat Skills"],
   ["Concentrate", "Combat Skills"],
   ["Frenzy", "Combat Skills"],
