@@ -437,6 +437,10 @@ class D2SkillParser {
       categories: ["combat skills", "barbarian skills", "double throw"],
     },
     {
+      name: "Split Throw",
+      categories: ["combat skills", "barbarian skills", "split throw"],
+    },
+    {
       name: "Increased Stamina",
       categories: ["masteries skills", "barbarian skills", "increased stamina"],
     },
@@ -1226,7 +1230,13 @@ class D2SkillParser {
 
     // Apply bonuses in correct order: direct -> tree -> class -> all
     this.log("Applying bonuses in order:");
-    this.applyBonusesByType(bonuses, "direct", characterClass, totalSkills, oskillBonuses);
+    this.applyBonusesByType(
+      bonuses,
+      "direct",
+      characterClass,
+      totalSkills,
+      oskillBonuses
+    );
     this.applyBonusesByType(bonuses, "tree", characterClass, totalSkills);
     this.applyBonusesByType(bonuses, "class", characterClass, totalSkills);
     this.applyBonusesByType(bonuses, "all", characterClass, totalSkills);
@@ -1253,7 +1263,7 @@ class D2SkillParser {
     return sortedSkills;
   }
 
-private isNativeToClass(skillName: string, characterClass: string): boolean {
+  private isNativeToClass(skillName: string, characterClass: string): boolean {
     const skill = this.skillDefinitions.find(
       (s) => this.normalize(s.name) === this.normalize(skillName)
     );
@@ -1387,7 +1397,12 @@ private isNativeToClass(skillName: string, characterClass: string): boolean {
       .forEach((bonus) => {
         switch (type) {
           case "direct":
-            this.applyDirectBonus(bonus, totalSkills, characterClass, oskillBonuses);
+            this.applyDirectBonus(
+              bonus,
+              totalSkills,
+              characterClass,
+              oskillBonuses
+            );
             break;
           case "tree":
             this.applyTreeBonus(bonus, characterClass, totalSkills);
