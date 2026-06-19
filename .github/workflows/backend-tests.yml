@@ -2,15 +2,15 @@ name: Backend Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
     paths:
-      - 'api/**'
-      - '.github/workflows/backend-tests.yml'
+      - "api/**"
+      - ".github/workflows/backend-tests.yml"
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
     paths:
-      - 'api/**'
-      - '.github/workflows/backend-tests.yml'
+      - "api/**"
+      - ".github/workflows/backend-tests.yml"
 
 jobs:
   test:
@@ -46,7 +46,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Cache npm dependencies
         uses: actions/cache@v3

@@ -55,7 +55,7 @@ export interface CharStats {
   lightningSkillDamage: number;
   poisonSkillDamage: number;
 
-  //Elemental Pierce  
+  //Elemental Pierce
   firePierce: number;
   coldPierce: number;
   lightningPierce: number;

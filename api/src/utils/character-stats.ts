@@ -249,7 +249,6 @@ export default class CharacterStatParser {
         if (lightAbsFlat) {
           this.characterStats.lAbsorbFlat += lightAbsFlat;
           continue;
-
         }
 
         const magicAbsFlat = this.matchInt(/\+(\d+) Magic Absorb/, property);
@@ -278,13 +277,19 @@ export default class CharacterStatParser {
           continue;
         }
 
-        const fasterHitRecovery = this.matchInt(/(\d+)% Faster Hit Recovery/, property);
+        const fasterHitRecovery = this.matchInt(
+          /(\d+)% Faster Hit Recovery/,
+          property
+        );
         if (fasterHitRecovery) {
           this.characterStats.fasterHitRecovery += fasterHitRecovery;
           continue;
         }
 
-        const crushingBlow = this.matchInt(/(\d+)% Chance of Crushing Blow/, property);
+        const crushingBlow = this.matchInt(
+          /(\d+)% Chance of Crushing Blow/,
+          property
+        );
         if (crushingBlow) {
           this.characterStats.crushingBlow += crushingBlow;
           continue;
@@ -308,13 +313,19 @@ export default class CharacterStatParser {
           continue;
         }
 
-        const openWounds = this.matchInt(/(\d+)% Chance of Open Wounds/, property);
+        const openWounds = this.matchInt(
+          /(\d+)% Chance of Open Wounds/,
+          property
+        );
         if (openWounds) {
           this.characterStats.openWounds += openWounds;
           continue;
         }
 
-        const openWoundsDPS = this.matchInt(/(\d+) Open Wounds Damage Per Second/, property);
+        const openWoundsDPS = this.matchInt(
+          /(\d+) Open Wounds Damage Per Second/,
+          property
+        );
         if (openWoundsDPS) {
           this.characterStats.openWoundsDPS += openWoundsDPS;
           continue;
@@ -326,56 +337,83 @@ export default class CharacterStatParser {
           continue;
         }
 
-        const mpPerKill = this.matchInt(/(\d+) to Mana after each Kill/, property);
+        const mpPerKill = this.matchInt(
+          /(\d+) to Mana after each Kill/,
+          property
+        );
         if (mpPerKill) {
           this.characterStats.mpPerKill += mpPerKill;
           continue;
         }
 
-        const fireSkillDamage = this.matchInt(/(\d+)% to Fire Skill Damage/, property);
+        const fireSkillDamage = this.matchInt(
+          /(\d+)% to Fire Skill Damage/,
+          property
+        );
         if (fireSkillDamage) {
           this.characterStats.fireSkillDamage += fireSkillDamage;
           continue;
         }
 
-        const coldSkillDamage = this.matchInt(/(\d+)% to Cold Skill Damage/, property);
+        const coldSkillDamage = this.matchInt(
+          /(\d+)% to Cold Skill Damage/,
+          property
+        );
         if (coldSkillDamage) {
           this.characterStats.coldSkillDamage += coldSkillDamage;
           continue;
         }
 
-        const lightningSkillDamage = this.matchInt(/(\d+)% to Lightning Skill Damage/, property);
+        const lightningSkillDamage = this.matchInt(
+          /(\d+)% to Lightning Skill Damage/,
+          property
+        );
         if (lightningSkillDamage) {
           this.characterStats.lightningSkillDamage += lightningSkillDamage;
           continue;
         }
 
-        const poisonSkillDamage = this.matchInt(/(\d+)% to Poison Skill Damage/, property);
+        const poisonSkillDamage = this.matchInt(
+          /(\d+)% to Poison Skill Damage/,
+          property
+        );
         if (poisonSkillDamage) {
           this.characterStats.poisonSkillDamage += poisonSkillDamage;
           continue;
         }
 
         //Elemental Pierce currently does not take into account skills like Cold Mastery
-        const firePierce = this.matchInt(/(\d+)% to Enemy Fire Resistance/, property);
+        const firePierce = this.matchInt(
+          /(\d+)% to Enemy Fire Resistance/,
+          property
+        );
         if (firePierce) {
           this.characterStats.firePierce -= firePierce;
           continue;
         }
 
-        const coldPierce = this.matchInt(/(\d+)% to Enemy Cold Resistance/, property);
+        const coldPierce = this.matchInt(
+          /(\d+)% to Enemy Cold Resistance/,
+          property
+        );
         if (coldPierce) {
           this.characterStats.coldPierce -= coldPierce;
           continue;
         }
 
-        const lightningPierce = this.matchInt(/(\d+)% to Enemy Lightning Resistance/, property);
+        const lightningPierce = this.matchInt(
+          /(\d+)% to Enemy Lightning Resistance/,
+          property
+        );
         if (lightningPierce) {
           this.characterStats.lightningPierce -= lightningPierce;
           continue;
         }
 
-        const poisonPierce = this.matchInt(/(\d+)% to Enemy Poison Resistance/, property);
+        const poisonPierce = this.matchInt(
+          /(\d+)% to Enemy Poison Resistance/,
+          property
+        );
         if (poisonPierce) {
           this.characterStats.poisonPierce -= poisonPierce;
           continue;

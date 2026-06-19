@@ -7,7 +7,16 @@ const logger = mainLogger.createNamedLogger("Online Players Tracker");
 
 async function recordOnlinePlayers() {
   try {
-    const resp = await fetch("https://api.projectdiablo2.com/game/online");
+    const resp = await fetch("https://api.projectdiablo2.com/game/online", {
+      compress: false,
+      timeout: 30000,
+      headers: {
+        Accept: "application/json",
+        "Accept-Encoding": "identity",
+        Connection: "close",
+        "User-Agent": "pd2.tools/1.0 (+https://pd2.tools)",
+      },
+    });
     if (!resp.ok) {
       logger.error(
         `Failed to fetch online players: ${resp.status} ${resp.statusText}`

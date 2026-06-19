@@ -56,16 +56,26 @@ function getArmorTable(): ArmorTable | null {
 
   const armorPath = path.join(PD2_GAME_DATA_DIRECTORY, "Armor.txt");
 
-  cachedArmorTable = fs.existsSync(armorPath) ? parseArmorTable(armorPath) : null;
+  cachedArmorTable = fs.existsSync(armorPath)
+    ? parseArmorTable(armorPath)
+    : null;
   return cachedArmorTable;
 }
 
-function getArmorCell(table: ArmorTable, row: string[], columnName: string): string {
+function getArmorCell(
+  table: ArmorTable,
+  row: string[],
+  columnName: string
+): string {
   const index = table.columns.indexOf(columnName);
   return index >= 0 ? row[index] || "" : "";
 }
 
-function getArmorNumber(table: ArmorTable, row: string[], columnName: string): number {
+function getArmorNumber(
+  table: ArmorTable,
+  row: string[],
+  columnName: string
+): number {
   const value = Number(getArmorCell(table, row, columnName));
   return Number.isFinite(value) ? value : 0;
 }
@@ -105,7 +115,10 @@ function getArmorRowForItem(item: IItem): [ArmorTable, string[]] | undefined {
 }
 
 function isEquippedBootItem(item: IItem): boolean {
-  if (item.location?.zone !== "Equipped" || item.location?.equipment !== "Boots") {
+  if (
+    item.location?.zone !== "Equipped" ||
+    item.location?.equipment !== "Boots"
+  ) {
     return false;
   }
 

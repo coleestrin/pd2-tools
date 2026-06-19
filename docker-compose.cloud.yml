@@ -1,0 +1,206 @@
+x-cloud-logging: &cloud-logging
+  driver: json-file
+  options:
+    max-size: ${LOG_MAX_SIZE:-10m}
+    max-file: ${LOG_MAX_FILE:-5}
+
+x-api-environment: &api-environment
+  NODE_ENV: production
+  PORT: 3000
+  API_VERSION: ${API_VERSION:-v1}
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
+  POSTGRES_DB: ${POSTGRES_DB:-pd2_tools}
+  POSTGRES_USER: ${POSTGRES_USER:-pd2_user}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  CURRENT_SEASON: ${CURRENT_SEASON:-13}
+  CORS_ORIGIN: ${CORS_ORIGIN:-https://pd2.tools,https://www.pd2.tools}
+  RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW:-15}
+  RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-10000}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+x-api-service: &api-service
+  build:
+    context: ./api
+    dockerfile: Dockerfile
+  image: pd2-tools-api:local
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  environment:
+    <<: *api-environment
+  logging: *cloud-logging
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    shm_size: ${POSTGRES_SHM_SIZE:-36gb}
+    command:
+      - postgres
+      - -c
+      - "data_directory=/var/lib/postgresql/data"
+      - -c
+      - "hba_file=/var/lib/postgresql/data/pg_hba.conf"
+      - -c
+      - "ident_file=/var/lib/postgresql/data/pg_ident.conf"
+      - -c
+      - "external_pid_file=/var/run/postgresql/16-main.pid"
+      - -c
+      - "listen_addresses=*"
+      - -c
+      - "port=5432"
+      - -c
+      - "max_connections=100"
+      - -c
+      - "unix_socket_directories=/var/run/postgresql"
+      - -c
+      - "ssl=off"
+      - -c
+      - "shared_buffers=32GB"
+      - -c
+      - "work_mem=1GB"
+      - -c
+      - "maintenance_work_mem=4GB"
+      - -c
+      - "effective_cache_size=48GB"
+      - -c
+      - "dynamic_shared_memory_type=posix"
+      - -c
+      - "backend_flush_after=0"
+      - -c
+      - "effective_io_concurrency=256"
+      - -c
+      - "max_worker_processes=16"
+      - -c
+      - "max_parallel_workers=16"
+      - -c
+      - "max_parallel_workers_per_gather=13"
+      - -c
+      - "max_parallel_maintenance_workers=3"
+      - -c
+      - "wal_buffers=512MB"
+      - -c
+      - "max_wal_size=16GB"
+      - -c
+      - "min_wal_size=4GB"
+      - -c
+      - "random_page_cost=1.0"
+      - -c
+      - "cpu_tuple_cost=0.005"
+      - -c
+      - "cpu_operator_cost=0.001"
+      - -c
+      - "parallel_tuple_cost=0.01"
+      - -c
+      - "min_parallel_table_scan_size=128kB"
+      - -c
+      - "jit=on"
+      - -c
+      - "jit_above_cost=100"
+      - -c
+      - "jit_inline_above_cost=500"
+      - -c
+      - "jit_optimize_above_cost=500"
+      - -c
+      - "log_line_prefix=%m [%p] %q%u@%d "
+      - -c
+      - "log_timezone=Europe/Berlin"
+      - -c
+      - "cluster_name=16/main"
+      - -c
+      - "timezone=Europe/Berlin"
+      - -c
+      - "datestyle=iso, mdy"
+      - -c
+      - "lc_messages=en_US.UTF-8"
+      - -c
+      - "lc_monetary=en_US.UTF-8"
+      - -c
+      - "lc_numeric=en_US.UTF-8"
+      - -c
+      - "lc_time=en_US.UTF-8"
+      - -c
+      - "default_text_search_config=pg_catalog.english"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pd2_tools}
+      POSTGRES_USER: ${POSTGRES_USER:-pd2_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--locale=en_US.UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-pd2_user} -d ${POSTGRES_DB:-pd2_tools}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    logging: *cloud-logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--save",
+        "60",
+        "1",
+        "--loglevel",
+        "warning",
+      ]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    logging: *cloud-logging
+
+  api:
+    <<: *api-service
+    ports:
+      - "127.0.0.1:${API_PORT:-3000}:3000"
+    volumes:
+      - app_data:/app/data
+
+  jobs:
+    <<: *api-service
+    command: ["npm", "run", "jobs"]
+    environment:
+      <<: *api-environment
+    volumes:
+      - app_data:/app/data
+
+  # web:
+  #   build:
+  #     context: ./web
+  #     dockerfile: Dockerfile
+  #     args:
+  #       VITE_API_URL: ${VITE_API_URL:-https://api.pd2.tools/api/v1}
+  #   image: pd2-tools-web:local
+  #   restart: unless-stopped
+  #   depends_on:
+  #     api:
+  #       condition: service_started
+  #   ports:
+  #    - "127.0.0.1:${WEB_PORT:-4173}:4173"
+  #   logging: *cloud-logging
+
+volumes:
+  postgres_data:
+  redis_data:
+  app_data:

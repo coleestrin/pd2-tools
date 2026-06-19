@@ -48,33 +48,30 @@ router.get("/level99", validateSeason, async (req: Request, res: Response) => {
  * - gameMode: "softcore" | "hardcore" (default: "softcore")
  * - season: number (default: current season)
  */
-router.get(
-  "/mirrored",
-  validateSeason,
-  async (req: Request, res: Response) => {
-    try {
-      const gameMode = (req.query.gameMode as string) || "softcore";
-      const season = req.query.season
-        ? parseInt(req.query.season as string, 10)
-        : config.currentSeason;
+router.get("/mirrored", validateSeason, async (req: Request, res: Response) => {
+  try {
+    const gameMode = (req.query.gameMode as string) || "softcore";
+    const season = req.query.season
+      ? parseInt(req.query.season as string, 10)
+      : config.currentSeason;
 
-      const leaderboard = await characterDB.getMirroredLeaderboard(
-        gameMode,
-        season
-      );
+    const leaderboard = await characterDB.getMirroredLeaderboard(
+      gameMode,
+      season
+    );
 
-      return res.json({
-        leaderboard,
-        gameMode,
-        season,
-        total: leaderboard.length,
-      });
-    } catch (error) {
-      logger.error("Error fetching mirrored leaderboard", { error });
-      return res
-        .status(500)
-        .json({ error: "Failed to fetch mirrored leaderboard" });
-    }
+    return res.json({
+      leaderboard,
+      gameMode,
+      season,
+      total: leaderboard.length,
+    });
+  } catch (error) {
+    logger.error("Error fetching mirrored leaderboard", { error });
+    return res
+      .status(500)
+      .json({ error: "Failed to fetch mirrored leaderboard" });
+  }
 });
 
 export default router;

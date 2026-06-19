@@ -559,7 +559,9 @@
   padding: 1.1rem;
   border-radius: 1rem;
   background: rgba(37, 38, 43, 0.82);
-  transition: transform 160ms ease, border-color 160ms ease;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease;
 }
 
 .featuredCard:hover {
@@ -751,7 +753,6 @@
   .sectionCopy {
     text-align: left;
   }
-
 }
 
 @media (max-width: 48rem) {

@@ -464,11 +464,7 @@ class D2SkillParser {
     },
     {
       name: "Pole Arm Mastery",
-      categories: [
-        "masteries skills",
-        "barbarian skills",
-        "pole arm mastery",
-      ],
+      categories: ["masteries skills", "barbarian skills", "pole arm mastery"],
     },
     {
       name: "Spear Mastery",
@@ -476,11 +472,7 @@ class D2SkillParser {
     },
     {
       name: "Throwing Mastery",
-      categories: [
-        "masteries skills",
-        "barbarian skills",
-        "throwing mastery",
-      ],
+      categories: ["masteries skills", "barbarian skills", "throwing mastery"],
     },
     {
       name: "Taunt",
@@ -540,11 +532,7 @@ class D2SkillParser {
     },
     {
       name: "Combat Reflexes",
-      categories: [
-        "masteries skills",
-        "barbarian skills",
-        "combat reflexes",
-      ],
+      categories: ["masteries skills", "barbarian skills", "combat reflexes"],
     },
     {
       name: "Battle Orders",
@@ -807,11 +795,7 @@ class D2SkillParser {
     },
     {
       name: "Teeth",
-      categories: [
-        "poison and bone skills",
-        "necromancer skills",
-        "teeth",
-      ],
+      categories: ["poison and bone skills", "necromancer skills", "teeth"],
     },
     {
       name: "Poison Dagger",

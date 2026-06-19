@@ -3,11 +3,7 @@ import fs from "fs";
 import path from "path";
 import { CharacterData, IItem } from "../types";
 
-const requiredGameFiles = [
-  "Skills.txt",
-  "Missiles.txt",
-  "SkillDesc.txt",
-];
+const requiredGameFiles = ["Skills.txt", "Missiles.txt", "SkillDesc.txt"];
 const gameDataPath = path.resolve(
   process.cwd(),
   "src",
@@ -90,16 +86,14 @@ function createWeapon(overrides: Partial<IItem> = {}): IItem {
       requirements: { level: 0, strength: 0, dexterity: 0 },
     },
     quality: { id: 2, name: "Normal" },
-    location:
-      overrides.location ??
-      {
-        zone: "Equipped",
-        storage: "Equipped",
-        zone_id: 1,
-        storage_id: 0,
-        equipment: "Right Hand",
-        equipment_id: 4,
-      },
+    location: overrides.location ?? {
+      zone: "Equipped",
+      storage: "Equipped",
+      zone_id: 1,
+      storage_id: 0,
+      equipment: "Right Hand",
+      equipment_id: 4,
+    },
     position: { row: 0, column: 0 },
     properties: [],
     damage: {
@@ -154,16 +148,14 @@ function createBoot(overrides: Partial<IItem> = {}): IItem {
       stat_bonus: { strength: 100 },
     },
     quality: { id: 2, name: "Normal" },
-    location:
-      overrides.location ??
-      {
-        zone: "Equipped",
-        storage: "Equipped",
-        zone_id: 1,
-        storage_id: 0,
-        equipment: "Boots",
-        equipment_id: 9,
-      },
+    location: overrides.location ?? {
+      zone: "Equipped",
+      storage: "Equipped",
+      zone_id: 1,
+      storage_id: 0,
+      equipment: "Boots",
+      equipment_id: 9,
+    },
     position: { row: 0, column: 0 },
     properties: [],
     is_identified: true,
@@ -222,13 +214,11 @@ function createCharacter(skillName: string, level: number): CharacterData {
 
 const describeWithGameData = hasRequiredGameData ? describe : describe.skip;
 const describeWithArmorData =
-  hasRequiredGameData &&
-  fs.existsSync(path.join(gameDataPath, "Armor.txt"))
+  hasRequiredGameData && fs.existsSync(path.join(gameDataPath, "Armor.txt"))
     ? describe
     : describe.skip;
 const describeWithMonStatsData =
-  hasRequiredGameData &&
-  fs.existsSync(path.join(gameDataPath, "MonStats.txt"))
+  hasRequiredGameData && fs.existsSync(path.join(gameDataPath, "MonStats.txt"))
     ? describe
     : describe.skip;
 
@@ -281,7 +271,10 @@ function getSourceLevelScaledValue(
   return value / 2 ** (8 - hitShift);
 }
 
-function getExpectedAuraPayloadsFromSkillsTxt(skillName: string, level: number) {
+function getExpectedAuraPayloadsFromSkillsTxt(
+  skillName: string,
+  level: number
+) {
   const skills = loadGameFile("Skills.txt", "skill");
   const row = skills.rowsByKey.get(skillName)!;
   const min = getSourceLevelScaledValue(skills, row, level, "EMin", [
@@ -312,8 +305,16 @@ function getExpectedAuraPayloadsFromSkillsTxt(skillName: string, level: number) 
       max: Math.floor(max),
     },
     self: {
-      min: Math.floor((Math.floor(min * 256) * getGameFileNumber(skills, row, `Param${minParam}`)) / 256),
-      max: Math.floor((Math.floor(max * 256) * getGameFileNumber(skills, row, `Param${maxParam}`)) / 256),
+      min: Math.floor(
+        (Math.floor(min * 256) *
+          getGameFileNumber(skills, row, `Param${minParam}`)) /
+          256
+      ),
+      max: Math.floor(
+        (Math.floor(max * 256) *
+          getGameFileNumber(skills, row, `Param${maxParam}`)) /
+          256
+      ),
     },
   };
 }
@@ -347,7 +348,10 @@ function getExpectedBattleCommandSkillLevelBonusFromSkillsTxt(level: number) {
   const skills = loadGameFile("Skills.txt", "skill");
   const row = skills.rowsByKey.get("Battle Command")!;
   const stat = getGameFileCell(skills, row, "aurastat1");
-  const calc = getGameFileCell(skills, row, "aurastatcalc1").replace(/\s+/g, "");
+  const calc = getGameFileCell(skills, row, "aurastatcalc1").replace(
+    /\s+/g,
+    ""
+  );
 
   expect(stat).toBe("item_allskills");
   expect(calc).toBe("1+blvl/10");
@@ -359,7 +363,10 @@ function getExpectedBattleCommandPhysicalBonusFromSkillsTxt(level: number) {
   const skills = loadGameFile("Skills.txt", "skill");
   const row = skills.rowsByKey.get("Battle Command")!;
   const stat = getGameFileCell(skills, row, "aurastat2");
-  const calc = getGameFileCell(skills, row, "aurastatcalc2").replace(/\s+/g, "");
+  const calc = getGameFileCell(skills, row, "aurastatcalc2").replace(
+    /\s+/g,
+    ""
+  );
 
   expect(stat).toBe("damagepercent");
   expect(calc).toBe("ln34");
@@ -395,12 +402,10 @@ function getExpectedWarCryPhysicalSynergyFromSkillsTxt({
   return (
     (howlBaseLevel + battleCryBaseLevel) *
       getGameFileNumber(skills, row, "Param8") +
-    (
-      tauntBaseLevel +
+    (tauntBaseLevel +
       shoutBaseLevel +
       battleCommandBaseLevel +
-      battleOrdersBaseLevel
-    ) *
+      battleOrdersBaseLevel) *
       getGameFileNumber(skills, row, "Param7")
   );
 }
@@ -487,8 +492,12 @@ function getExpectedHydraFirePayloadFromSkillsTxt(
       getGameFileNumber(skills, fireMasteryRow, "Param2");
 
   return {
-    min: Math.floor(Math.floor(min * (1 + synergyPercent / 100)) * (1 + masteryPercent / 100)),
-    max: Math.floor(Math.floor(max * (1 + synergyPercent / 100)) * (1 + masteryPercent / 100)),
+    min: Math.floor(
+      Math.floor(min * (1 + synergyPercent / 100)) * (1 + masteryPercent / 100)
+    ),
+    max: Math.floor(
+      Math.floor(max * (1 + synergyPercent / 100)) * (1 + masteryPercent / 100)
+    ),
   };
 }
 
@@ -502,20 +511,20 @@ function getExpectedSkeletalMagePayloadFromGameFiles(
   const mageRow = skills.rowsByKey.get("Raise Skeletal Mage")!;
   const masteryRow = skills.rowsByKey.get("Skeleton Mastery")!;
   const missileRow = missiles.rowsByKey.get(missileName)!;
-  const min = getSourceLevelScaledValue(missiles, missileRow, mageLevel, "EMin", [
-    "MinELev1",
-    "MinELev2",
-    "MinELev3",
-    "MinELev4",
-    "MinELev5",
-  ]);
-  const max = getSourceLevelScaledValue(missiles, missileRow, mageLevel, "Emax", [
-    "MaxELev1",
-    "MaxELev2",
-    "MaxELev3",
-    "MaxELev4",
-    "MaxELev5",
-  ]);
+  const min = getSourceLevelScaledValue(
+    missiles,
+    missileRow,
+    mageLevel,
+    "EMin",
+    ["MinELev1", "MinELev2", "MinELev3", "MinELev4", "MinELev5"]
+  );
+  const max = getSourceLevelScaledValue(
+    missiles,
+    missileRow,
+    mageLevel,
+    "Emax",
+    ["MaxELev1", "MaxELev2", "MaxELev3", "MaxELev4", "MaxELev5"]
+  );
   const dotMultiplier =
     getGameFileCell(missiles, missileRow, "EType") === "pois"
       ? getGameFileNumber(missiles, missileRow, "ELen") || 1
@@ -612,8 +621,7 @@ function getExpectedSkeletonDamagePercentFromGameFiles({
       skillLevel < 4
         ? 0
         : (skillLevel - 3) * getGameFileNumber(skills, row, "Param3");
-    total +=
-      skeletonArcherBaseLevel * getGameFileNumber(skills, row, "Param7");
+    total += skeletonArcherBaseLevel * getGameFileNumber(skills, row, "Param7");
   } else {
     expect(getGameFileCell(skills, row, "DmgSymPerCalc")).toBe(
       getGameFileCell(skills, row, "passivecalc4")
@@ -764,8 +772,7 @@ describeWithGameData("damage calculator component model", () => {
     );
     const chargedBoltProfile = calculation.profiles.find(
       (profile) =>
-        profile.skillName === "Charged Bolt" &&
-        profile.playerAuraId === "none"
+        profile.skillName === "Charged Bolt" && profile.playerAuraId === "none"
     );
 
     expect(chargedBoltOption).toMatchObject({ damageMode: "spell" });
@@ -887,8 +894,7 @@ describeWithGameData("damage calculator component model", () => {
     );
     const baseProfile = calculation.profiles.find(
       (profile) =>
-        profile.skillName === "Basic Attack" &&
-        profile.playerAuraId === "none"
+        profile.skillName === "Basic Attack" && profile.playerAuraId === "none"
     );
     const partyProfile = calculation.profiles.find(
       (profile) =>
@@ -928,12 +934,13 @@ describeWithGameData("damage calculator component model", () => {
     const battleCommand = calculation.playerAuraOptions.find(
       (aura) => aura.name === "Battle Command"
     );
-    const skillLevelBonus = getExpectedBattleCommandSkillLevelBonusFromSkillsTxt(20);
-    const physicalBonus = getExpectedBattleCommandPhysicalBonusFromSkillsTxt(20);
+    const skillLevelBonus =
+      getExpectedBattleCommandSkillLevelBonusFromSkillsTxt(20);
+    const physicalBonus =
+      getExpectedBattleCommandPhysicalBonusFromSkillsTxt(20);
     const baseProfile = calculation.profiles.find(
       (profile) =>
-        profile.skillName === "War Cry" &&
-        profile.playerAuraId === "none"
+        profile.skillName === "War Cry" && profile.playerAuraId === "none"
     );
     const battleCommandProfile = calculation.profiles.find(
       (profile) =>
@@ -955,10 +962,12 @@ describeWithGameData("damage calculator component model", () => {
     expect(battleCommandProfile!.skillLevel).toBe(
       baseProfile!.skillLevel + skillLevelBonus
     );
-    expect(battleCommandProfile!.damageTotals.combinedDamage.min).toBeGreaterThan(
-      baseProfile!.damageTotals.combinedDamage.min
-    );
-    expect(battleCommandProfile!.breakdown.physicalBonusPercent.activeAuras).toBe(0);
+    expect(
+      battleCommandProfile!.damageTotals.combinedDamage.min
+    ).toBeGreaterThan(baseProfile!.damageTotals.combinedDamage.min);
+    expect(
+      battleCommandProfile!.breakdown.physicalBonusPercent.activeAuras
+    ).toBe(0);
     expect(battleCommandProfile!.activeAuras).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1004,8 +1013,7 @@ describeWithGameData("damage calculator component model", () => {
     });
     const warCryProfile = calculation.profiles.find(
       (profile) =>
-        profile.skillName === "War Cry" &&
-        profile.playerAuraId === "none"
+        profile.skillName === "War Cry" && profile.playerAuraId === "none"
     );
 
     expect(warCryProfile).toBeDefined();
@@ -1025,8 +1033,7 @@ describeWithGameData("damage calculator component model", () => {
     const calculation = calculateDamage(character);
     const arcticBlastProfile = calculation.profiles.find(
       (profile) =>
-        profile.skillName === "Arctic Blast" &&
-        profile.playerAuraId === "none"
+        profile.skillName === "Arctic Blast" && profile.playerAuraId === "none"
     );
 
     expect(arcticBlastProfile).toBeDefined();
@@ -1067,14 +1074,12 @@ describeWithGameData("damage calculator component model", () => {
     const calculation = calculateDamage(character);
     const fistsOfFireProfile = calculation.profiles.find(
       (profile) =>
-        profile.skillName === "Fists of Fire" &&
-        profile.playerAuraId === "none"
+        profile.skillName === "Fists of Fire" && profile.playerAuraId === "none"
     );
     const missilePhysicalComponents =
       fistsOfFireProfile?.damageComponents.filter(
         (component) =>
-          component.source === "missile" &&
-          component.damageType === "physical"
+          component.source === "missile" && component.damageType === "physical"
       ) || [];
     const meteorFireComponent = fistsOfFireProfile?.damageComponents.find(
       (component) =>
@@ -1127,8 +1132,7 @@ describeWithGameData("damage calculator component model", () => {
     );
     const baseProfile = calculation.profiles.find(
       (profile) =>
-        profile.skillName === "Basic Attack" &&
-        profile.playerAuraId === "none"
+        profile.skillName === "Basic Attack" && profile.playerAuraId === "none"
     );
     const venomProfile = calculation.profiles.find(
       (profile) =>
@@ -1152,10 +1156,11 @@ describeWithGameData("damage calculator component model", () => {
     );
 
     expect(venom).toBeDefined();
-    expect(venom!.selfLevelBonuses.find((bonus) => bonus.level === venomLevel))
-      .toMatchObject({
-        poisonDamage: expectedLevelBonus,
-      });
+    expect(
+      venom!.selfLevelBonuses.find((bonus) => bonus.level === venomLevel)
+    ).toMatchObject({
+      poisonDamage: expectedLevelBonus,
+    });
     expect(
       venom!.partyLevelBonuses.find((bonus) => bonus.level === venomLevel)!
         .poisonDamage
@@ -1268,16 +1273,14 @@ describeWithGameData("damage calculator component model", () => {
 
     expect(sequenceOption?.sequenceHits).toHaveLength(2);
     expect(sequenceProfile?.sequenceHits).toHaveLength(2);
-    expect(sequenceProfile?.damageTotals.combinedDamage).toEqual(
-      {
-        min:
-          rightProfile!.damageTotals.combinedDamage.min +
-          leftProfile!.damageTotals.combinedDamage.min,
-        max:
-          rightProfile!.damageTotals.combinedDamage.max +
-          leftProfile!.damageTotals.combinedDamage.max,
-      }
-    );
+    expect(sequenceProfile?.damageTotals.combinedDamage).toEqual({
+      min:
+        rightProfile!.damageTotals.combinedDamage.min +
+        leftProfile!.damageTotals.combinedDamage.min,
+      max:
+        rightProfile!.damageTotals.combinedDamage.max +
+        leftProfile!.damageTotals.combinedDamage.max,
+    });
     expect(sequenceProfile?.notes.join(" ")).toContain("weapsel=2");
   });
 
@@ -1317,16 +1320,17 @@ describeWithGameData("damage calculator component model", () => {
 
     const calculation = calculateDamage(character);
     const frenzyProfiles = calculation.profiles.filter(
-      (profile) => profile.skillId === "Frenzy" && profile.playerAuraId === "none"
+      (profile) =>
+        profile.skillId === "Frenzy" && profile.playerAuraId === "none"
     );
     const profileWeaponOptions = frenzyProfiles.map((profile) =>
       calculation.weaponOptions.find((option) => option.id === profile.weaponId)
     );
 
     expect(frenzyProfiles).toHaveLength(1);
-    expect(profileWeaponOptions.every((option) => option?.handMode === "dual_wield")).toBe(
-      true
-    );
+    expect(
+      profileWeaponOptions.every((option) => option?.handMode === "dual_wield")
+    ).toBe(true);
     expect(frenzyProfiles[0].sequenceHits).toHaveLength(2);
     expect(frenzyProfiles[0].notes.join(" ")).toContain("required two-weapon");
   });
@@ -1402,9 +1406,9 @@ describeWithGameData("damage calculator component model", () => {
       calculation.weaponOptions.some((option) => option.handMode === "missile")
     ).toBe(true);
     expect(doubleThrowProfiles).toHaveLength(1);
-    expect(profileWeaponOptions.every((option) => option?.handMode === "dual_throw")).toBe(
-      true
-    );
+    expect(
+      profileWeaponOptions.every((option) => option?.handMode === "dual_throw")
+    ).toBe(true);
     expect(doubleThrowProfiles[0].sequenceHits).toEqual([
       expect.objectContaining({
         handMode: "missile",
@@ -1415,7 +1419,9 @@ describeWithGameData("damage calculator component model", () => {
         itemName: "Left Throwing Knife",
       }),
     ]);
-    expect(doubleThrowProfiles[0].notes.join(" ")).toContain("required two-throw");
+    expect(doubleThrowProfiles[0].notes.join(" ")).toContain(
+      "required two-throw"
+    );
   });
 
   it("uses bow two-handed armory damage as a missile weapon option", () => {
@@ -1517,14 +1523,16 @@ describeWithGameData("damage calculator component model", () => {
       handMode: "missile",
       itemName: "Test Bow",
     });
-    expect(primaryWeaponOptions.some((option) => option.handMode === "unarmed")).toBe(
-      false
-    );
+    expect(
+      primaryWeaponOptions.some((option) => option.handMode === "unarmed")
+    ).toBe(false);
     expect(magicArrowProfile?.breakdown.flatPhysicalDamage).toEqual({
       min: 12,
       max: 12,
     });
-    expect(magicArrowProfile?.damageTotals.combinedDamage.max).toBeGreaterThan(0);
+    expect(magicArrowProfile?.damageTotals.combinedDamage.max).toBeGreaterThan(
+      0
+    );
   });
 
   it("uses equipped boots as the source item for kick skills", () => {
@@ -1538,8 +1546,7 @@ describeWithGameData("damage calculator component model", () => {
     );
     const dragonTalonProfiles = calculation.profiles.filter(
       (profile) =>
-        profile.skillId === "Dragon Talon" &&
-        profile.playerAuraId === "none"
+        profile.skillId === "Dragon Talon" && profile.playerAuraId === "none"
     );
     const dragonTalonWeaponOptions = dragonTalonProfiles.map((profile) =>
       calculation.weaponOptions.find((option) => option.id === profile.weaponId)
@@ -1642,8 +1649,7 @@ describeWithMonStatsData("summon damage modeling", () => {
     );
     const grizzlyProfile = calculation.profiles.find(
       (profile) =>
-        profile.skillId === "Summon Grizzly" &&
-        profile.playerAuraId === "none"
+        profile.skillId === "Summon Grizzly" && profile.playerAuraId === "none"
     );
     const summonComponent = grizzlyProfile?.damageComponents.find(
       (component) => component.source === "summon"
@@ -1667,7 +1673,9 @@ describeWithMonStatsData("summon damage modeling", () => {
         }),
       ]),
     });
-    expect(grizzlyProfile?.notes.join(" ")).toContain("per-summon damage profile");
+    expect(grizzlyProfile?.notes.join(" ")).toContain(
+      "per-summon damage profile"
+    );
   });
 
   it("uses MonStats attack damage and summon damagepercent for melee summons", () => {
@@ -1706,8 +1714,7 @@ describeWithMonStatsData("summon damage modeling", () => {
     });
     const skeletonProfile = calculation.profiles.find(
       (profile) =>
-        profile.skillId === "Raise Skeleton" &&
-        profile.playerAuraId === "none"
+        profile.skillId === "Raise Skeleton" && profile.playerAuraId === "none"
     );
     const monsterComponent = skeletonProfile?.damageComponents.find(
       (component) => component.source === "monster"
@@ -1749,10 +1756,12 @@ describeWithMonStatsData("summon damage modeling", () => {
     expect(monsterComponent?.damage.min).toBeGreaterThan(
       monsterComponent?.baseDamage?.min ?? 0
     );
-    expect(
-      skeletonProfile?.breakdown.physicalBonusPercent.selectedSkill
-    ).toBe(damagePercent);
-    expect(skeletonProfile?.damageTotals.combinedDamage.min).toBeGreaterThan(100);
+    expect(skeletonProfile?.breakdown.physicalBonusPercent.selectedSkill).toBe(
+      damagePercent
+    );
+    expect(skeletonProfile?.damageTotals.combinedDamage.min).toBeGreaterThan(
+      100
+    );
   });
 
   it("applies Skeleton Mastery once to skeleton archer direct and flat physical damage", () => {
@@ -1791,12 +1800,11 @@ describeWithMonStatsData("summon damage modeling", () => {
       raiseSkeletonBaseLevel,
       skeletonMasteryLevel,
     });
-    const expectedDirectPhysical = getExpectedSkeletonArcherDirectPhysicalFromGameFiles(
-      {
+    const expectedDirectPhysical =
+      getExpectedSkeletonArcherDirectPhysicalFromGameFiles({
         archerLevel,
         damagePercent,
-      }
-    );
+      });
     const expectedFlatPhysical = getExpectedSkeletonFlatPhysicalFromGameFiles({
       skillName: "Raise Skeleton Archer",
       skillLevel: archerLevel,
@@ -1861,10 +1869,12 @@ describeWithMonStatsData("summon damage modeling", () => {
 
     const calculation = calculateDamage(character);
     const fireGolemProfile = calculation.profiles.find(
-      (profile) => profile.skillId === "FireGolem" && profile.playerAuraId === "none"
+      (profile) =>
+        profile.skillId === "FireGolem" && profile.playerAuraId === "none"
     );
     const hydraProfile = calculation.profiles.find(
-      (profile) => profile.skillId === "Hydra" && profile.playerAuraId === "none"
+      (profile) =>
+        profile.skillId === "Hydra" && profile.playerAuraId === "none"
     );
 
     expect(
@@ -1901,7 +1911,8 @@ describeWithMonStatsData("summon damage modeling", () => {
 
     const calculation = calculateDamage(character);
     const hydraProfile = calculation.profiles.find(
-      (profile) => profile.skillId === "Hydra" && profile.playerAuraId === "none"
+      (profile) =>
+        profile.skillId === "Hydra" && profile.playerAuraId === "none"
     );
     const hydraFireComponent = hydraProfile?.damageComponents.find(
       (component) => component.label === "Summon payload: Fire"
@@ -1966,7 +1977,9 @@ describeWithMonStatsData("summon damage modeling", () => {
       "Raise Skeletal Mage (Poison Mage)",
     ]);
     expect(
-      calculation.skillOptions.some((option) => option.id === "Raise Skeletal Mage")
+      calculation.skillOptions.some(
+        (option) => option.id === "Raise Skeletal Mage"
+      )
     ).toBe(false);
     expect(fireProfile?.weaponId).toBe("primary:summon:raise-skeletal-mage");
     expect(fireProfile?.sourceSkillName).toBe("Raise Skeletal Mage");
@@ -2043,14 +2056,13 @@ describeWithMonStatsData("summon damage modeling", () => {
         component.label === "Summon payload: Poison" &&
         component.damageType === "poison"
     );
-    const expectedPoisonDamage = getExpectedPlaguePoppyPoisonPayloadFromGameFiles(
-      {
+    const expectedPoisonDamage =
+      getExpectedPlaguePoppyPoisonPayloadFromGameFiles({
         plaguePoppyLevel,
         rabiesBaseLevel,
         cycleOfLifeBaseLevel,
         vinesBaseLevel,
-      }
-    );
+      });
 
     expect(poisonComponent).toBeDefined();
     expect(poisonComponent?.damage).toEqual(expectedPoisonDamage);
@@ -2071,7 +2083,8 @@ describeWithMonStatsData("summon damage modeling", () => {
 
     const calculation = calculateDamage(character);
     const clayProfile = calculation.profiles.find(
-      (profile) => profile.skillId === "Clay Golem" && profile.playerAuraId === "none"
+      (profile) =>
+        profile.skillId === "Clay Golem" && profile.playerAuraId === "none"
     );
     const monsterComponent = clayProfile?.damageComponents.find(
       (component) => component.source === "monster"
@@ -2093,7 +2106,8 @@ describeWithMonStatsData("summon damage modeling", () => {
 
     const calculation = calculateDamage(character);
     const ravenProfile = calculation.profiles.find(
-      (profile) => profile.skillId === "Raven" && profile.playerAuraId === "none"
+      (profile) =>
+        profile.skillId === "Raven" && profile.playerAuraId === "none"
     );
 
     expect(ravenProfile?.damageComponents[0]).toMatchObject({

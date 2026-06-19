@@ -53,8 +53,8 @@ export default function EconomyDisclaimer() {
           </Text>
           <Text size="sm">
             Prices may be inaccurate, especially for items with a low amount of
-            listings. Use your own discretion when determining item values.
-            Only available for softcore.
+            listings. Use your own discretion when determining item values. Only
+            available for softcore.
           </Text>
         </Stack>
       </Alert>

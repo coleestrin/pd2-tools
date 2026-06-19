@@ -90,7 +90,7 @@ export default function DamageCalculator() {
         queryCharacterName,
         queryGameMode,
         normalizedQuerySeason
-    ),
+      ),
     enabled: queryCharacterName.length > 0,
     staleTime: 0,
     retry: false,

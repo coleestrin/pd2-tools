@@ -376,7 +376,9 @@ describe("StatParser", () => {
     });
 
     it("should parse lightning pierce", () => {
-      const items = [createMockItem("Item1", ["-4% to Enemy Lightning Resistance"])];
+      const items = [
+        createMockItem("Item1", ["-4% to Enemy Lightning Resistance"]),
+      ];
       const char = createMockCharacter(items);
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
@@ -385,7 +387,9 @@ describe("StatParser", () => {
     });
 
     it("should parse poison pierce", () => {
-      const items = [createMockItem("Item1", ["-5% to Enemy Poison Resistance"])];
+      const items = [
+        createMockItem("Item1", ["-5% to Enemy Poison Resistance"]),
+      ];
       const char = createMockCharacter(items);
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
@@ -509,9 +513,7 @@ describe("StatParser", () => {
 
   describe("Damage Procs", () => {
     it("should parse crushing blow", () => {
-      const items = [
-        createMockItem("Item1", ["+25% Chance of Crushing Blow"]),
-      ];
+      const items = [createMockItem("Item1", ["+25% Chance of Crushing Blow"])];
       const char = createMockCharacter(items);
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
@@ -520,9 +522,7 @@ describe("StatParser", () => {
     });
 
     it("should parse deadly strike", () => {
-      const items = [
-        createMockItem("Item1", ["+33% Deadly Strike"])
-      ];
+      const items = [createMockItem("Item1", ["+33% Deadly Strike"])];
       const char = createMockCharacter(items);
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
@@ -531,9 +531,7 @@ describe("StatParser", () => {
     });
 
     it("should parse open wounds", () => {
-      const items = [
-        createMockItem("Item1", ["+50% Chance of Open Wounds"])
-      ];
+      const items = [createMockItem("Item1", ["+50% Chance of Open Wounds"])];
       const char = createMockCharacter(items);
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
@@ -543,7 +541,7 @@ describe("StatParser", () => {
 
     it("should parse open wounds additional dps", () => {
       const items = [
-        createMockItem("Item1", ["+500 Open Wounds Damage Per Second"])
+        createMockItem("Item1", ["+500 Open Wounds Damage Per Second"]),
       ];
       const char = createMockCharacter(items);
       const parser = new CharacterStatParser(char);

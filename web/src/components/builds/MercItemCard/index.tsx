@@ -9,10 +9,7 @@ import {
   getBrightBorderColor,
   getDarkBackgroundColor,
 } from "../shared/item-colors";
-import {
-  type ItemData,
-  ItemTooltip,
-} from "../shared/ItemHelpers";
+import { type ItemData, ItemTooltip } from "../shared/ItemHelpers";
 
 interface Props {
   data: {

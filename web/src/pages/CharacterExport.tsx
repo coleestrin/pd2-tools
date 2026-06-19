@@ -183,7 +183,12 @@ export default function CharacterExport() {
             }}
           >
             <Center>
-              <Accordion variant="contained" mb={"md"} maw={rem(600)} w={"100%"}>
+              <Accordion
+                variant="contained"
+                mb={"md"}
+                maw={rem(600)}
+                w={"100%"}
+              >
                 <Accordion.Item value="disclaimer">
                   <Accordion.Control
                     icon={<IconAlertTriangle size="1rem" color="orange" />}
@@ -278,13 +283,7 @@ export default function CharacterExport() {
               padding: rem(24),
             }}
           >
-            <Card
-              withBorder
-              shadow="md"
-              padding="lg"
-              maw={rem(520)}
-              w="100%"
-            >
+            <Card withBorder shadow="md" padding="lg" maw={rem(520)} w="100%">
               <Text fw={700} size="lg" mb="xs">
                 Character Exporter Archived
               </Text>
@@ -294,8 +293,8 @@ export default function CharacterExport() {
                 exporter.
               </Text>
               <Text size="xs" c="dimmed" mb="md">
-                Interested in the original exporter code? The archived
-                pd2.tools exporter source is{" "}
+                Interested in the original exporter code? The archived pd2.tools
+                exporter source is{" "}
                 <Anchor
                   href={ARCHIVED_EXPORTER_REPO_URL}
                   target="_blank"

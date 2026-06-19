@@ -518,7 +518,10 @@ describe("D2SkillParser", () => {
             ],
           },
           { name: "Amulet", properties: ["+2 to Druid Skills"] },
-          { name: "Gloves", properties: ["+2 to Shape Shifting Skills (Druid Only)"] },
+          {
+            name: "Gloves",
+            properties: ["+2 to Shape Shifting Skills (Druid Only)"],
+          },
           { name: "Hellfire Torch", properties: ["+2 to Druid Skills"] },
           { name: "Arachnid Mesh", properties: ["+1 to All Skills"] },
           { name: "Annihilus", properties: ["+1 to All Skills"] },
@@ -554,16 +557,36 @@ describe("D2SkillParser", () => {
 
       expect(result).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ skill: "Rabies", level: 41, baseLevel: 20 }),
-          expect.objectContaining({ skill: "Feral Rage", level: 41, baseLevel: 20 }),
-          expect.objectContaining({ skill: "Lycanthropy", level: 41, baseLevel: 20 }),
-          expect.objectContaining({ skill: "Werewolf", level: 29, baseLevel: 8 }),
+          expect.objectContaining({
+            skill: "Rabies",
+            level: 41,
+            baseLevel: 20,
+          }),
+          expect.objectContaining({
+            skill: "Feral Rage",
+            level: 41,
+            baseLevel: 20,
+          }),
+          expect.objectContaining({
+            skill: "Lycanthropy",
+            level: 41,
+            baseLevel: 20,
+          }),
+          expect.objectContaining({
+            skill: "Werewolf",
+            level: 29,
+            baseLevel: 8,
+          }),
           expect.objectContaining({
             skill: "Poison Creeper",
             level: 29,
             baseLevel: 20,
           }),
-          expect.objectContaining({ skill: "Oak Sage", level: 20, baseLevel: 11 }),
+          expect.objectContaining({
+            skill: "Oak Sage",
+            level: 20,
+            baseLevel: 11,
+          }),
         ])
       );
     });
