@@ -489,6 +489,85 @@ describe("D2SkillParser", () => {
   });
 
   describe("Complex Scenarios", () => {
+    it("should apply Druid skill bonuses from equipped items and inventory charms", () => {
+      const shapeCharm = (index: number) => ({
+        name: `Spiritual Grand Charm ${index}`,
+        properties: ["+1 to Shape Shifting Skills (Druid Only)"],
+        location: {
+          storage: "Inventory",
+          equipment: index % 3 === 0 ? "Right Hand" : undefined,
+        } as ILocation,
+      });
+      const char = createMockCharacter(
+        "Druid",
+        [
+          { name: "Rabies", level: 20 },
+          { name: "Poison Creeper", level: 20 },
+          { name: "Feral Rage", level: 20 },
+          { name: "Lycanthropy", level: 20 },
+          { name: "Werewolf", level: 8 },
+          { name: "Oak Sage", level: 11 },
+        ],
+        [
+          ...Array.from({ length: 8 }, (_, index) => shapeCharm(index)),
+          {
+            name: "Jalal's Mane",
+            properties: [
+              "+2 to Shape Shifting Skills (Druid Only)",
+              "+2 to Druid Skills",
+            ],
+          },
+          { name: "Amulet", properties: ["+2 to Druid Skills"] },
+          { name: "Gloves", properties: ["+2 to Shape Shifting Skills (Druid Only)"] },
+          { name: "Hellfire Torch", properties: ["+2 to Druid Skills"] },
+          { name: "Arachnid Mesh", properties: ["+1 to All Skills"] },
+          { name: "Annihilus", properties: ["+1 to All Skills"] },
+          { name: "Wisp Projector", properties: ["+1 to All Skills"] },
+          {
+            name: "Call to Arms",
+            properties: ["+1 to All Skills"],
+            location: {
+              equipment: "Left Hand Switch",
+              storage_id: 0,
+              equipment_id: 0,
+              zone_id: 0,
+              zone: "",
+              storage: "",
+            },
+          },
+          {
+            name: "Lidless Wall",
+            properties: ["+2 to All Skills"],
+            location: {
+              equipment: "Right Hand Switch",
+              storage_id: 0,
+              equipment_id: 0,
+              zone_id: 0,
+              zone: "",
+              storage: "",
+            },
+          },
+        ]
+      );
+
+      const result = parser.calculateTotalSkills(char);
+
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ skill: "Rabies", level: 41, baseLevel: 20 }),
+          expect.objectContaining({ skill: "Feral Rage", level: 41, baseLevel: 20 }),
+          expect.objectContaining({ skill: "Lycanthropy", level: 41, baseLevel: 20 }),
+          expect.objectContaining({ skill: "Werewolf", level: 29, baseLevel: 8 }),
+          expect.objectContaining({
+            skill: "Poison Creeper",
+            level: 29,
+            baseLevel: 20,
+          }),
+          expect.objectContaining({ skill: "Oak Sage", level: 20, baseLevel: 11 }),
+        ])
+      );
+    });
+
     it("should handle Hammerdin build", () => {
       const char = createMockCharacter(
         "Paladin",

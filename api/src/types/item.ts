@@ -24,6 +24,12 @@ export interface IItemDamage {
   one_handed: IHandDamage;
   two_handed: IHandDamage;
   missile: IHandDamage;
+  kick?: IHandDamage;
+}
+
+export interface IStatBonus {
+  strength?: number;
+  dexterity?: number;
 }
 
 export interface IBaseItem {
@@ -43,6 +49,7 @@ export interface IBaseItem {
     "2hd": string;
   };
   damage?: IItemDamage;
+  stat_bonus?: IStatBonus;
 }
 
 export interface IItemQuality {

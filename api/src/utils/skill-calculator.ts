@@ -39,6 +39,14 @@ class D2SkillParser {
       categories: ["javelin and spear skills", "amazon skills", "jab"],
     },
     {
+      name: "Javelin and Spear Mastery",
+      categories: [
+        "javelin and spear skills",
+        "amazon skills",
+        "javelin and spear mastery",
+      ],
+    },
+    {
       name: "Cold Arrow",
       categories: [
         "bow and crossbow skills",
@@ -88,6 +96,14 @@ class D2SkillParser {
         "passive and magic skills",
         "amazon skills",
         "slow missiles",
+      ],
+    },
+    {
+      name: "Slow Movement",
+      categories: [
+        "passive and magic skills",
+        "amazon skills",
+        "slow movement",
       ],
     },
     {
@@ -307,6 +323,15 @@ class D2SkillParser {
       ],
     },
     {
+      name: "Chain Lightning Sentry",
+      categories: [
+        "trap skills",
+        "assassin skills",
+        "chain lightning sentry",
+        "lightning skills",
+      ],
+    },
+    {
       name: "Wake of Inferno",
       categories: [
         "trap skills",
@@ -329,8 +354,21 @@ class D2SkillParser {
       ],
     },
     {
+      name: "Claws of Thunder",
+      categories: [
+        "martial arts",
+        "assassin skills",
+        "claws of thunder",
+        "lightning skills",
+      ],
+    },
+    {
       name: "Dragon Flight",
       categories: ["martial arts", "assassin skills", "dragon flight"],
+    },
+    {
+      name: "Blade Dance",
+      categories: ["martial arts", "assassin skills", "blade dance"],
     },
     {
       name: "Death Sentry",
@@ -357,6 +395,10 @@ class D2SkillParser {
     {
       name: "Shadow Master",
       categories: ["shadow disciplines", "assassin skills", "shadow master"],
+    },
+    {
+      name: "Shadow Warrior",
+      categories: ["shadow disciplines", "assassin skills", "shadow warrior"],
     },
     {
       name: "Phoenix Strike",
@@ -421,6 +463,26 @@ class D2SkillParser {
       ],
     },
     {
+      name: "Pole Arm Mastery",
+      categories: [
+        "masteries skills",
+        "barbarian skills",
+        "pole arm mastery",
+      ],
+    },
+    {
+      name: "Spear Mastery",
+      categories: ["masteries skills", "barbarian skills", "spear mastery"],
+    },
+    {
+      name: "Throwing Mastery",
+      categories: [
+        "masteries skills",
+        "barbarian skills",
+        "throwing mastery",
+      ],
+    },
+    {
       name: "Taunt",
       categories: ["warcries skills", "barbarian skills", "taunt"],
     },
@@ -469,8 +531,20 @@ class D2SkillParser {
       categories: ["combat skills", "barbarian skills", "frenzy"],
     },
     {
+      name: "Battle Rage",
+      categories: ["combat skills", "barbarian skills", "battle rage"],
+    },
+    {
       name: "Increased Speed",
       categories: ["masteries skills", "barbarian skills", "increased speed"],
+    },
+    {
+      name: "Combat Reflexes",
+      categories: [
+        "masteries skills",
+        "barbarian skills",
+        "combat reflexes",
+      ],
     },
     {
       name: "Battle Orders",
@@ -503,6 +577,10 @@ class D2SkillParser {
     {
       name: "Battle Command",
       categories: ["warcries skills", "barbarian skills", "battle command"],
+    },
+    {
+      name: "Grim Ward",
+      categories: ["warcries skills", "barbarian skills", "grim ward"],
     },
     {
       name: "Deep Wounds",
@@ -575,6 +653,14 @@ class D2SkillParser {
       categories: ["shape shifting skills", "druid skills", "lycanthropy"],
     },
     {
+      name: "Feral Rage",
+      categories: ["shape shifting skills", "druid skills", "feral rage"],
+    },
+    {
+      name: "Maul",
+      categories: ["shape shifting skills", "druid skills", "maul"],
+    },
+    {
       name: "Fire Claws",
       categories: [
         "shape shifting skills",
@@ -632,6 +718,10 @@ class D2SkillParser {
     {
       name: "Fury",
       categories: ["shape shifting skills", "druid skills", "fury"],
+    },
+    {
+      name: "Shock Wave",
+      categories: ["shape shifting skills", "druid skills", "shock wave"],
     },
     {
       name: "Volcano",
@@ -710,6 +800,18 @@ class D2SkillParser {
     {
       name: "Dim Vision",
       categories: ["curses skills", "necromancer skills", "dim vision"],
+    },
+    {
+      name: "Attract",
+      categories: ["curses skills", "necromancer skills", "attract"],
+    },
+    {
+      name: "Teeth",
+      categories: [
+        "poison and bone skills",
+        "necromancer skills",
+        "teeth",
+      ],
     },
     {
       name: "Poison Dagger",
@@ -824,6 +926,14 @@ class D2SkillParser {
       ],
     },
     {
+      name: "Bone Spikes",
+      categories: [
+        "poison and bone skills",
+        "necromancer skills",
+        "bone spikes",
+      ],
+    },
+    {
       name: "Fire Golem",
       categories: [
         "summoning skills",
@@ -894,6 +1004,22 @@ class D2SkillParser {
       categories: ["combat skills", "paladin skills", "holy bolt"],
     },
     {
+      name: "Holy Nova",
+      categories: ["combat skills", "paladin skills", "holy nova"],
+    },
+    {
+      name: "Holy Light",
+      categories: ["combat skills", "paladin skills", "holy light"],
+    },
+    {
+      name: "Joust",
+      categories: ["combat skills", "paladin skills", "joust"],
+    },
+    {
+      name: "Holy Sword",
+      categories: ["combat skills", "paladin skills", "holy sword"],
+    },
+    {
       name: "Prayer",
       categories: ["defensive auras", "paladin skills", "prayer"],
     },
@@ -904,6 +1030,10 @@ class D2SkillParser {
     {
       name: "Smite",
       categories: ["combat skills", "paladin skills", "smite"],
+    },
+    {
+      name: "Thorns",
+      categories: ["offensive auras", "paladin skills", "thorns"],
     },
     {
       name: "Holy Fire",
@@ -930,6 +1060,10 @@ class D2SkillParser {
     {
       name: "Zeal",
       categories: ["combat skills", "paladin skills", "zeal"],
+    },
+    {
+      name: "Conversion",
+      categories: ["combat skills", "paladin skills", "conversion"],
     },
     {
       name: "Charge",
@@ -996,6 +1130,10 @@ class D2SkillParser {
     {
       name: "Blessed Shield",
       categories: ["combat skills", "paladin skills", "blessed shield"],
+    },
+    {
+      name: "Holy Shield",
+      categories: ["combat skills", "paladin skills", "holy shield"],
     },
     {
       name: "Holy Shock",

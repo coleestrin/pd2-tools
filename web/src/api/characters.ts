@@ -1,5 +1,6 @@
 import { apiClient } from "./client";
 import { API_ENDPOINTS } from "../config/api";
+import { DAMAGE_CALCULATOR_PAYLOAD_VERSION } from "../types";
 import type {
   FullCharacterResponse,
   CharacterFilter,
@@ -53,6 +54,7 @@ export const charactersAPI = {
       {
         gameMode,
         season,
+        damageCalculatorVersion: DAMAGE_CALCULATOR_PAYLOAD_VERSION,
       }
     );
   },

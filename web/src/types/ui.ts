@@ -7,6 +7,7 @@ import type {
   MercenaryInfo,
   CharacterSnapshotListItem,
 } from "./character";
+import type { DamageCalculation } from "./damage";
 import type { EconomyItem, PriceData } from "./economy";
 import type { SkillsView, PlayerToggle } from "./constants";
 
@@ -45,6 +46,13 @@ export interface SkillsSectionProps {
   hasCta: boolean;
   skillsView: SkillsView;
   onSkillsViewChange: (value: SkillsView) => void;
+}
+
+export interface DamageCalculatorSectionProps {
+  damageCalculation?: DamageCalculation;
+  variant?: "full" | "compact";
+  fullCalculatorUrl?: string;
+  onOpenFullCalculator?: () => void;
 }
 
 // Economy components

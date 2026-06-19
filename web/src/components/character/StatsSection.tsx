@@ -1,34 +1,7 @@
 import { ActionIcon, Card, Text, Tooltip } from "@mantine/core";
 import { IconInfoCircle } from "@tabler/icons-react";
 import type { StatsSectionProps } from "../../types";
-
-// Color definitions for consistency
-const COLORS = {
-  life: "rgb(239, 78, 78)",
-  mana: "rgb(36, 135, 235)",
-  strength: "rgb(239, 78, 78)",
-  dexterity: "rgb(49, 180, 56)",
-  vitality: "rgb(239, 78, 78)",
-  energy: "rgb(36, 135, 235)",
-  fire: "rgb(148, 0, 0)",
-  cold: "rgb(54, 99, 145)",
-  lightning: "rgb(255, 217, 0)",
-  poison: "#00991c",
-  magic: "rgb(255, 140, 0)",
-  fasterCastRate: "rgb(0, 200, 255)",
-  fasterHitRecovery: "rgb(190, 80, 255)",
-  fasterRunWalk: "rgb(80, 255, 80)",
-  increasedAttackSpeed: "rgb(80, 120, 255)",
-  crushingBlow: "rgb(255, 140, 0)",
-  deadlyStrike: "rgb(255, 220, 0)",
-  openWounds: "rgb(255, 60, 60)",
-  lifeLeech: "rgb(255, 80, 80)",
-  manaLeech: "rgb(60, 140, 255)",
-  magicFind: "rgb(200, 90, 255)",
-  goldFind: "rgb(255, 230, 80)",
-  physicalDamageReduction: "#bdbc99",
-  zeroValue: "rgb(107, 114, 128)"
-} as const;
+import { STAT_COLORS as COLORS } from "./stat-colors";
 
 interface StatRowProps {
   label: string;

@@ -8,7 +8,7 @@ export type GameMode = (typeof GAME_MODES)[keyof typeof GAME_MODES];
 
 // Season configuration
 export const CURRENT_SEASON = 13;
-export const DEFAULT_VIEW_SEASON = 12;
+export const DEFAULT_VIEW_SEASON = CURRENT_SEASON;
 export const EARLIEST_SUPPORTED_SEASON = 11;
 export const SUPPORTED_SEASONS = Array.from(
   { length: CURRENT_SEASON - EARLIEST_SUPPORTED_SEASON + 1 },
@@ -24,6 +24,7 @@ export const SHORT_SEASON_OPTIONS = SUPPORTED_SEASONS.map((season) => ({
 }));
 export const SEASON_STORAGE_KEY_SUFFIX = `s${CURRENT_SEASON}`;
 export const LEVEL_RANGE_COOKIE_KEY = `levelRange_${CURRENT_SEASON}`;
+export const DAMAGE_CALCULATOR_PAYLOAD_VERSION = "damage-model-v11";
 
 // Time ranges for statistics
 export type TimeRange = "1d" | "7d" | "14d" | "1mo" | "3mo" | "all";

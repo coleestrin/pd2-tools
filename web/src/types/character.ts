@@ -1,3 +1,5 @@
+import type { DamageCalculation } from "./damage";
+
 export interface ICharacter {
   name: string;
   level: number;
@@ -45,6 +47,8 @@ export interface FullCharacterResponse {
   mercenary?: unknown;
   nullReason?: string;
   realSkills?: unknown[];
+  realStats?: RealStats;
+  damageCalculation?: DamageCalculation;
   lastUpdated?: number;
   accountName?: string;
   [key: string]: unknown;

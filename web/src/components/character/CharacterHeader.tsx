@@ -52,8 +52,8 @@ export function CharacterHeader({
   const getCharacterUrl = (charName: string) => {
     const queryString = searchParams.toString();
     return queryString
-      ? `/builds/character/${charName}?${queryString}`
-      : `/builds/character/${charName}`;
+      ? `/builds/character/${encodeURIComponent(charName)}?${queryString}`
+      : `/builds/character/${encodeURIComponent(charName)}`;
   };
 
   const handleNavClick = (targetName: string) => {

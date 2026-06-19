@@ -21,7 +21,7 @@ x-api-service: &api-service
     REDIS_HOST: redis
     REDIS_PORT: 6379
     CURRENT_SEASON: ${CURRENT_SEASON:-13}
-    CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:4173}
+    CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:4173,http://127.0.0.1:4173,http://localhost:4174,http://127.0.0.1:4174,http://localhost:5173,http://127.0.0.1:5173}
     RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW:-15}
     RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
     LOG_LEVEL: ${LOG_LEVEL:-info}

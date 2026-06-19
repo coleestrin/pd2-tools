@@ -330,7 +330,9 @@ export default function PlayerTable({
       if (filters.season !== DEFAULT_VIEW_SEASON)
         searchParams.set("season", filters.season.toString());
 
-      const href = `/builds/character/${row.original.name}?${searchParams.toString()}`;
+      const href = `/builds/character/${encodeURIComponent(
+        row.original.name
+      )}?${searchParams.toString()}`;
 
       return {
         component: "a",
