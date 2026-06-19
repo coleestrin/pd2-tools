@@ -31,10 +31,7 @@ import {
 } from "../components/builds/shared/ItemHelpers";
 import { API_ENDPOINTS } from "../config/api";
 import { ECONOMY_ITEMS_DATA } from "../data/economy-items";
-import {
-  DEFAULT_VIEW_SEASON,
-  type HomeStats,
-} from "../types";
+import { DEFAULT_VIEW_SEASON, type HomeStats } from "../types";
 import classes from "./Home.module.css";
 
 const CACHE_KEY = "pd2tools_home_stats";
@@ -119,17 +116,16 @@ interface HomeSliderResponse {
 
 const ECONOMY_ITEM_DETAILS_BY_INTERNAL_NAME = Object.entries(
   ECONOMY_ITEMS_DATA
-).reduce<Record<string, { displayName: string; iconUrl: string; href: string }>>(
-  (acc, [slug, item]) => {
-    acc[item.itemNameInternal] = {
-      displayName: item.displayName,
-      iconUrl: item.iconUrl,
-      href: `/economy/item/${slug}`,
-    };
-    return acc;
-  },
-  {}
-);
+).reduce<
+  Record<string, { displayName: string; iconUrl: string; href: string }>
+>((acc, [slug, item]) => {
+  acc[item.itemNameInternal] = {
+    displayName: item.displayName,
+    iconUrl: item.iconUrl,
+    href: `/economy/item/${slug}`,
+  };
+  return acc;
+}, {});
 
 function getEconomyIconPath(iconUrl?: string) {
   if (!iconUrl) {
@@ -522,56 +518,60 @@ export default function Home() {
                       >
                         <div className={classes.activityFeed}>
                           {homeSliderQuery.isPending
-                            ? Array.from({ length: RECENT_CHARACTER_LIMIT }).map(
-                                (_, index) => (
-                                  <Skeleton
-                                    key={`recent-character-skeleton-${index}`}
-                                    height={RECENT_SKELETON_HEIGHT}
-                                    radius="sm"
-                                    className={classes.activityFeedSkeleton}
-                                  />
-                                )
-                              )
+                            ? Array.from({
+                                length: RECENT_CHARACTER_LIMIT,
+                              }).map((_, index) => (
+                                <Skeleton
+                                  key={`recent-character-skeleton-${index}`}
+                                  height={RECENT_SKELETON_HEIGHT}
+                                  radius="sm"
+                                  className={classes.activityFeedSkeleton}
+                                />
+                              ))
                             : null}
 
                           {!homeSliderQuery.isPending &&
-                          homeSliderQuery.data?.recentCharacters.length ? (
-                            homeSliderQuery.data.recentCharacters.map(
-                              (character) => (
-                                <Anchor
-                                  key={`${character.mode}-${character.name}`}
-                                  href={character.href}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className={classes.activityFeedRow}
-                                >
-                                  <img
-                                    src={`/${character.className}.webp`}
-                                    alt=""
-                                    aria-hidden="true"
-                                    className={classes.activityFeedClassImage}
-                                  />
+                          homeSliderQuery.data?.recentCharacters.length
+                            ? homeSliderQuery.data.recentCharacters.map(
+                                (character) => (
+                                  <Anchor
+                                    key={`${character.mode}-${character.name}`}
+                                    href={character.href}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className={classes.activityFeedRow}
+                                  >
+                                    <img
+                                      src={`/${character.className}.webp`}
+                                      alt=""
+                                      aria-hidden="true"
+                                      className={classes.activityFeedClassImage}
+                                    />
 
-                                  <div className={classes.activityFeedMain}>
-                                    <Text className={classes.activityFeedName}>
-                                      {character.name}
-                                    </Text>
-                                    <Text className={classes.activityFeedMeta}>
-                                      Level {character.level}{" "}
-                                      {character.className} · {character.mode}
-                                    </Text>
-                                  </div>
+                                    <div className={classes.activityFeedMain}>
+                                      <Text
+                                        className={classes.activityFeedName}
+                                      >
+                                        {character.name}
+                                      </Text>
+                                      <Text
+                                        className={classes.activityFeedMeta}
+                                      >
+                                        Level {character.level}{" "}
+                                        {character.className} · {character.mode}
+                                      </Text>
+                                    </div>
 
-                                  <Text className={classes.activityFeedTime}>
-                                    {formatRelativeAge(
-                                      character.lastUpdated,
-                                      relativeTimeNow
-                                    )}
-                                  </Text>
-                                </Anchor>
+                                    <Text className={classes.activityFeedTime}>
+                                      {formatRelativeAge(
+                                        character.lastUpdated,
+                                        relativeTimeNow
+                                      )}
+                                    </Text>
+                                  </Anchor>
+                                )
                               )
-                            )
-                          ) : null}
+                            : null}
 
                           {!homeSliderQuery.isPending &&
                           !homeSliderQuery.data?.recentCharacters.length ? (
@@ -609,38 +609,40 @@ export default function Home() {
                             : null}
 
                           {!homeSliderQuery.isPending &&
-                          homeSliderQuery.data?.marketSnapshot.length ? (
-                            homeSliderQuery.data.marketSnapshot.map((item) => (
-                              <Anchor
-                                key={item.itemName}
-                                href={item.href}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={classes.marketRow}
-                              >
-                                <img
-                                  src={item.iconUrl}
-                                  alt=""
-                                  aria-hidden="true"
-                                  className={classes.marketItemImage}
-                                  onError={handleEconomyIconError}
-                                />
-                                <div className={classes.marketRowMain}>
-                                  <Text className={classes.marketItemName}>
-                                    {item.itemName}
-                                  </Text>
-                                  <Text className={classes.marketItemMeta}>
-                                    {item.listings >= 100
-                                      ? "100+ listings"
-                                      : `${item.listings} listings`}
-                                  </Text>
-                                </div>
-                                <Text className={classes.marketPrice}>
-                                  {formatPrice(item.price)}
-                                </Text>
-                              </Anchor>
-                            ))
-                          ) : null}
+                          homeSliderQuery.data?.marketSnapshot.length
+                            ? homeSliderQuery.data.marketSnapshot.map(
+                                (item) => (
+                                  <Anchor
+                                    key={item.itemName}
+                                    href={item.href}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className={classes.marketRow}
+                                  >
+                                    <img
+                                      src={item.iconUrl}
+                                      alt=""
+                                      aria-hidden="true"
+                                      className={classes.marketItemImage}
+                                      onError={handleEconomyIconError}
+                                    />
+                                    <div className={classes.marketRowMain}>
+                                      <Text className={classes.marketItemName}>
+                                        {item.itemName}
+                                      </Text>
+                                      <Text className={classes.marketItemMeta}>
+                                        {item.listings >= 100
+                                          ? "100+ listings"
+                                          : `${item.listings} listings`}
+                                      </Text>
+                                    </div>
+                                    <Text className={classes.marketPrice}>
+                                      {formatPrice(item.price)}
+                                    </Text>
+                                  </Anchor>
+                                )
+                              )
+                            : null}
                         </div>
                       </div>
                     ) : null}
@@ -665,44 +667,46 @@ export default function Home() {
                             : null}
 
                           {!homeSliderQuery.isPending &&
-                          homeSliderQuery.data?.softcoreClasses.length ? (
-                            homeSliderQuery.data.softcoreClasses.map(
-                              (item) => (
-                                <div
-                                  key={item.className}
-                                  className={classes.classMetaRow}
-                                >
-                                  <img
-                                    src={`/${item.className}.webp`}
-                                    alt=""
-                                    aria-hidden="true"
-                                    className={classes.classMetaImage}
-                                  />
-                                  <div className={classes.classMetaMain}>
-                                    <div className={classes.classMetaHeader}>
-                                      <Text className={classes.classMetaName}>
-                                        {item.className}
-                                      </Text>
-                                      <Text className={classes.classMetaShare}>
-                                        {Math.round(item.share * 100)}%
-                                      </Text>
-                                    </div>
-                                    <div className={classes.classMetaBar}>
-                                      <div
-                                        className={classes.classMetaBarFill}
-                                        style={{
-                                          width: `${Math.max(
-                                            10,
-                                            item.share * 100
-                                          )}%`,
-                                        }}
-                                      />
+                          homeSliderQuery.data?.softcoreClasses.length
+                            ? homeSliderQuery.data.softcoreClasses.map(
+                                (item) => (
+                                  <div
+                                    key={item.className}
+                                    className={classes.classMetaRow}
+                                  >
+                                    <img
+                                      src={`/${item.className}.webp`}
+                                      alt=""
+                                      aria-hidden="true"
+                                      className={classes.classMetaImage}
+                                    />
+                                    <div className={classes.classMetaMain}>
+                                      <div className={classes.classMetaHeader}>
+                                        <Text className={classes.classMetaName}>
+                                          {item.className}
+                                        </Text>
+                                        <Text
+                                          className={classes.classMetaShare}
+                                        >
+                                          {Math.round(item.share * 100)}%
+                                        </Text>
+                                      </div>
+                                      <div className={classes.classMetaBar}>
+                                        <div
+                                          className={classes.classMetaBarFill}
+                                          style={{
+                                            width: `${Math.max(
+                                              10,
+                                              item.share * 100
+                                            )}%`,
+                                          }}
+                                        />
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
+                                )
                               )
-                            )
-                          ) : null}
+                            : null}
                         </div>
                       </div>
                     ) : null}
@@ -727,68 +731,72 @@ export default function Home() {
                             : null}
 
                           {!homeSliderQuery.isPending &&
-                          homeSliderQuery.data?.topItems.length ? (
-                            homeSliderQuery.data.topItems.map((item) => {
-                              const itemData = item.itemData;
-                              const imageUrl = itemData?.imageUrl;
-                              const borderColor = getBrightBorderColor(
-                                item.itemType
-                              );
-                              const backgroundColor = getDarkBackgroundColor(
-                                item.itemType
-                              );
+                          homeSliderQuery.data?.topItems.length
+                            ? homeSliderQuery.data.topItems.map((item) => {
+                                const itemData = item.itemData;
+                                const imageUrl = itemData?.imageUrl;
+                                const borderColor = getBrightBorderColor(
+                                  item.itemType
+                                );
+                                const backgroundColor = getDarkBackgroundColor(
+                                  item.itemType
+                                );
 
-                              return (
-                                <ItemTooltip
-                                  key={`${item.itemName}-${item.itemType}`}
-                                  itemData={itemData}
-                                  itemType={item.itemType}
-                                  itemName={item.itemName}
-                                >
-                                  <Anchor
-                                    href={item.href}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className={classes.marketRow}
+                                return (
+                                  <ItemTooltip
+                                    key={`${item.itemName}-${item.itemType}`}
+                                    itemData={itemData}
+                                    itemType={item.itemType}
+                                    itemName={item.itemName}
                                   >
-                                    <div
-                                      className={classes.homeItemIconFrame}
-                                      style={{
-                                        borderColor: imageUrl
-                                          ? borderColor
-                                          : "transparent",
-                                        backgroundColor: imageUrl
-                                          ? backgroundColor
-                                          : "transparent",
-                                      }}
+                                    <Anchor
+                                      href={item.href}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className={classes.marketRow}
                                     >
-                                      {imageUrl ? (
-                                        <img
-                                          src={imageUrl}
-                                          alt=""
-                                          aria-hidden="true"
-                                          className={classes.marketItemImage}
-                                        />
-                                      ) : null}
-                                    </div>
-                                    <div className={classes.marketRowMain}>
-                                      <Text className={classes.marketItemName}>
-                                        {item.itemName}
+                                      <div
+                                        className={classes.homeItemIconFrame}
+                                        style={{
+                                          borderColor: imageUrl
+                                            ? borderColor
+                                            : "transparent",
+                                          backgroundColor: imageUrl
+                                            ? backgroundColor
+                                            : "transparent",
+                                        }}
+                                      >
+                                        {imageUrl ? (
+                                          <img
+                                            src={imageUrl}
+                                            alt=""
+                                            aria-hidden="true"
+                                            className={classes.marketItemImage}
+                                          />
+                                        ) : null}
+                                      </div>
+                                      <div className={classes.marketRowMain}>
+                                        <Text
+                                          className={classes.marketItemName}
+                                        >
+                                          {item.itemName}
+                                        </Text>
+                                        <Text
+                                          className={classes.marketItemMeta}
+                                        >
+                                          {item.itemType} ·{" "}
+                                          {item.numOccurrences.toLocaleString()}{" "}
+                                          equips
+                                        </Text>
+                                      </div>
+                                      <Text className={classes.marketPrice}>
+                                        {item.pct.toFixed(1)}%
                                       </Text>
-                                      <Text className={classes.marketItemMeta}>
-                                        {item.itemType} ·{" "}
-                                        {item.numOccurrences.toLocaleString()}{" "}
-                                        equips
-                                      </Text>
-                                    </div>
-                                    <Text className={classes.marketPrice}>
-                                      {item.pct.toFixed(1)}%
-                                    </Text>
-                                  </Anchor>
-                                </ItemTooltip>
-                              );
-                            })
-                          ) : null}
+                                    </Anchor>
+                                  </ItemTooltip>
+                                );
+                              })
+                            : null}
                         </div>
                       </div>
                     ) : null}
@@ -813,38 +821,42 @@ export default function Home() {
                             : null}
 
                           {!homeSliderQuery.isPending &&
-                          homeSliderQuery.data?.leaderboard.length ? (
-                            homeSliderQuery.data.leaderboard.map((entry, index) => (
-                              <div
-                                key={`${entry.account_name}-${index}`}
-                                className={classes.leaderboardRow}
-                              >
-                                <Text className={classes.leaderboardRank}>
-                                  {index + 1}
-                                </Text>
-                                <Anchor
-                                  href={`/builds/account/${encodeURIComponent(
-                                    entry.account_name
-                                  )}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className={classes.leaderboardLink}
-                                >
-                                  <Text className={classes.leaderboardName}>
-                                    {entry.account_name}
-                                  </Text>
-                                </Anchor>
-                                <Text className={classes.leaderboardValue}>
-                                  <span>{entry.count}x </span>
-                                  <span
-                                    className={classes.leaderboardValueLevel}
+                          homeSliderQuery.data?.leaderboard.length
+                            ? homeSliderQuery.data.leaderboard.map(
+                                (entry, index) => (
+                                  <div
+                                    key={`${entry.account_name}-${index}`}
+                                    className={classes.leaderboardRow}
                                   >
-                                    99
-                                  </span>
-                                </Text>
-                              </div>
-                            ))
-                          ) : null}
+                                    <Text className={classes.leaderboardRank}>
+                                      {index + 1}
+                                    </Text>
+                                    <Anchor
+                                      href={`/builds/account/${encodeURIComponent(
+                                        entry.account_name
+                                      )}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className={classes.leaderboardLink}
+                                    >
+                                      <Text className={classes.leaderboardName}>
+                                        {entry.account_name}
+                                      </Text>
+                                    </Anchor>
+                                    <Text className={classes.leaderboardValue}>
+                                      <span>{entry.count}x </span>
+                                      <span
+                                        className={
+                                          classes.leaderboardValueLevel
+                                        }
+                                      >
+                                        99
+                                      </span>
+                                    </Text>
+                                  </div>
+                                )
+                              )
+                            : null}
                         </div>
                       </div>
                     ) : null}
@@ -903,7 +915,6 @@ export default function Home() {
               })}
             </div>
           </section>
-
         </Container>
       </div>
     </>

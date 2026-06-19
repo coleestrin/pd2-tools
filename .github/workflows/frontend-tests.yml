@@ -2,15 +2,15 @@ name: Frontend Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
     paths:
-      - 'web/**'
-      - '.github/workflows/frontend-tests.yml'
+      - "web/**"
+      - ".github/workflows/frontend-tests.yml"
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
     paths:
-      - 'web/**'
-      - '.github/workflows/frontend-tests.yml'
+      - "web/**"
+      - ".github/workflows/frontend-tests.yml"
 
 jobs:
   test:
@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Cache npm dependencies
         uses: actions/cache@v3

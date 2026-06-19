@@ -127,7 +127,16 @@ class ApiClient {
 
       const request = this.requestQueue.shift()!;
       try {
-        const response = await fetch(request.url);
+        const response = await fetch(request.url, {
+          compress: false,
+          timeout: 30000,
+          headers: {
+            Accept: "application/json",
+            "Accept-Encoding": "identity",
+            Connection: "close",
+            "User-Agent": "pd2.tools/1.0 (+https://pd2.tools)",
+          },
+        });
         const data = await response.json();
         request.resolve(data);
       } catch (error) {

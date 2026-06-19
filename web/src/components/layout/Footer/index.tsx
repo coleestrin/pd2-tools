@@ -145,7 +145,8 @@ export function Footer() {
 
         <div className={classes.bottomBar}>
           <Text className={classes.disclaimer}>
-            pd2.tools is not affiliated with or endorsed by the Project Diablo 2 team.
+            pd2.tools is not affiliated with or endorsed by the Project Diablo 2
+            team.
           </Text>
         </div>
       </Container>

@@ -111,7 +111,9 @@ export interface DamageAuraLevelBonus {
   level: number;
   skillLevelBonus: number;
   physicalBonusPercent: number;
-  elementalDamage: Partial<Record<Exclude<DamageElement, "physical" | "poison">, DamageRange>>;
+  elementalDamage: Partial<
+    Record<Exclude<DamageElement, "physical" | "poison">, DamageRange>
+  >;
   poisonDamage?: PoisonDamagePayload;
 }
 
@@ -160,7 +162,9 @@ export interface DamageProfileBreakdown {
     activeAuras: number;
     total: number;
   };
-  elementalDamage: Partial<Record<Exclude<DamageElement, "physical" | "poison">, DamageRange>>;
+  elementalDamage: Partial<
+    Record<Exclude<DamageElement, "physical" | "poison">, DamageRange>
+  >;
   poisonDamage?: PoisonDamage;
 }
 

@@ -128,22 +128,21 @@ router.get(
         softcoreMeta,
         economyItems,
         leaderboardData,
-      ] =
-        await Promise.all([
-          characterDB.getRecentCharacters(
-            "softcore",
-            season,
-            RECENT_CHARACTER_SAMPLE_SIZE
-          ),
-          characterDB.getRecentCharacters(
-            "hardcore",
-            season,
-            RECENT_CHARACTER_SAMPLE_SIZE
-          ),
-          characterDB.getFilteredCharacters("softcore", { season }, 1, 0),
-          economyDB.getItemsSummary(season, 7),
-          characterDB.getLevel99Leaderboard("softcore", leaderboardSeason),
-        ]);
+      ] = await Promise.all([
+        characterDB.getRecentCharacters(
+          "softcore",
+          season,
+          RECENT_CHARACTER_SAMPLE_SIZE
+        ),
+        characterDB.getRecentCharacters(
+          "hardcore",
+          season,
+          RECENT_CHARACTER_SAMPLE_SIZE
+        ),
+        characterDB.getFilteredCharacters("softcore", { season }, 1, 0),
+        economyDB.getItemsSummary(season, 7),
+        characterDB.getLevel99Leaderboard("softcore", leaderboardSeason),
+      ]);
 
       const recentCharacters = [
         ...softcoreRecent.map((character) =>
@@ -154,7 +153,8 @@ router.get(
         ),
       ]
         .filter(
-          (character): character is RecentCharacterActivity => character !== null
+          (character): character is RecentCharacterActivity =>
+            character !== null
         )
         .sort((a, b) => b.lastUpdated - a.lastUpdated);
 
@@ -180,29 +180,28 @@ router.get(
 
       const marketSnapshot = pickRandomItems(
         economyItems
-        .map((item) => {
-          const latest = item.price_data[item.price_data.length - 1];
-          if (!latest || typeof latest.price !== "number") {
-            return null;
-          }
+          .map((item) => {
+            const latest = item.price_data[item.price_data.length - 1];
+            if (!latest || typeof latest.price !== "number") {
+              return null;
+            }
 
-          if (!ECONOMY_ITEM_POOL.includes(item.item_name)) {
-            return null;
-          }
+            if (!ECONOMY_ITEM_POOL.includes(item.item_name)) {
+              return null;
+            }
 
-          return {
-            itemName: item.item_name,
-            price: latest.price,
-            listings: latest.numListings,
-          };
-        })
-        .filter(
-          (
-            item
-          ): item is { itemName: string; price: number; listings: number } =>
-            item !== null
-        )
-        ,
+            return {
+              itemName: item.item_name,
+              price: latest.price,
+              listings: latest.numListings,
+            };
+          })
+          .filter(
+            (
+              item
+            ): item is { itemName: string; price: number; listings: number } =>
+              item !== null
+          ),
         MARKET_ITEM_LIMIT
       );
 

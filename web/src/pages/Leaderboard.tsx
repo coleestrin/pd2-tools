@@ -20,10 +20,7 @@ import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { useSearchParams } from "react-router-dom";
 import { leaderboardAPI } from "../api";
-import type {
-  AccountLevel99Entry,
-  MirroredItemEntry,
-} from "../api/leaderboard";
+import type { AccountLevel99Entry } from "../api/leaderboard";
 import { DEFAULT_VIEW_SEASON, SHORT_SEASON_OPTIONS } from "../types";
 
 const getRarityColor = (item: any): string | null => {
@@ -459,88 +456,6 @@ function Level99LeaderboardTable({ gameMode, season }) {
   );
 }
 
-function MirroredItemLeaderboardTable({ gameMode, season }) {
-  return (
-    <GenericLeaderboardTable
-      queryKey={["mirroredLeaderboard", gameMode, season]}
-      queryFn={() => leaderboardAPI.getMirroredLeaderboard(gameMode, season)}
-      emptyMessage="No mirrored items found"
-      renderPodium={(entry: MirroredItemEntry, rank) => (
-        <PodiumCard
-          rank={rank}
-          item={entry.example_item_json}
-          title={entry.item_name}
-          subtitle={entry.item_base_name}
-          stats={
-            <div>
-              <Text ta="center" fw={700} size="lg" c="violet">
-                {entry.count}
-              </Text>
-              <Text ta="center" size="xs" c="dimmed" mb={4}>
-                Copies Found
-              </Text>
-              <Text ta="center" size="xs" c="dimmed" mt={4}>
-                Example:{" "}
-                <Anchor
-                  href={`/builds/character/${entry.example_character_name}`}
-                  target="_blank"
-                  size="xs"
-                  style={{
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    display: "inline",
-                  }}
-                >
-                  {entry.example_character_name}
-                </Anchor>
-              </Text>
-            </div>
-          }
-        />
-      )}
-      renderRow={(entry: MirroredItemEntry, index) => (
-        <Table.Tr key={`${entry.properties_signature}-${index}`}>
-          <Table.Td style={{ whiteSpace: "nowrap", minWidth: "50px" }}>
-            <Badge variant="light" color="blue" style={{ minWidth: "45px" }}>
-              #{index + 4}
-            </Badge>
-          </Table.Td>
-          <Table.Td>
-            <Tooltip
-              label={<ItemTooltip item={entry.example_item_json} />}
-              multiline
-              position="right"
-              styles={{
-                tooltip: {
-                  backgroundColor: "rgba(0, 0, 0, 0.95)",
-                  border: `1px solid ${getRarityBorderColor(entry.example_item_json)}`,
-                  padding: 0,
-                  maxWidth: "400px",
-                },
-              }}
-            >
-              <div style={{ cursor: "pointer" }}>
-                <Text fw={500} size="sm">
-                  {entry.item_name}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {entry.item_base_name}
-                </Text>
-              </div>
-            </Tooltip>
-          </Table.Td>
-          <Table.Td>
-            <Text fw={700} c="violet" size="sm">
-              {entry.count} copies
-            </Text>
-          </Table.Td>
-        </Table.Tr>
-      )}
-    />
-  );
-}
-
 export default function LeaderboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const theme = useMantineTheme();
@@ -551,35 +466,18 @@ export default function LeaderboardPage() {
   const [season, setSeason] = useState<number>(
     parseInt(searchParams.get("season") || DEFAULT_VIEW_SEASON.toString(), 10)
   );
-  const [activeLeaderboardTab, setActiveLeaderboardTab] = useState<
-    string | null
-  >(searchParams.get("tab") || "mirrored");
 
   useEffect(() => {
     const params = new URLSearchParams();
     if (gameMode !== "softcore") params.set("mode", gameMode);
     if (season !== DEFAULT_VIEW_SEASON) params.set("season", season.toString());
-    if (activeLeaderboardTab !== "mirrored")
-      params.set("tab", activeLeaderboardTab || "mirrored");
     setSearchParams(params, { replace: true });
-  }, [gameMode, season, activeLeaderboardTab, setSearchParams]);
+  }, [gameMode, season, setSearchParams]);
 
-  // Pre-fetch all leaderboard data to track loading state
   const { isPending: level99Loading } = useQuery({
     queryKey: ["level99Leaderboard", gameMode, season],
     queryFn: () => leaderboardAPI.getLevel99Leaderboard(gameMode, season),
-    enabled: activeLeaderboardTab === "level99",
   });
-
-  const { isPending: mirroredLoading } = useQuery({
-    queryKey: ["mirroredLeaderboard", gameMode, season],
-    queryFn: () => leaderboardAPI.getMirroredLeaderboard(gameMode, season),
-    enabled: activeLeaderboardTab === "mirrored",
-  });
-
-  const isAnyLoading =
-    (activeLeaderboardTab === "level99" && level99Loading) ||
-    (activeLeaderboardTab === "mirrored" && mirroredLoading);
 
   const cardWidthStyles = {
     width: "95%",
@@ -595,7 +493,7 @@ export default function LeaderboardPage() {
         <title>Leaderboard - pd2.tools</title>
         <meta
           name="description"
-          content="Track top players, items, and achievements across Project Diablo 2."
+          content="Track top account leaderboards and achievements across Project Diablo 2."
         />
       </Helmet>
 
@@ -641,24 +539,13 @@ export default function LeaderboardPage() {
             </Group>
           </Group>
 
-          {isAnyLoading ? (
+          {level99Loading ? (
             <Skeleton height={500} />
           ) : (
-            <Tabs
-              value={activeLeaderboardTab}
-              onChange={setActiveLeaderboardTab}
-            >
+            <Tabs defaultValue="level99">
               <Tabs.List>
-                <Tabs.Tab value="mirrored">Most Mirrored Items</Tabs.Tab>
                 <Tabs.Tab value="level99">Most Level 99 Accounts</Tabs.Tab>
               </Tabs.List>
-
-              <Tabs.Panel value="mirrored" pt="md">
-                <MirroredItemLeaderboardTable
-                  gameMode={gameMode}
-                  season={season}
-                />
-              </Tabs.Panel>
 
               <Tabs.Panel value="level99" pt="md">
                 <Level99LeaderboardTable gameMode={gameMode} season={season} />

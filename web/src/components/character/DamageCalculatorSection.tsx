@@ -43,7 +43,9 @@ function getWeaponSetLabel(weaponSet: DamageWeaponOption["weaponSet"]) {
   return weaponSet === "primary" ? "primary set" : "swap set";
 }
 
-function isBowOrCrossbowWeapon(weapon: Pick<DamageWeaponOption, "baseName" | "itemName" | "weaponType">) {
+function isBowOrCrossbowWeapon(
+  weapon: Pick<DamageWeaponOption, "baseName" | "itemName" | "weaponType">
+) {
   return /bow|crossbow/i.test(
     [weapon.baseName, weapon.itemName, weapon.weaponType].join(" ")
   );
@@ -246,7 +248,9 @@ function normalizeAuraSelectionRows(
 }
 
 function getDamageTypeColor(damageType: string | null | undefined) {
-  return DAMAGE_TYPE_COLORS[damageType?.toLowerCase() ?? ""] ?? STAT_COLORS.zeroValue;
+  return (
+    DAMAGE_TYPE_COLORS[damageType?.toLowerCase() ?? ""] ?? STAT_COLORS.zeroValue
+  );
 }
 
 function getAuraLevelBonus(
@@ -272,8 +276,8 @@ function getAuraLevelBonus(
       : auraOption.level || auraOption.levelOptions[0] || 1;
 
   const bonuses = isParty
-    ? auraOption.partyLevelBonuses ?? auraOption.levelBonuses
-    : auraOption.selfLevelBonuses ?? auraOption.levelBonuses;
+    ? (auraOption.partyLevelBonuses ?? auraOption.levelBonuses)
+    : (auraOption.selfLevelBonuses ?? auraOption.levelBonuses);
 
   return (
     bonuses.find((bonus) => bonus.level === numericLevel) ?? {
@@ -292,10 +296,12 @@ function getAuraBonusScore(
   }, 0);
   const poisonScore = bonus.poisonDamage?.total ?? 0;
 
-  return bonus.skillLevelBonus * 1000000 +
+  return (
+    bonus.skillLevelBonus * 1000000 +
     bonus.physicalBonusPercent * 1000 +
     elementalScore +
-    poisonScore;
+    poisonScore
+  );
 }
 
 function getResolvedAuraLevel(
@@ -466,10 +472,16 @@ function buildDamageTotalsFromComponents(
 
   const instantDamage = components
     .filter((component) => component.timing === "instant")
-    .reduce((total, component) => addRange(total, component.damage), createEmptyRange());
+    .reduce(
+      (total, component) => addRange(total, component.damage),
+      createEmptyRange()
+    );
   const overTimeDamage = components
     .filter((component) => component.timing === "over_time")
-    .reduce((total, component) => addRange(total, component.damage), createEmptyRange());
+    .reduce(
+      (total, component) => addRange(total, component.damage),
+      createEmptyRange()
+    );
   const combinedDamage = addRange(instantDamage, overTimeDamage);
 
   return {
@@ -498,8 +510,7 @@ function summaryFieldsFromComponents(
 
   return {
     damageTotals,
-    totalPhysicalDamage:
-      damageTotals.byElement.physical || createEmptyRange(),
+    totalPhysicalDamage: damageTotals.byElement.physical || createEmptyRange(),
     totalElementalDamage,
     totalPoisonDamage: damageTotals.poisonDamage,
     totalDamage: damageTotals.combinedDamage,
@@ -661,7 +672,8 @@ function normalizeDamageTotals(
   const overTimeDamage =
     cloneRange(existingTotals?.overTimeDamage) ?? derivedTotals.overTimeDamage;
   const byElement =
-    existingTotals?.byElement && Object.keys(existingTotals.byElement).length > 0
+    existingTotals?.byElement &&
+    Object.keys(existingTotals.byElement).length > 0
       ? existingTotals.byElement
       : derivedTotals.byElement;
   const poisonDamage =
@@ -819,7 +831,11 @@ function applyAuraToProfile(
   }
 
   const auraAppliesAsParty = isParty || profile.skillDamageMode === "summon";
-  const selectedBonus = getAuraLevelBonus(auraOption, level, auraAppliesAsParty);
+  const selectedBonus = getAuraLevelBonus(
+    auraOption,
+    level,
+    auraAppliesAsParty
+  );
   const numericLevel = selectedBonus.level || auraOption.level || 1;
   const selectedAura = buildAuraSummary(
     auraOption,
@@ -920,7 +936,12 @@ function applyAuraToProfile(
           {
             table: "Skills.txt",
             row: auraOption.name,
-            columns: ["aurastat*", "aurastatcalc*", "passivestat*", "passivecalc*"],
+            columns: [
+              "aurastat*",
+              "aurastatcalc*",
+              "passivestat*",
+              "passivecalc*",
+            ],
           },
         ],
         notes: [],
@@ -1040,7 +1061,9 @@ function applyTransformationToProfile(
         name: transformationOption.name,
         level: numericLevel,
       },
-      notes: profile.notes.includes(note) ? profile.notes : [...profile.notes, note],
+      notes: profile.notes.includes(note)
+        ? profile.notes
+        : [...profile.notes, note],
     };
   }
 
@@ -1096,7 +1119,9 @@ function StatLine({
       wrap="nowrap"
       style={{
         padding: "0.25rem 0",
-        borderBottom: isLast ? "none" : "0.0625rem solid rgba(255,255,255,0.08)",
+        borderBottom: isLast
+          ? "none"
+          : "0.0625rem solid rgba(255,255,255,0.08)",
       }}
     >
       <Text size="sm" c="dimmed">
@@ -1140,7 +1165,9 @@ export function DamageCalculatorSection({
     createAuraSelectionRow(),
   ]);
   const [transformationId, setTransformationId] = useState<string | null>(null);
-  const [transformationLevel, setTransformationLevel] = useState<string | null>(null);
+  const [transformationLevel, setTransformationLevel] = useState<string | null>(
+    null
+  );
   const [notesExpanded, setNotesExpanded] = useState(false);
 
   useEffect(() => {
@@ -1191,12 +1218,12 @@ export function DamageCalculatorSection({
     setTransformationLevel(
       parsedTransformation.id === "none"
         ? "0"
-        : parsedTransformation.level ??
+        : (parsedTransformation.level ??
             String(
               transformationOption?.level ??
                 transformationOption?.levelOptions[0] ??
                 1
-            )
+            ))
     );
   }, [damageCalculation]);
 
@@ -1269,7 +1296,10 @@ export function DamageCalculatorSection({
       return;
     }
 
-    if (!weaponId || !availableWeaponOptions.some((weapon) => weapon.id === weaponId)) {
+    if (
+      !weaponId ||
+      !availableWeaponOptions.some((weapon) => weapon.id === weaponId)
+    ) {
       setWeaponId(availableWeaponOptions[0].id);
     }
   }, [availableWeaponOptions, weaponId]);
@@ -1290,8 +1320,10 @@ export function DamageCalculatorSection({
       availableWeaponOptions.find((weapon) => weapon.id === weaponId) ?? null,
     [availableWeaponOptions, weaponId]
   );
-  const selectedSequenceWeaponOption =
-    selectedWeaponOption?.sequenceHits?.length ? selectedWeaponOption : null;
+  const selectedSequenceWeaponOption = selectedWeaponOption?.sequenceHits
+    ?.length
+    ? selectedWeaponOption
+    : null;
   const nonSequenceWeaponOptions = useMemo(
     () =>
       availableWeaponOptions.filter(
@@ -1301,8 +1333,8 @@ export function DamageCalculatorSection({
   );
   const primaryWeaponValue =
     hasSequenceWeaponControls && selectedSequenceWeaponOption
-      ? selectedSequenceWeaponOption.sequenceHits?.[0]?.weaponId ??
-        selectedSequenceWeaponOption.id
+      ? (selectedSequenceWeaponOption.sequenceHits?.[0]?.weaponId ??
+        selectedSequenceWeaponOption.id)
       : weaponId;
   const pairableSequenceWeaponOptions = useMemo(() => {
     if (!primaryWeaponValue) {
@@ -1323,7 +1355,8 @@ export function DamageCalculatorSection({
   ]);
   const secondaryWeaponValue = selectedSequenceWeaponOption?.id ?? "none";
   const secondaryWeaponDisabled =
-    !requiresSequenceWeaponControls && pairableSequenceWeaponOptions.length === 0;
+    !requiresSequenceWeaponControls &&
+    pairableSequenceWeaponOptions.length === 0;
 
   const selectedSkillAllowedTransformationIds = useMemo(
     () => selectedSkillOption?.allowedTransformationIds ?? [],
@@ -1365,7 +1398,11 @@ export function DamageCalculatorSection({
   ]);
 
   const compactRequiredTransformationOption = useMemo(() => {
-    if (!isCompact || !damageCalculation || !selectedSkillRequiresTransformation) {
+    if (
+      !isCompact ||
+      !damageCalculation ||
+      !selectedSkillRequiresTransformation
+    ) {
       return null;
     }
 
@@ -1624,7 +1661,10 @@ export function DamageCalculatorSection({
           auraAppliesAsParty
         );
 
-        return selectedBonus.skillLevelBonus > 0 || Boolean(selectedBonus.poisonDamage);
+        return (
+          selectedBonus.skillLevelBonus > 0 ||
+          Boolean(selectedBonus.poisonDamage)
+        );
       }
     );
     const precomputedAuraProfileRow =
@@ -1803,7 +1843,9 @@ export function DamageCalculatorSection({
             <Card
               withBorder
               padding="sm"
-              style={{ borderTop: `0.1875rem solid ${STAT_COLORS.combinedDamage}` }}
+              style={{
+                borderTop: `0.1875rem solid ${STAT_COLORS.combinedDamage}`,
+              }}
             >
               <Group justify="space-between" align="center" gap="md">
                 <div>
@@ -1888,7 +1930,8 @@ export function DamageCalculatorSection({
               <Group justify="space-between" gap="xs">
                 <Text fw={600}>Selected Auras</Text>
                 <Text size="xs" c="dimmed">
-                  Selecting an aura adds another row; choose No aura to remove one.
+                  Selecting an aura adds another row; choose No aura to remove
+                  one.
                 </Text>
               </Group>
 
@@ -1962,7 +2005,9 @@ export function DamageCalculatorSection({
                 <Card
                   withBorder
                   padding="sm"
-                  style={{ borderTop: `0.1875rem solid ${STAT_COLORS.combinedDamage}` }}
+                  style={{
+                    borderTop: `0.1875rem solid ${STAT_COLORS.combinedDamage}`,
+                  }}
                 >
                   <Text size="xs" c="dimmed" tt="uppercase">
                     {getCombinedDamageLabel(selectedProfile)}
@@ -2041,7 +2086,8 @@ export function DamageCalculatorSection({
                     {formatRange(selectedProfile.totalPhysicalDamage)}
                   </Text>
                   <Text size="xs" c="dimmed">
-                    +{selectedProfile.breakdown.physicalBonusPercent.total}% total bonus
+                    +{selectedProfile.breakdown.physicalBonusPercent.total}%
+                    total bonus
                   </Text>
                 </Card>
 
@@ -2099,12 +2145,15 @@ export function DamageCalculatorSection({
                           ),
                         }}
                       >
-                        {formatRange(selectedProfile.damageTotals.overTimeDamage)}
+                        {formatRange(
+                          selectedProfile.damageTotals.overTimeDamage
+                        )}
                       </Text>
                       {selectedProfile.totalPoisonDamage ? (
                         <Text size="xs" c="dimmed">
                           poison total{" "}
-                          {selectedProfile.totalPoisonDamage.total.toLocaleString()} over{" "}
+                          {selectedProfile.totalPoisonDamage.total.toLocaleString()}{" "}
+                          over{" "}
                           {selectedProfile.totalPoisonDamage.durationSeconds}s
                         </Text>
                       ) : null}
@@ -2229,7 +2278,9 @@ export function DamageCalculatorSection({
                           ? "Summon base"
                           : "Weapon damage"
                       }
-                      value={formatRange(selectedProfile.breakdown.weaponDamage)}
+                      value={formatRange(
+                        selectedProfile.breakdown.weaponDamage
+                      )}
                       color={getRangeColor(
                         selectedProfile.breakdown.weaponDamage,
                         STAT_COLORS.physicalDamageReduction
@@ -2237,7 +2288,9 @@ export function DamageCalculatorSection({
                     />
                     <StatLine
                       label="Flat damage"
-                      value={formatRange(selectedProfile.breakdown.flatPhysicalDamage)}
+                      value={formatRange(
+                        selectedProfile.breakdown.flatPhysicalDamage
+                      )}
                       color={getRangeColor(
                         selectedProfile.breakdown.flatPhysicalDamage,
                         STAT_COLORS.physicalDamageReduction
@@ -2255,7 +2308,8 @@ export function DamageCalculatorSection({
                       label="Non-weapon ED"
                       value={`${selectedProfile.breakdown.physicalBonusPercent.nonWeapon}%`}
                       color={getPercentColor(
-                        selectedProfile.breakdown.physicalBonusPercent.nonWeapon,
+                        selectedProfile.breakdown.physicalBonusPercent
+                          .nonWeapon,
                         STAT_COLORS.physicalDamageReduction
                       )}
                     />
@@ -2271,7 +2325,8 @@ export function DamageCalculatorSection({
                       label="Selected skill"
                       value={`${selectedProfile.breakdown.physicalBonusPercent.selectedSkill}%`}
                       color={getPercentColor(
-                        selectedProfile.breakdown.physicalBonusPercent.selectedSkill,
+                        selectedProfile.breakdown.physicalBonusPercent
+                          .selectedSkill,
                         STAT_COLORS.physicalDamageReduction
                       )}
                     />
@@ -2297,7 +2352,8 @@ export function DamageCalculatorSection({
                       label="Auras"
                       value={`${selectedProfile.breakdown.physicalBonusPercent.activeAuras}%`}
                       color={getPercentColor(
-                        selectedProfile.breakdown.physicalBonusPercent.activeAuras,
+                        selectedProfile.breakdown.physicalBonusPercent
+                          .activeAuras,
                         STAT_COLORS.physicalDamageReduction
                       )}
                       isLast
@@ -2310,68 +2366,70 @@ export function DamageCalculatorSection({
                 (selectedProfile.notes.length > 0 ||
                   Boolean(selectedProfile.damageScope?.note) ||
                   damageCalculation.notes.length > 0) && (
-                <>
-                  <Divider />
-                  <Stack gap="xs">
-                    <Group justify="space-between" gap="xs">
-                      <Text size="sm" fw={600}>
-                        Damage model notes
-                      </Text>
-                      <Button
-                        variant="subtle"
-                        size="xs"
-                        onClick={() => setNotesExpanded((expanded) => !expanded)}
-                        rightSection={
-                          <IconChevronDown
-                            size={14}
-                            style={{
-                              transform: notesExpanded
-                                ? "rotate(180deg)"
-                                : "rotate(0deg)",
-                              transition: "transform 150ms ease",
-                            }}
-                          />
-                        }
-                        aria-expanded={notesExpanded}
-                      >
-                        {notesExpanded ? "Show less" : "Read more"}
-                      </Button>
-                    </Group>
-                    <Collapse in={notesExpanded}>
-                      <Stack gap="xs">
-                        <Text size="sm" c="dimmed">
-                          This calculator is intended to be a close model, not a
-                          perfect guarantee. If you notice a significant
-                          difference from the damage you expect,{" "}
-                          <Anchor
-                            href={BUG_REPORT_CHANNEL_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            make a #bug-report
-                          </Anchor>
-                          .
+                  <>
+                    <Divider />
+                    <Stack gap="xs">
+                      <Group justify="space-between" gap="xs">
+                        <Text size="sm" fw={600}>
+                          Damage model notes
                         </Text>
-                        {selectedProfile.damageScope?.note ? (
+                        <Button
+                          variant="subtle"
+                          size="xs"
+                          onClick={() =>
+                            setNotesExpanded((expanded) => !expanded)
+                          }
+                          rightSection={
+                            <IconChevronDown
+                              size={14}
+                              style={{
+                                transform: notesExpanded
+                                  ? "rotate(180deg)"
+                                  : "rotate(0deg)",
+                                transition: "transform 150ms ease",
+                              }}
+                            />
+                          }
+                          aria-expanded={notesExpanded}
+                        >
+                          {notesExpanded ? "Show less" : "Read more"}
+                        </Button>
+                      </Group>
+                      <Collapse in={notesExpanded}>
+                        <Stack gap="xs">
                           <Text size="sm" c="dimmed">
-                            {selectedProfile.damageScope.note}
+                            This calculator is intended to be a close model, not
+                            a perfect guarantee. If you notice a significant
+                            difference from the damage you expect,{" "}
+                            <Anchor
+                              href={BUG_REPORT_CHANNEL_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              make a #bug-report
+                            </Anchor>
+                            .
                           </Text>
-                        ) : null}
-                        {selectedProfile.notes.map((note) => (
-                          <Text key={note} size="sm" c="dimmed">
-                            {note}
-                          </Text>
-                        ))}
-                        {damageCalculation.notes.map((note) => (
-                          <Text key={note} size="sm" c="dimmed">
-                            {note}
-                          </Text>
-                        ))}
-                      </Stack>
-                    </Collapse>
-                  </Stack>
-                </>
-              )}
+                          {selectedProfile.damageScope?.note ? (
+                            <Text size="sm" c="dimmed">
+                              {selectedProfile.damageScope.note}
+                            </Text>
+                          ) : null}
+                          {selectedProfile.notes.map((note) => (
+                            <Text key={note} size="sm" c="dimmed">
+                              {note}
+                            </Text>
+                          ))}
+                          {damageCalculation.notes.map((note) => (
+                            <Text key={note} size="sm" c="dimmed">
+                              {note}
+                            </Text>
+                          ))}
+                        </Stack>
+                      </Collapse>
+                    </Stack>
+                  </>
+                )}
             </>
           ) : (
             <Text size="sm" c="dimmed">

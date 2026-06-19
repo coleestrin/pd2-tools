@@ -26,10 +26,10 @@ function hasDamageCalculatorInput(
 
   return Boolean(
     character &&
-      Array.isArray(data?.items) &&
-      Array.isArray(character.skills) &&
-      character.class?.name &&
-      character.attributes
+    Array.isArray(data?.items) &&
+    Array.isArray(character.skills) &&
+    character.class?.name &&
+    character.attributes
   );
 }
 
@@ -704,116 +704,135 @@ router.get(
 );
 
 // POST /api/characters/:name/refresh - Manually refresh character data
-router.post("/:name/refresh", characterRefreshLimiter, async (req: Request, res: Response) => {
-  try {
-    const { name } = req.params;
-    const now = Date.now();
-    const cacheKey = `refresh:character:${name.toLowerCase()}`;
+router.post(
+  "/:name/refresh",
+  characterRefreshLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const { name } = req.params;
+      const now = Date.now();
+      const cacheKey = `refresh:character:${name.toLowerCase()}`;
 
-    // Check 15-minute rate limit from Redis
-    const lastRefresh = await getCacheValue<number>(cacheKey);
+      // Check 15-minute rate limit from Redis
+      const lastRefresh = await getCacheValue<number>(cacheKey);
 
-    // Check 15-minute rate limit
-    if (lastRefresh && now - lastRefresh < 15 * 60 * 1000) {
-      const retryAfter = Math.ceil(
-        (15 * 60 * 1000 - (now - lastRefresh)) / 1000
+      // Check 15-minute rate limit
+      if (lastRefresh && now - lastRefresh < 15 * 60 * 1000) {
+        const retryAfter = Math.ceil(
+          (15 * 60 * 1000 - (now - lastRefresh)) / 1000
+        );
+        return res.status(429).json({
+          error: "Character was refreshed recently. Please try again later.",
+          retryAfter,
+        });
+      }
+
+      // Fetch character data from PD2 API
+      logger.info(`Manual refresh requested for character: ${name}`);
+      const response = await fetch(
+        `https://api.projectdiablo2.com/game/character/${encodeURIComponent(name)}`,
+        {
+          compress: false,
+          timeout: 30000,
+          headers: {
+            Accept: "application/json",
+            "Accept-Encoding": "identity",
+            Connection: "close",
+            "User-Agent": "pd2.tools/1.0 (+https://pd2.tools)",
+          },
+        }
       );
-      return res.status(429).json({
-        error: "Character was refreshed recently. Please try again later.",
-        retryAfter,
+
+      if (!response.ok) {
+        return res.status(404).json({
+          error: "Character not found or API unavailable",
+        });
+      }
+
+      const charData: any = await response.json();
+
+      if (!charData?.character) {
+        return res.status(404).json({
+          error: "Invalid character data received",
+        });
+      }
+
+      // Determine game mode
+      const gameMode = charData.character.status?.is_hardcore
+        ? "hardcore"
+        : "softcore";
+
+      // Get season from request or use current season
+      const season = charData.character.season || config.currentSeason;
+
+      // Get existing character to preserve accountName
+      const existingChar = await characterDB.getCharacterByName(
+        gameMode,
+        name,
+        season
+      );
+      const accountName = existingChar?.accountName;
+
+      // Set lastUpdated and calculate realSkills (same as scraper does)
+      charData.lastUpdated = now;
+      enrichArmoryPayload(charData as unknown as Partial<CharacterData>);
+      charData.realSkills = calculateTotalSkills(
+        charData as unknown as CharacterResponse
+      );
+
+      // Ingest character data with preserved accountName
+      await characterDB.ingestCharacter(
+        charData,
+        gameMode,
+        season,
+        accountName
+      );
+
+      // Update rate limit cache in Redis (TTL: 15 minutes = 900 seconds)
+      await setCacheValue(cacheKey, now, 900);
+
+      // Invalidate API cache for this character (cache keys are auto:/:name:<hash>)
+      const deletedKeys = await deleteCachePattern(`auto:/${name}:*`);
+      logger.debug(
+        `Invalidated ${deletedKeys} cache keys for character: ${name}`
+      );
+
+      // Fetch and return updated character
+      const updatedChar = await characterDB.getCharacterByName(
+        gameMode,
+        name,
+        season
+      );
+
+      if (!updatedChar) {
+        return res.status(500).json({
+          error: "Character refreshed but failed to retrieve updated data",
+        });
+      }
+
+      // Calculate realStats from items (same as GET endpoint does)
+      enrichArmoryPayload(updatedChar as unknown as Partial<CharacterData>);
+      if (updatedChar.items && updatedChar.items.length > 0) {
+        // @ts-expect-error - character structure is validated by DB
+        const statParser = new CharacterStatParser(updatedChar);
+        updatedChar.realStats = statParser.parseAndGetCharStats();
+      }
+
+      attachDamageCalculation(updatedChar as unknown as Partial<CharacterData>);
+
+      logger.info(`Character ${name} successfully refreshed`);
+
+      // Return same format as GET endpoint (character directly, not wrapped)
+      return res.json(updatedChar);
+    } catch (error: unknown) {
+      logger.error("Error refreshing character", {
+        error: error instanceof Error ? error.message : String(error),
       });
-    }
-
-    // Fetch character data from PD2 API
-    logger.info(`Manual refresh requested for character: ${name}`);
-    const response = await fetch(
-      `https://api.projectdiablo2.com/game/character/${name}`
-    );
-
-    if (!response.ok) {
-      return res.status(404).json({
-        error: "Character not found or API unavailable",
-      });
-    }
-
-    const charData: any = await response.json();
-
-    if (!charData?.character) {
-      return res.status(404).json({
-        error: "Invalid character data received",
-      });
-    }
-
-    // Determine game mode
-    const gameMode = charData.character.status?.is_hardcore
-      ? "hardcore"
-      : "softcore";
-
-    // Get season from request or use current season
-    const season = charData.character.season || config.currentSeason;
-
-    // Get existing character to preserve accountName
-    const existingChar = await characterDB.getCharacterByName(
-      gameMode,
-      name,
-      season
-    );
-    const accountName = existingChar?.accountName;
-
-    // Set lastUpdated and calculate realSkills (same as scraper does)
-    charData.lastUpdated = now;
-    enrichArmoryPayload(charData as unknown as Partial<CharacterData>);
-    charData.realSkills = calculateTotalSkills(
-      charData as unknown as CharacterResponse
-    );
-
-    // Ingest character data with preserved accountName
-    await characterDB.ingestCharacter(charData, gameMode, season, accountName);
-
-    // Update rate limit cache in Redis (TTL: 15 minutes = 900 seconds)
-    await setCacheValue(cacheKey, now, 900);
-
-    // Invalidate API cache for this character (cache keys are auto:/:name:<hash>)
-    const deletedKeys = await deleteCachePattern(`auto:/${name}:*`);
-    logger.debug(
-      `Invalidated ${deletedKeys} cache keys for character: ${name}`
-    );
-
-    // Fetch and return updated character
-    const updatedChar = await characterDB.getCharacterByName(
-      gameMode,
-      name,
-      season
-    );
-
-    if (!updatedChar) {
       return res.status(500).json({
-        error: "Character refreshed but failed to retrieve updated data",
+        error: "Failed to refresh character data",
       });
     }
-
-    // Calculate realStats from items (same as GET endpoint does)
-    enrichArmoryPayload(updatedChar as unknown as Partial<CharacterData>);
-    if (updatedChar.items && updatedChar.items.length > 0) {
-      // @ts-expect-error - character structure is validated by DB
-      const statParser = new CharacterStatParser(updatedChar);
-      updatedChar.realStats = statParser.parseAndGetCharStats();
-    }
-
-    attachDamageCalculation(updatedChar as unknown as Partial<CharacterData>);
-
-    logger.info(`Character ${name} successfully refreshed`);
-
-    // Return same format as GET endpoint (character directly, not wrapped)
-    return res.json(updatedChar);
-  } catch (error: unknown) {
-    logger.error("Error refreshing character", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return res.status(500).json({
-      error: "Failed to refresh character data",
-    });
   }
-});
+);
 
 export default router;

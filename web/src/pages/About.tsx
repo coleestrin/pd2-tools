@@ -150,8 +150,8 @@ export default function AboutPage() {
                 fw={600}
               >
                 Project Diablo 2 team
-              </Anchor>
-              {" "}for making the data that powers the site accessible.
+              </Anchor>{" "}
+              for making the data that powers the site accessible.
             </Text>
             <Text size="md" style={{ lineHeight: 1.8, marginBottom: rem(24) }}>
               Need to contact us? The best way is via our{" "}

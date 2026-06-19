@@ -636,12 +636,10 @@ export default function StatisticsPage() {
         count,
         pct: total ? (count / total) * 100 : 0,
         accent: modeColor,
-        href: getBuildsHref(
-          gameMode,
-          metaSeason,
-          metaLevelRange,
-          { type: "class", value: className }
-        ),
+        href: getBuildsHref(gameMode, metaSeason, metaLevelRange, {
+          type: "class",
+          value: className,
+        }),
       };
     }).sort((a, b) => b.count - a.count);
   }, [gameMode, metaLevelRange, metaSeason, metaSummaryQuery.data, modeColor]);
@@ -995,7 +993,11 @@ export default function StatisticsPage() {
                             "Characters",
                           ]}
                         />
-                        <Bar dataKey="count" fill={modeColor} radius={[6, 6, 0, 0]} />
+                        <Bar
+                          dataKey="count"
+                          fill={modeColor}
+                          radius={[6, 6, 0, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -1009,7 +1011,8 @@ export default function StatisticsPage() {
               <Box>
                 <Title order={3}>Character Gamemode Distribution</Title>
                 <Text size="sm" c="dimmed" mt={4}>
-                  Overall tracked characters split between softcore and hardcore.
+                  Overall tracked characters split between softcore and
+                  hardcore.
                 </Text>
               </Box>
 
@@ -1031,7 +1034,14 @@ export default function StatisticsPage() {
                           innerRadius={70}
                           outerRadius={100}
                           labelLine={{ stroke: theme.colors.gray[5] }}
-                          label={({ name, percent, x, y, textAnchor, fill }) => (
+                          label={({
+                            name,
+                            percent,
+                            x,
+                            y,
+                            textAnchor,
+                            fill,
+                          }) => (
                             <text
                               x={x}
                               y={y}
@@ -1167,9 +1177,7 @@ export default function StatisticsPage() {
                 />
                 <SummaryStat
                   label="Top Item Share"
-                  value={
-                    topItems[0] ? formatPercent(topItems[0].pct) : "0.0%"
-                  }
+                  value={topItems[0] ? formatPercent(topItems[0].pct) : "0.0%"}
                   note={topItems[0]?.item || "No item data"}
                   accent={theme.colors.orange[5]}
                 />
@@ -1216,10 +1224,15 @@ export default function StatisticsPage() {
                         {topSkills.map((skill, index) => (
                           <Anchor
                             key={skill.name}
-                            href={getBuildsHref(gameMode, metaSeason, metaLevelRange, {
-                              type: "skill",
-                              value: skill.name,
-                            })}
+                            href={getBuildsHref(
+                              gameMode,
+                              metaSeason,
+                              metaLevelRange,
+                              {
+                                type: "skill",
+                                value: skill.name,
+                              }
+                            )}
                             underline="never"
                             style={{ color: "inherit" }}
                           >
@@ -1250,9 +1263,13 @@ export default function StatisticsPage() {
                     <SectionPanel title="Top Items">
                       <Stack gap="xs">
                         {topItems.map((item, index) => {
-                          const itemData = itemCatalogQuery.data?.get(item.item);
+                          const itemData = itemCatalogQuery.data?.get(
+                            item.item
+                          );
                           const imageUrl = itemData?.imageUrl;
-                          const borderColor = getBrightBorderColor(item.itemType);
+                          const borderColor = getBrightBorderColor(
+                            item.itemType
+                          );
                           const backgroundColor = getDarkBackgroundColor(
                             item.itemType
                           );
@@ -1265,10 +1282,15 @@ export default function StatisticsPage() {
                               itemName={item.item}
                             >
                               <Anchor
-                                href={getBuildsHref(gameMode, metaSeason, metaLevelRange, {
-                                  type: "item",
-                                  value: item.item,
-                                })}
+                                href={getBuildsHref(
+                                  gameMode,
+                                  metaSeason,
+                                  metaLevelRange,
+                                  {
+                                    type: "item",
+                                    value: item.item,
+                                  }
+                                )}
                                 underline="never"
                                 style={{ color: "inherit", display: "block" }}
                               >
@@ -1330,10 +1352,15 @@ export default function StatisticsPage() {
                         {topMercTypes.map((mercType, index) => (
                           <Anchor
                             key={mercType.mercType}
-                            href={getBuildsHref(gameMode, metaSeason, metaLevelRange, {
-                              type: "mercType",
-                              value: mercType.mercType,
-                            })}
+                            href={getBuildsHref(
+                              gameMode,
+                              metaSeason,
+                              metaLevelRange,
+                              {
+                                type: "mercType",
+                                value: mercType.mercType,
+                              }
+                            )}
                             underline="never"
                             style={{ color: "inherit" }}
                           >
@@ -1365,9 +1392,13 @@ export default function StatisticsPage() {
                     <SectionPanel title="Mercenary Gear">
                       <Stack gap="xs">
                         {topMercItems.map((item, index) => {
-                          const itemData = itemCatalogQuery.data?.get(item.item);
+                          const itemData = itemCatalogQuery.data?.get(
+                            item.item
+                          );
                           const imageUrl = itemData?.imageUrl;
-                          const borderColor = getBrightBorderColor(item.itemType);
+                          const borderColor = getBrightBorderColor(
+                            item.itemType
+                          );
                           const backgroundColor = getDarkBackgroundColor(
                             item.itemType
                           );
@@ -1380,10 +1411,15 @@ export default function StatisticsPage() {
                               itemName={item.item}
                             >
                               <Anchor
-                                href={getBuildsHref(gameMode, metaSeason, metaLevelRange, {
-                                  type: "mercItem",
-                                  value: item.item,
-                                })}
+                                href={getBuildsHref(
+                                  gameMode,
+                                  metaSeason,
+                                  metaLevelRange,
+                                  {
+                                    type: "mercItem",
+                                    value: item.item,
+                                  }
+                                )}
                                 underline="never"
                                 style={{ color: "inherit", display: "block" }}
                               >
