@@ -25,9 +25,7 @@ import { charactersAPI } from "../api";
 import { DamageCalculatorSection } from "../components/character";
 import {
   DAMAGE_CALCULATOR_PAYLOAD_VERSION,
-  DEFAULT_VIEW_SEASON,
   GAME_MODES,
-  SEASON_OPTIONS,
   type GameMode,
 } from "../types";
 
@@ -37,45 +35,31 @@ function getGameMode(value: string | null): GameMode {
     : GAME_MODES.SOFTCORE;
 }
 
-function getSeason(value: string | null): number {
-  if (!value) {
-    return DEFAULT_VIEW_SEASON;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_VIEW_SEASON;
-}
-
 const BUG_REPORT_CHANNEL_URL =
   "https://discordapp.com/channels/1311407302149931128/1311407430122475580";
-const LATEST_SEASON_VALUE = "latest";
-const DAMAGE_CALCULATOR_SEASON_OPTIONS = [
-  { value: LATEST_SEASON_VALUE, label: "Latest" },
-  ...SEASON_OPTIONS.filter(
-    (option) => option.value !== String(DEFAULT_VIEW_SEASON)
-  ),
-];
 
 export default function DamageCalculator() {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryCharacterName = (searchParams.get("character") || "").trim();
   const queryGameMode = getGameMode(searchParams.get("mode"));
-  const querySeason = searchParams.has("season")
-    ? getSeason(searchParams.get("season"))
-    : undefined;
-  const normalizedQuerySeason =
-    querySeason === DEFAULT_VIEW_SEASON ? undefined : querySeason;
-  const querySeasonKey = normalizedQuerySeason ?? LATEST_SEASON_VALUE;
 
   const [characterName, setCharacterName] = useState(queryCharacterName);
   const [gameMode, setGameMode] = useState<GameMode>(queryGameMode);
-  const [season, setSeason] = useState(String(querySeasonKey));
+
+  useEffect(() => {
+    if (!searchParams.has("season")) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("season");
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     setCharacterName(queryCharacterName);
     setGameMode(queryGameMode);
-    setSeason(String(querySeasonKey));
-  }, [queryCharacterName, queryGameMode, querySeasonKey]);
+  }, [queryCharacterName, queryGameMode]);
 
   const characterQuery = useQuery({
     queryKey: [
@@ -83,14 +67,9 @@ export default function DamageCalculator() {
       DAMAGE_CALCULATOR_PAYLOAD_VERSION,
       queryCharacterName,
       queryGameMode,
-      querySeasonKey,
     ],
     queryFn: () =>
-      charactersAPI.getCharacter(
-        queryCharacterName,
-        queryGameMode,
-        normalizedQuerySeason
-      ),
+      charactersAPI.getCharacter(queryCharacterName, queryGameMode),
     enabled: queryCharacterName.length > 0,
     staleTime: 0,
     retry: false,
@@ -104,14 +83,10 @@ export default function DamageCalculator() {
     const loadedMode = characterQuery.data.character.status?.is_hardcore
       ? GAME_MODES.HARDCORE
       : GAME_MODES.SOFTCORE;
-    const loadedSeason = characterQuery.data.character.season;
     const params = new URLSearchParams();
 
     if (loadedMode !== GAME_MODES.SOFTCORE) {
       params.set("gameMode", loadedMode);
-    }
-    if (loadedSeason && loadedSeason !== DEFAULT_VIEW_SEASON) {
-      params.set("season", String(loadedSeason));
     }
 
     const queryString = params.toString();
@@ -134,9 +109,6 @@ export default function DamageCalculator() {
 
     if (gameMode !== GAME_MODES.SOFTCORE) {
       nextParams.set("mode", gameMode);
-    }
-    if (season !== LATEST_SEASON_VALUE) {
-      nextParams.set("season", season);
     }
 
     setSearchParams(nextParams);
@@ -188,6 +160,11 @@ export default function DamageCalculator() {
                       <Badge variant="light">
                         {loadedCharacter.status?.is_hardcore ? "HC" : "SC"}
                       </Badge>
+                      {loadedCharacter.season ? (
+                        <Badge variant="light">
+                          Season {loadedCharacter.season}
+                        </Badge>
+                      ) : null}
                     </Group>
                   ) : null}
                 </Stack>
@@ -214,7 +191,7 @@ export default function DamageCalculator() {
               </Flex>
 
               <form onSubmit={handleSubmit}>
-                <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="sm">
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
                   <TextInput
                     label="Character"
                     placeholder="Character name"
@@ -231,15 +208,6 @@ export default function DamageCalculator() {
                       { value: GAME_MODES.SOFTCORE, label: "Softcore" },
                       { value: GAME_MODES.HARDCORE, label: "Hardcore" },
                     ]}
-                    allowDeselect={false}
-                  />
-                  <Select
-                    label="Season"
-                    value={season}
-                    onChange={(value) =>
-                      setSeason(value || LATEST_SEASON_VALUE)
-                    }
-                    data={DAMAGE_CALCULATOR_SEASON_OPTIONS}
                     allowDeselect={false}
                   />
                   <Button
@@ -278,7 +246,7 @@ export default function DamageCalculator() {
           ) : characterQuery.isError || !characterQuery.data ? (
             <Alert color="red" icon={<IconAlertCircle size={18} />}>
               Character data could not be loaded. Check the character name,
-              season, and game mode.
+              and game mode.
             </Alert>
           ) : !loadedCharacter ? (
             <Alert color="yellow" icon={<IconAlertCircle size={18} />}>

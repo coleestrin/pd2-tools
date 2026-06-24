@@ -149,20 +149,17 @@ router.get(
 // GET /api/characters/:name - Get character by name
 router.get(
   "/:name",
-  validateSeason,
   autoCache(900),
   async (req: Request, res: Response) => {
     try {
       const { name } = req.params;
-      const { gameMode = "softcore", season } = req.query;
+      const { gameMode = "softcore" } = req.query;
 
-      const seasonNumber = season ? parseInt(season as string, 10) : undefined;
       const MODES = ["hardcore", "softcore"];
 
       let character = await characterDB.getCharacterByName(
         gameMode as string,
-        name,
-        seasonNumber
+        name
       );
 
       // If not found in requested gameMode, try all other modes as fallback
@@ -171,20 +168,7 @@ router.get(
           if (otherGameMode === gameMode) continue; // Skip already-checked mode
           character = await characterDB.getCharacterByName(
             otherGameMode,
-            name,
-            seasonNumber
-          );
-          if (character) break;
-        }
-      }
-
-      // Keep explicit-season links tolerant of the previous default-season behavior.
-      if (!character && seasonNumber !== undefined) {
-        for (const gm of MODES) {
-          character = await characterDB.getCharacterByName(
-            gm,
-            name,
-            seasonNumber - 1
+            name
           );
           if (character) break;
         }

@@ -70,6 +70,10 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+## 5. Damage Calculator Regression Scope
+
+After every change that affects damage calculator output, compare the changed output against the committed damage regression snapshot to validate that the differences are intentionally scoped. If the changed calculator output is accepted as correct, update the snapshot in the same change so future regressions use the new accepted values.
+
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.

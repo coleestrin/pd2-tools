@@ -67,6 +67,20 @@ function createStats() {
   };
 }
 
+function expectPhysicalBonusTotalToMatchBuckets(profile) {
+  const bonus = profile.breakdown.physicalBonusPercent;
+  const expectedTotal =
+    bonus.stat +
+    bonus.nonWeapon +
+    bonus.passive +
+    bonus.selectedSkill +
+    bonus.selectedSkillSynergy +
+    bonus.transformation +
+    bonus.activeAuras;
+
+  expect(bonus.total).toBeCloseTo(expectedTotal, 5);
+}
+
 function createWeapon(overrides: Partial<IItem> = {}): IItem {
   return {
     id: overrides.id ?? "test-weapon",
@@ -164,6 +178,54 @@ function createBoot(overrides: Partial<IItem> = {}): IItem {
     is_ear: false,
     is_starter: false,
     is_simple: true,
+    is_ethereal: false,
+    is_personalized: false,
+    is_runeword: false,
+    socketed_count: 0,
+    item_level: 1,
+    graphic_id: 0,
+    class_specifics: false,
+    socket_count: 0,
+    modifiers: [],
+    corrupted: false,
+    desecrated: false,
+    ...overrides,
+  } as unknown as IItem;
+}
+
+function createSimpleItem(overrides: Partial<IItem> = {}): IItem {
+  return {
+    id: overrides.id ?? "test-item",
+    hash: overrides.hash ?? "test-item",
+    name: overrides.name ?? "Test Item",
+    category: "misc",
+    base_code: "rin",
+    base: {
+      id: "rin",
+      category: "misc",
+      codes: {},
+      name: "Ring",
+      stackable: false,
+      type: "Ring",
+      type_code: "ring",
+      size: { height: 1, width: 1 },
+      requirements: { level: 0, strength: 0, dexterity: 0 },
+    },
+    quality: { id: 4, name: "Magic" },
+    location: {
+      zone: "Stored",
+      storage: "Inventory",
+      zone_id: 2,
+      storage_id: 1,
+    },
+    position: { row: 0, column: 0 },
+    properties: [],
+    is_identified: true,
+    is_socketed: false,
+    is_new: false,
+    is_ear: false,
+    is_starter: false,
+    is_simple: false,
     is_ethereal: false,
     is_personalized: false,
     is_runeword: false,
@@ -375,6 +437,83 @@ function getExpectedBattleCommandPhysicalBonusFromSkillsTxt(level: number) {
     getGameFileNumber(skills, row, "Param3") +
     (level - 1) * getGameFileNumber(skills, row, "Param4")
   );
+}
+
+function getExpectedVengeanceElementalPercentFromSkillsTxt({
+  vengeanceLevel,
+  holyFireBaseLevel,
+  holyFreezeBaseLevel,
+  holyShockBaseLevel,
+  convictionBaseLevel,
+}: {
+  vengeanceLevel: number;
+  holyFireBaseLevel: number;
+  holyFreezeBaseLevel: number;
+  holyShockBaseLevel: number;
+  convictionBaseLevel: number;
+}) {
+  const skills = loadGameFile("Skills.txt", "skill");
+  const row = skills.rowsByKey.get("Vengeance")!;
+
+  expect(getGameFileCell(skills, row, "*calc1 desc")).toBe("fire damage%");
+  expect(getGameFileCell(skills, row, "*calc2 desc")).toBe("cold damage%");
+  expect(getGameFileCell(skills, row, "*calc3 desc")).toBe("ltng damage%");
+
+  return (
+    getGameFileNumber(skills, row, "Param1") +
+    Math.max(0, vengeanceLevel - 1) *
+      getGameFileNumber(skills, row, "Param2") +
+    (holyFireBaseLevel + holyFreezeBaseLevel + holyShockBaseLevel) *
+      getGameFileNumber(skills, row, "Param8") +
+    convictionBaseLevel * getGameFileNumber(skills, row, "Param7")
+  );
+}
+
+function getExpectedVengeanceFlatElementalPayloadFromSkillsTxt({
+  vengeanceLevel,
+  holyFireBaseLevel,
+  holyFreezeBaseLevel,
+  holyShockBaseLevel,
+  convictionBaseLevel,
+}: {
+  vengeanceLevel: number;
+  holyFireBaseLevel: number;
+  holyFreezeBaseLevel: number;
+  holyShockBaseLevel: number;
+  convictionBaseLevel: number;
+}) {
+  const skills = loadGameFile("Skills.txt", "skill");
+  const row = skills.rowsByKey.get("Vengeance")!;
+  const min = getSourceLevelScaledValue(skills, row, vengeanceLevel, "EMin", [
+    "EMinLev1",
+    "EMinLev2",
+    "EMinLev3",
+    "EMinLev4",
+    "EMinLev5",
+  ]);
+  const max = getSourceLevelScaledValue(skills, row, vengeanceLevel, "EMax", [
+    "EMaxLev1",
+    "EMaxLev2",
+    "EMaxLev3",
+    "EMaxLev4",
+    "EMaxLev5",
+  ]);
+  const synergyPercent =
+    (holyFireBaseLevel +
+      holyFreezeBaseLevel +
+      holyShockBaseLevel +
+      convictionBaseLevel) *
+    getGameFileNumber(skills, row, "Param8");
+
+  expect(getGameFileCell(skills, row, "EType")).toBe("");
+  expect(getGameFileCell(skills, row, "EDmgSymPerCalc")).toContain(
+    "skill('Holy Fire'.blvl)"
+  );
+
+  return {
+    min: Math.floor(min * (1 + synergyPercent / 100)),
+    max: Math.floor(max * (1 + synergyPercent / 100)),
+  };
 }
 
 function getExpectedWarCryPhysicalSynergyFromSkillsTxt({
@@ -755,6 +894,293 @@ describeWithGameData("damage calculator component model", () => {
     });
   });
 
+  it("models Vengeance flat elemental payload and weapon elemental conversion", () => {
+    const vengeanceLevel = 20;
+    const synergyBaseLevel = 20;
+    const character = createCharacter("Vengeance", vengeanceLevel);
+    character.character.class = { id: 3, name: "Paladin" };
+    character.character.skills = [
+      { id: 102, name: "Holy Fire", level: synergyBaseLevel },
+      { id: 111, name: "Vengeance", level: vengeanceLevel },
+      { id: 114, name: "Holy Freeze", level: synergyBaseLevel },
+      { id: 118, name: "Holy Shock", level: synergyBaseLevel },
+      { id: 123, name: "Conviction", level: synergyBaseLevel },
+    ];
+    character.realSkills = [
+      {
+        skill: "Holy Fire",
+        level: synergyBaseLevel,
+        baseLevel: synergyBaseLevel,
+      },
+      { skill: "Vengeance", level: vengeanceLevel, baseLevel: vengeanceLevel },
+      {
+        skill: "Holy Freeze",
+        level: synergyBaseLevel,
+        baseLevel: synergyBaseLevel,
+      },
+      {
+        skill: "Holy Shock",
+        level: synergyBaseLevel,
+        baseLevel: synergyBaseLevel,
+      },
+      {
+        skill: "Conviction",
+        level: synergyBaseLevel,
+        baseLevel: synergyBaseLevel,
+      },
+    ];
+    character.items = [
+      createWeapon({
+        damage: {
+          one_handed: { minimum: 100, maximum: 200 },
+          two_handed: {},
+          missile: {},
+        },
+      }),
+    ];
+
+    const calculation = calculateDamage(character);
+    const vengeanceOption = calculation.skillOptions.find(
+      (skill) => skill.name === "Vengeance"
+    );
+    const vengeanceProfile = calculation.profiles.find(
+      (profile) =>
+        profile.skillName === "Vengeance" &&
+        profile.weaponId.startsWith("primary:right:one_handed") &&
+        profile.playerAuraId === "none"
+    );
+    const percent = getExpectedVengeanceElementalPercentFromSkillsTxt({
+      vengeanceLevel,
+      holyFireBaseLevel: synergyBaseLevel,
+      holyFreezeBaseLevel: synergyBaseLevel,
+      holyShockBaseLevel: synergyBaseLevel,
+      convictionBaseLevel: synergyBaseLevel,
+    });
+    const flatPayload = getExpectedVengeanceFlatElementalPayloadFromSkillsTxt({
+      vengeanceLevel,
+      holyFireBaseLevel: synergyBaseLevel,
+      holyFreezeBaseLevel: synergyBaseLevel,
+      holyShockBaseLevel: synergyBaseLevel,
+      convictionBaseLevel: synergyBaseLevel,
+    });
+    const weaponConversion = {
+      min: Math.floor(100 * (percent / 100)),
+      max: Math.floor(200 * (percent / 100)),
+    };
+    const expectedElementTotal = {
+      min: flatPayload.min + weaponConversion.min,
+      max: flatPayload.max + weaponConversion.max,
+    };
+
+    expect(vengeanceOption).toMatchObject({ damageMode: "weapon" });
+    expect(vengeanceProfile).toBeDefined();
+
+    (["fire", "cold", "lightning"] as const).forEach((element) => {
+      expect(
+        vengeanceProfile!.damageComponents.find(
+          (component) =>
+            component.label ===
+              `Vengeance ${element} weapon conversion` &&
+            component.damageType === element
+        )
+      ).toMatchObject({
+        source: "skill",
+        damage: weaponConversion,
+        baseDamage: weaponConversion,
+      });
+      expect(
+        vengeanceProfile!.damageComponents.find(
+          (component) =>
+            component.label ===
+              `Skill: ${element[0].toUpperCase()}${element.slice(1)}` &&
+            component.damageType === element
+        )
+      ).toMatchObject({
+        source: "skill",
+        damage: flatPayload,
+      });
+      expect(vengeanceProfile!.totalElementalDamage[element]).toEqual(
+        expectedElementTotal
+      );
+    });
+
+    expect(vengeanceProfile!.damageTotals.combinedDamage.min).toBe(
+      100 + expectedElementTotal.min * 3
+    );
+    expect(vengeanceProfile!.damageTotals.combinedDamage.max).toBe(
+      200 + expectedElementTotal.max * 3
+    );
+  });
+
+  it("limits flat item elemental damage to equipped items and active inventory charms", () => {
+    const character = createCharacter("Rabies", 1);
+    character.items = [
+      createWeapon(),
+      createSimpleItem({
+        id: "equipped-ring",
+        hash: "equipped-ring",
+        name: "Equipped Ring",
+        location: {
+          zone: "Equipped",
+          storage: "Unknown",
+          zone_id: 1,
+          storage_id: 0,
+          equipment: "Right Ring",
+          equipment_id: 10,
+        },
+        properties: ["Adds 7-9 Cold Damage"],
+      }),
+      createSimpleItem({
+        id: "active-charm",
+        hash: "active-charm",
+        name: "Active Charm",
+        base: {
+          id: "cm1",
+          category: "charm",
+          codes: {},
+          name: "Small Charm",
+          stackable: false,
+          type: "Small Charm",
+          type_code: "scha",
+          size: { height: 1, width: 1 },
+          requirements: { level: 0, strength: 0, dexterity: 0 },
+        },
+        location: {
+          zone: "Stored",
+          storage: "Inventory",
+          zone_id: 2,
+          storage_id: 1,
+          equipment: "Left Hand Switch",
+          equipment_id: 0,
+        },
+        properties: ["Adds 3-5 Fire Damage"],
+      }),
+      createSimpleItem({
+        id: "inventory-ring",
+        hash: "inventory-ring",
+        name: "Inventory Ring",
+        properties: ["Adds 100-200 Fire Damage"],
+      }),
+      createSimpleItem({
+        id: "cube-charm",
+        hash: "cube-charm",
+        name: "Cube Charm",
+        base: {
+          id: "cm1",
+          category: "charm",
+          codes: {},
+          name: "Small Charm",
+          stackable: false,
+          type: "Small Charm",
+          type_code: "scha",
+          size: { height: 1, width: 1 },
+          requirements: { level: 0, strength: 0, dexterity: 0 },
+        },
+        location: {
+          zone: "Stored",
+          storage: "Cube",
+          zone_id: 4,
+          storage_id: 4,
+        },
+        properties: ["Adds 11-13 Lightning Damage"],
+      }),
+    ];
+
+    const calculation = calculateDamage(character);
+    const basicAttackProfile = calculation.profiles.find(
+      (profile) =>
+        profile.skillName === "Basic Attack" &&
+        profile.weaponId.startsWith("primary:right:one_handed")
+    );
+
+    expect(basicAttackProfile).toBeDefined();
+    expect(basicAttackProfile!.totalElementalDamage.fire).toEqual({
+      min: 3,
+      max: 5,
+    });
+    expect(basicAttackProfile!.totalElementalDamage.cold).toEqual({
+      min: 7,
+      max: 9,
+    });
+    expect(basicAttackProfile!.totalElementalDamage.lightning).toBeUndefined();
+  });
+
+  it("counts plus-prefixed off-weapon enhanced damage from equipped items and active charms", () => {
+    const character = createCharacter("Rabies", 1);
+    character.items = [
+      createWeapon({
+        properties: ["+500% Enhanced Damage"],
+        damage: {
+          one_handed: { minimum: 100, maximum: 200 },
+          two_handed: {},
+          missile: {},
+        },
+      }),
+      createSimpleItem({
+        id: "equipped-amulet",
+        hash: "equipped-amulet",
+        name: "Equipped Amulet",
+        location: {
+          zone: "Equipped",
+          storage: "Unknown",
+          zone_id: 1,
+          storage_id: 0,
+          equipment: "Amulet",
+          equipment_id: 2,
+        },
+        properties: ["+50% Enhanced Damage"],
+      }),
+      createSimpleItem({
+        id: "active-charm-ed",
+        hash: "active-charm-ed",
+        name: "Active ED Charm",
+        base: {
+          id: "cm1",
+          category: "charm",
+          codes: {},
+          name: "Small Charm",
+          stackable: false,
+          type: "Small Charm",
+          type_code: "scha",
+          size: { height: 1, width: 1 },
+          requirements: { level: 0, strength: 0, dexterity: 0 },
+        },
+        location: {
+          zone: "Stored",
+          storage: "Inventory",
+          zone_id: 2,
+          storage_id: 1,
+          equipment: "Left Hand Switch",
+          equipment_id: 0,
+        },
+        properties: ["25% Enhanced Damage"],
+      }),
+      createSimpleItem({
+        id: "inactive-ring-ed",
+        hash: "inactive-ring-ed",
+        name: "Inactive ED Ring",
+        properties: ["+900% Enhanced Damage"],
+      }),
+    ];
+
+    const calculation = calculateDamage(character);
+    const basicAttackProfile = calculation.profiles.find(
+      (profile) =>
+        profile.skillName === "Basic Attack" &&
+        profile.weaponId.startsWith("primary:right:one_handed")
+    );
+
+    expect(basicAttackProfile).toBeDefined();
+    expect(
+      basicAttackProfile!.breakdown.physicalBonusPercent.nonWeapon
+    ).toBe(75);
+    expect(basicAttackProfile!.breakdown.physicalBonusPercent.total).toBe(75);
+    expect(basicAttackProfile!.totalPhysicalDamage).toEqual({
+      min: 175,
+      max: 350,
+    });
+  });
+
   it("treats direct missile spells without source damage as spell profiles", () => {
     const character = createCharacter("Charged Bolt", 20);
     character.character.class = { id: 1, name: "Sorceress" };
@@ -1024,7 +1450,54 @@ describeWithGameData("damage calculator component model", () => {
     expect(warCryProfile!.breakdown.physicalBonusPercent.total).toBe(
       expectedSynergy
     );
+    expectPhysicalBonusTotalToMatchBuckets(warCryProfile);
     expect(warCryProfile!.totalPhysicalDamage.min).toBeGreaterThan(0);
+  });
+
+  it("does not double-report direct physical weapon skill synergies in the physical bonus total", () => {
+    const character = createCharacter("Blade Fury", 20);
+    character.character.class = { id: 6, name: "Assassin" };
+    character.character.skills = [
+      { id: 257, name: "Blade Sentinel", level: 20 },
+      { id: 266, name: "Blade Fury", level: 20 },
+      { id: 277, name: "Blade Shield", level: 20 },
+    ];
+    character.realSkills = [
+      { skill: "Blade Sentinel", level: 20, baseLevel: 20 },
+      { skill: "Blade Fury", level: 20, baseLevel: 20 },
+      { skill: "Blade Shield", level: 20, baseLevel: 20 },
+    ];
+    character.items = [
+      createWeapon({
+        damage: {
+          one_handed: { minimum: 100, maximum: 200 },
+          two_handed: {},
+          missile: {},
+        },
+      }),
+    ];
+
+    const calculation = calculateDamage(character);
+    const bladeFuryProfile = calculation.profiles.find(
+      (profile) =>
+        profile.skillName === "Blade Fury" &&
+        profile.weaponId.startsWith("primary:right:one_handed") &&
+        profile.playerAuraId === "none"
+    );
+    const directPhysicalComponent = bladeFuryProfile?.damageComponents.find(
+      (component) =>
+        component.label === "Skill: Physical" &&
+        component.sourceRefs.some((ref) =>
+          ref.columns.includes("DmgSymPerCalc")
+        )
+    );
+
+    expect(bladeFuryProfile).toBeDefined();
+    expect(directPhysicalComponent).toBeDefined();
+    expect(
+      bladeFuryProfile!.breakdown.physicalBonusPercent.selectedSkillSynergy
+    ).toBe(0);
+    expectPhysicalBonusTotalToMatchBuckets(bladeFuryProfile);
   });
 
   it("labels stream skills as per-second damage", () => {
@@ -1845,7 +2318,8 @@ describeWithMonStatsData("summon damage modeling", () => {
     );
     expect(
       archerProfile?.breakdown.physicalBonusPercent.selectedSkillSynergy
-    ).toBe(damagePercent);
+    ).toBe(0);
+    expectPhysicalBonusTotalToMatchBuckets(archerProfile);
   });
 
   it("includes summon-owned aura payloads without pulling class synergy rows", () => {

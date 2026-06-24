@@ -303,8 +303,7 @@ describe("API Routes", () => {
         expect(response.body).toEqual(mockCharacter);
         expect(characterDB.getCharacterByName).toHaveBeenCalledWith(
           "softcore",
-          "TestChar",
-          undefined
+          "TestChar"
         );
       });
 
@@ -318,23 +317,21 @@ describe("API Routes", () => {
 
         expect(characterDB.getCharacterByName).toHaveBeenCalledWith(
           "hardcore",
-          "TestChar",
-          undefined
+          "TestChar"
         );
       });
 
-      it("should handle season parameter", async () => {
+      it("should ignore season parameter for direct character lookup", async () => {
         (characterDB.getCharacterByName as jest.Mock).mockResolvedValue({});
 
         await request(app)
           .get("/api/v1/characters/TestChar")
-          .query({ season: 11 })
+          .query({ season: "not-a-season" })
           .expect(200);
 
         expect(characterDB.getCharacterByName).toHaveBeenCalledWith(
           "softcore",
-          "TestChar",
-          11
+          "TestChar"
         );
       });
 

@@ -38,6 +38,29 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile jobs up
 
 Open `http://localhost:4173`
 
+### Damage Regression Snapshot
+
+The API includes a sampled real-character damage snapshot for calculator
+regression coverage. The snapshot is generated from the public character API and
+keeps only characters that pass main-skill quality gates: level 80+, base and
+effective target skill level 20+, enough maxed synergy investment where the game
+data exposes synergies, and target skill damage at least 50% of the character's
+best no-manual-aura modeled profile.
+
+```bash
+cd api
+npm run damage:snapshot
+npx jest src/utils/damage-regression-snapshot.test.ts --runInBand
+```
+
+Useful generation knobs:
+
+- `DAMAGE_REGRESSION_SEASON`: season to sample, default `13`.
+- `DAMAGE_REGRESSION_GAME_MODES`: comma-separated modes, default `softcore`.
+- `DAMAGE_REGRESSION_MAX_SKILLS`: cap the number of usage-ranked skills sampled.
+- `DAMAGE_REGRESSION_TARGET_SAMPLES_PER_SKILL`: desired qualified samples per skill, default `3`.
+- `DAMAGE_REGRESSION_MIN_SAMPLES_PER_SKILL`: minimum retained samples per skill, default `2`.
+
 ## 🤝 Contributing
 
 Contributions are welcome. For coordination or questions join the [pd2.tools discord](https://discord.com/invite/TVTExqWRhK).
