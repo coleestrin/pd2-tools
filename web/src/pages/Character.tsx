@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { Container, Grid, Skeleton } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
@@ -14,7 +14,6 @@ import {
   LevelProgressChart,
 } from "../components/character";
 import {
-  DEFAULT_VIEW_SEASON,
   GAME_MODES,
   type GameMode,
   type PlayerToggle,
@@ -32,28 +31,28 @@ function getGameMode(value: string | null): GameMode {
     : GAME_MODES.SOFTCORE;
 }
 
-function getSeason(value: string | null): number | undefined {
-  if (!value) {
-    return undefined;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
-}
-
 export default function Character() {
   const { name } = useParams<{ name: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const characterName = name;
   const requestedGameMode = getGameMode(
     searchParams.get("gameMode") ?? searchParams.get("mode")
   );
-  const requestedSeason = getSeason(searchParams.get("season"));
   const isMobile = useMediaQuery("(max-width: 767px)");
   const [playerToggle, setPlayerToggle] = useState<PlayerToggle>("player");
   const [skillsView, setSkillsView] = useState<SkillsView>("text");
   const [didError, setDidError] = useState(false);
   const [selectedSnapshot, setSelectedSnapshot] = useState<string | null>(""); // empty string = current/live data
+
+  useEffect(() => {
+    if (!searchParams.has("season")) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("season");
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // Get nav ID from URL params
   const navId = searchParams.get("nav");
@@ -83,13 +82,12 @@ export default function Character() {
   }, [characterName, navId]);
 
   const charQuery = useQuery({
-    queryKey: ["character", characterName, requestedGameMode, requestedSeason],
+    queryKey: ["character", characterName, requestedGameMode],
     queryFn: async () => {
       try {
         const data = await charactersAPI.getCharacter(
           characterName || "",
-          requestedGameMode,
-          requestedSeason
+          requestedGameMode
         );
         if (!data) {
           setDidError(true);
@@ -103,6 +101,7 @@ export default function Character() {
     retry: false,
     enabled: !!characterName,
   });
+  const resolvedSeason = charQuery.data?.character?.season;
 
   // Fetch snapshot list for dropdown
   const snapshotsListQuery = useQuery({
@@ -110,14 +109,14 @@ export default function Character() {
       "character-snapshots",
       characterName,
       requestedGameMode,
-      requestedSeason,
+      resolvedSeason,
     ],
     queryFn: async () => {
       try {
         return await charactersAPI.getCharacterSnapshots(
           characterName || "",
           requestedGameMode,
-          requestedSeason
+          resolvedSeason
         );
       } catch {
         // No snapshots yet, return empty array
@@ -125,7 +124,7 @@ export default function Character() {
       }
     },
     retry: false,
-    enabled: !!characterName,
+    enabled: !!characterName && resolvedSeason !== undefined,
   });
 
   // Fetch specific snapshot when selected
@@ -150,8 +149,6 @@ export default function Character() {
     ?.is_hardcore
     ? GAME_MODES.HARDCORE
     : GAME_MODES.SOFTCORE;
-  const damageCalculatorSeason =
-    displayData?.character?.season ?? DEFAULT_VIEW_SEASON;
   const damageCalculatorUrl = useMemo(() => {
     if (!displayData?.character?.name) {
       return "/tools/damage-calculator";
@@ -162,12 +159,8 @@ export default function Character() {
       mode: damageCalculatorGameMode,
     });
 
-    if (damageCalculatorSeason !== DEFAULT_VIEW_SEASON) {
-      params.set("season", String(damageCalculatorSeason));
-    }
-
     return `/tools/damage-calculator?${params.toString()}`;
-  }, [damageCalculatorGameMode, damageCalculatorSeason, displayData]);
+  }, [damageCalculatorGameMode, displayData]);
 
   return (
     <>

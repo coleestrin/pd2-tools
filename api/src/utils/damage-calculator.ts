@@ -187,6 +187,15 @@ type SkillSynergyBonuses = {
   poisonPct: number;
 };
 
+type WeaponElementalDamageElement = "fire" | "cold" | "lightning";
+
+type WeaponElementalDamagePercentComponent = {
+  element: WeaponElementalDamageElement;
+  percent: number;
+  calcColumn: string;
+  descColumn: string;
+};
+
 type DirectSkillDamage = {
   components: Array<{
     label: string;
@@ -371,6 +380,25 @@ const GAME_ETYPES: Record<
   ltng: "lightning",
   mag: "magic",
   pois: "poison",
+};
+
+const SKILL_DESC_ELEMENTAL_DAMAGE_TEXTS: Record<
+  string,
+  WeaponElementalDamageElement
+> = {
+  AddFireDmg: "fire",
+  AddColdDmg: "cold",
+  AddLtngDmg: "lightning",
+};
+
+const WEAPON_ELEMENTAL_DAMAGE_CALC_DESCRIPTIONS: Record<
+  string,
+  WeaponElementalDamageElement
+> = {
+  "fire damage%": "fire",
+  "cold damage%": "cold",
+  "ltng damage%": "lightning",
+  "lightning damage%": "lightning",
 };
 
 const SKILL_MISSILE_COLUMNS = [
@@ -1737,6 +1765,32 @@ function getGamePoisonDurationSeconds(skillName: string): number | undefined {
     : undefined;
 }
 
+function getSkillDescElementalDamageElements(
+  skillRow: string[]
+): WeaponElementalDamageElement[] {
+  const skillDescRow = getGameSkillDescRow(skillRow);
+  if (!skillDescRow) {
+    return [];
+  }
+
+  const elements: WeaponElementalDamageElement[] = [];
+  for (let index = 1; index <= 6; index += 1) {
+    (["a", "b"] as const).forEach((side) => {
+      const textKey = getGameRowString(
+        "SkillDesc",
+        skillDescRow,
+        `desctext${side}${index}`
+      );
+      const element = SKILL_DESC_ELEMENTAL_DAMAGE_TEXTS[textKey];
+      if (element && !elements.includes(element)) {
+        elements.push(element);
+      }
+    });
+  }
+
+  return elements;
+}
+
 function getGameSkillComponents(
   skillName: string,
   level: number,
@@ -1849,6 +1903,51 @@ function getGameSkillComponents(
         element === "poison" ? "over_time" : "instant"
       )
     );
+  }
+
+  if (!element && elementalRange) {
+    getSkillDescElementalDamageElements(skillRow).forEach((descElement) => {
+      components.push(
+        createGameComponent(
+          descElement[0].toUpperCase() + descElement.slice(1),
+          descElement,
+          elementalRange,
+          evaluateGameCalcExpression(
+            getGameRowString("Skills", skillRow, "EDmgSymPerCalc"),
+            skillRow,
+            skillMap,
+            level
+          ),
+          getGameElementalBonusPercent(
+            descElement,
+            skillMap,
+            realStats,
+            skillName
+          ),
+          "skill",
+          [
+            {
+              table: "Skills.txt",
+              row: getGameRowString("Skills", skillRow, "skill") || skillName,
+              columns: [
+                "EMin",
+                "EMax",
+                "EMinLev1..5",
+                "EMaxLev1..5",
+                "EDmgSymPerCalc",
+                "HitShift",
+              ],
+              note: "SkillDesc maps this blank-EType payload to elemental damage display rows.",
+            },
+            {
+              table: "SkillDesc.txt",
+              row: getGameRowString("Skills", skillRow, "skilldesc"),
+              columns: ["desctext*", "desccalc*"],
+            },
+          ]
+        )
+      );
+    });
   }
 
   for (const missileName of getGameSkillMissileNames(skillRow)) {
@@ -2162,11 +2261,26 @@ function getWeaponSetForEquipment(equipment?: string): WeaponSet | undefined {
   return undefined;
 }
 
+function isActiveInventoryCharm(item: IItem): boolean {
+  return Boolean(
+    item.base?.type_code?.toLowerCase().includes("cha") &&
+      item.location?.storage === "Inventory"
+  );
+}
+
+function isEquippedItem(item: IItem): boolean {
+  return item.location?.zone === "Equipped";
+}
+
 function getPlayerItemsForWeaponSet(
   items: IItem[],
   weaponSet: WeaponSet
 ): IItem[] {
   return items.filter((item) => {
+    if (isActiveInventoryCharm(item)) {
+      return true;
+    }
+
     const itemWeaponSet = getWeaponSetForEquipment(item.location?.equipment);
     return !itemWeaponSet || itemWeaponSet === weaponSet;
   });
@@ -4175,6 +4289,100 @@ function getDirectSkillDamage(
   return createEmptyDirectSkillDamage();
 }
 
+function getWeaponElementalDamagePercentComponents(
+  skillName: string,
+  level: number,
+  skillMap: Map<string, SkillEntry>
+): WeaponElementalDamagePercentComponent[] {
+  const skillRow = getGameRow("Skills", skillName);
+  if (!skillRow) {
+    return [];
+  }
+
+  const components: WeaponElementalDamagePercentComponent[] = [];
+  for (let index = 1; index <= 4; index += 1) {
+    const descColumn = `*calc${index} desc`;
+    const calcColumn = `calc${index}`;
+    const description = getGameRowString(
+      "Skills",
+      skillRow,
+      descColumn
+    )
+      .trim()
+      .toLowerCase();
+    const element = WEAPON_ELEMENTAL_DAMAGE_CALC_DESCRIPTIONS[description];
+    if (!element) {
+      continue;
+    }
+
+    const percent = evaluateGameCalcExpression(
+      getGameRowString("Skills", skillRow, calcColumn),
+      skillRow,
+      skillMap,
+      level
+    );
+    if (percent <= 0) {
+      continue;
+    }
+
+    components.push({
+      element,
+      percent,
+      calcColumn,
+      descColumn,
+    });
+  }
+
+  return components;
+}
+
+function createWeaponElementalDamageComponents(
+  skillName: string,
+  level: number,
+  skillMap: Map<string, SkillEntry>,
+  weaponDamage: DamageRange,
+  realStats?: CharacterData["realStats"]
+): DamageComponent[] {
+  const skillRow = getGameRow("Skills", skillName);
+  if (!skillRow || !isNonZeroDamageRange(weaponDamage)) {
+    return [];
+  }
+
+  return getWeaponElementalDamagePercentComponents(
+    skillName,
+    level,
+    skillMap
+  )
+    .map(({ element, percent, calcColumn, descColumn }) => {
+      const baseDamage = floorScaleDamageRange(weaponDamage, percent / 100);
+      const elementalBonusPercent = getGameElementalBonusPercent(
+        element,
+        skillMap,
+        realStats,
+        skillName
+      );
+      const damage = scaleDamageRange(baseDamage, elementalBonusPercent);
+
+      return createDamageComponent({
+        id: `skill-weapon-elemental:${skillName}:${element}`,
+        label: `${skillName} ${element} weapon conversion`,
+        source: "skill",
+        damageType: element,
+        damage,
+        baseDamage,
+        sourceRefs: [
+          {
+            table: "Skills.txt",
+            row: getGameRowString("Skills", skillRow, "skill") || skillName,
+            columns: [calcColumn, descColumn, "SrcDam", "HitShift"],
+            note: "Elemental percent is applied to the modeled weapon-source damage for this attack.",
+          },
+        ],
+      });
+    })
+    .filter((component) => isNonZeroDamageRange(component.damage));
+}
+
 function getWeaponSourceDamageModifier(skillName: string): number {
   const skillRow = getGameRow("Skills", skillName);
   const srcDam = skillRow ? getGameRowNumber("Skills", skillRow, "SrcDam") : 0;
@@ -4332,6 +4540,14 @@ function parseItemDamageStats(
     const itemKey = item.hash || String(item.id);
     const isWeapon = item.category === "weapon";
     const isSelectedWeapon = itemKey === selectedWeaponKey;
+    if (
+      !isSelectedWeapon &&
+      !isEquippedItem(item) &&
+      !isActiveInventoryCharm(item)
+    ) {
+      return;
+    }
+
     const standaloneElementalDamage: Record<
       "fire" | "cold" | "lightning" | "magic",
       DamageRange
@@ -4348,7 +4564,7 @@ function parseItemDamageStats(
       }
 
       if (!isWeapon) {
-        const enhancedDamage = property.match(/^(\d+)% Enhanced Damage$/i);
+        const enhancedDamage = property.match(/^\+?(\d+)% Enhanced Damage$/i);
         if (enhancedDamage) {
           nonWeaponEnhancedDamagePct += Number(enhancedDamage[1]);
           return;
@@ -5137,10 +5353,6 @@ function buildSummonProfile(
     realStats,
     skillOption.summonVariant
   );
-  const directPhysicalSynergyPercent = getDirectPhysicalSkillSynergyPercent(
-    sourceSkillName,
-    effectiveSkillMap
-  );
   const summonDamagePercent = getSummonDamagePercent(
     sourceSkillName,
     selectedSkillLevel,
@@ -5282,7 +5494,7 @@ function buildSummonProfile(
         nonWeapon: 0,
         passive: 0,
         selectedSkill: Number(summonDamagePercent.toFixed(1)),
-        selectedSkillSynergy: directPhysicalSynergyPercent,
+        selectedSkillSynergy: 0,
         transformation: 0,
         activeAuras: Number(auraPercent.toFixed(1)),
         total: Number(totalPhysicalBonusPercent.toFixed(1)),
@@ -5613,13 +5825,6 @@ function buildProfile(
           poisonPct: 0,
         }
       : getSkillSynergyBonuses(selectedSkillName, effectiveSkillMap);
-  const directPhysicalSynergyPercent =
-    selectedSkillName === "Basic Attack"
-      ? 0
-      : getDirectPhysicalSkillSynergyPercent(
-          selectedSkillName,
-          effectiveSkillMap
-        );
   const auraPercent = activeAuras.reduce(
     (total, aura) => total + getAuraPhysicalDamagePercent(aura),
     0
@@ -5780,6 +5985,16 @@ function buildProfile(
   const skillPayloadComponents = directDamageComponents.filter(
     (component) => component.damageType !== "physical"
   );
+  const weaponElementalDamageComponents =
+    selectedSkillName === "Basic Attack"
+      ? []
+      : createWeaponElementalDamageComponents(
+          selectedSkillName,
+          selectedSkillLevel,
+          effectiveSkillMap,
+          carriedWeaponDamage,
+          realStats
+        );
 
   const auraElementalComponents: DamageComponent[] = [];
   activeAuras.forEach((aura) => {
@@ -5855,6 +6070,7 @@ function buildProfile(
     ...physicalComponents,
     ...itemElementalComponents,
     ...skillPayloadComponents,
+    ...weaponElementalDamageComponents,
     ...auraElementalComponents,
     ...itemPoisonComponents,
   ].filter((component) => isNonZeroDamageRange(component.damage));
@@ -5931,7 +6147,9 @@ function buildProfile(
         nonWeapon: parsedItemDamage.nonWeaponEnhancedDamagePct,
         passive: passivePercent,
         selectedSkill: selectedSkillPercent,
-        selectedSkillSynergy: directPhysicalSynergyPercent,
+        selectedSkillSynergy: Number(
+          selectedSkillSynergies.physicalPct.toFixed(1)
+        ),
         transformation: 0,
         activeAuras: auraPercent,
         total: Number(totalPhysicalBonusPercent.toFixed(1)),
