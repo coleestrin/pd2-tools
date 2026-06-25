@@ -5,6 +5,9 @@
 # Root docker env
 .env
 
+# Local agent instructions
+AGENTS.md
+
 # Dependencies
 api/node_modules/
 
