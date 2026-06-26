@@ -60065,35 +60065,35 @@
           },
           "damageTotals": {
             "instantDamage": {
-              "min": 3747,
-              "max": 4801
+              "min": 10674,
+              "max": 15213
             },
             "overTimeDamage": {
               "min": 0,
               "max": 0
             },
             "combinedDamage": {
-              "min": 3747,
-              "max": 4801
+              "min": 10674,
+              "max": 15213
             },
-            "averageInstantDamage": 4274,
-            "averageCombinedDamage": 4274,
+            "averageInstantDamage": 12943.5,
+            "averageCombinedDamage": 12943.5,
             "byElement": {
               "physical": {
                 "min": 348,
                 "max": 442
               },
               "fire": {
-                "min": 1362,
-                "max": 1770
+                "min": 3879,
+                "max": 5554
               },
               "cold": {
-                "min": 1093,
-                "max": 1419
+                "min": 3298,
+                "max": 4733
               },
               "lightning": {
-                "min": 944,
-                "max": 1170
+                "min": 3149,
+                "max": 4484
               }
             }
           },
@@ -60103,16 +60103,16 @@
           },
           "totalElementalDamage": {
             "fire": {
-              "min": 1362,
-              "max": 1770
+              "min": 3879,
+              "max": 5554
             },
             "cold": {
-              "min": 1093,
-              "max": 1419
+              "min": 3298,
+              "max": 4733
             },
             "lightning": {
-              "min": 944,
-              "max": 1170
+              "min": 3149,
+              "max": 4484
             }
           },
           "breakdown": {
@@ -60136,16 +60136,16 @@
             },
             "elementalDamage": {
               "fire": {
-                "min": 1362,
-                "max": 1770
+                "min": 3879,
+                "max": 5554
               },
               "cold": {
-                "min": 1093,
-                "max": 1419
+                "min": 3298,
+                "max": 4733
               },
               "lightning": {
-                "min": 944,
-                "max": 1170
+                "min": 3149,
+                "max": 4484
               }
             }
           },
@@ -60195,75 +60195,45 @@
               }
             },
             {
-              "label": "Skill: Lightning",
-              "source": "skill",
-              "damageType": "lightning",
-              "timing": "instant",
-              "damage": {
-                "min": 561,
-                "max": 686
-              }
-            },
-            {
-              "label": "Skill: Cold",
-              "source": "skill",
-              "damageType": "cold",
-              "timing": "instant",
-              "damage": {
-                "min": 561,
-                "max": 686
-              }
-            },
-            {
-              "label": "Skill: Fire",
+              "label": "Vengeance fire damage",
               "source": "skill",
               "damageType": "fire",
               "timing": "instant",
               "damage": {
-                "min": 641,
-                "max": 783
-              }
-            },
-            {
-              "label": "Vengeance fire weapon conversion",
-              "source": "skill",
-              "damageType": "fire",
-              "timing": "instant",
-              "damage": {
-                "min": 428,
-                "max": 543
+                "min": 3586,
+                "max": 5110
               },
               "baseDamage": {
-                "min": 313,
-                "max": 397
+                "min": 768,
+                "max": 1094
               }
             },
             {
-              "label": "Vengeance cold weapon conversion",
+              "label": "Vengeance cold damage",
               "source": "skill",
               "damageType": "cold",
               "timing": "instant",
               "damage": {
-                "min": 375,
-                "max": 476
+                "min": 3141,
+                "max": 4476
               },
               "baseDamage": {
-                "min": 313,
-                "max": 397
+                "min": 768,
+                "max": 1094
               }
             },
             {
-              "label": "Vengeance lightning weapon conversion",
+              "label": "Vengeance lightning damage",
               "source": "skill",
               "damageType": "lightning",
               "timing": "instant",
               "damage": {
-                "min": 375,
-                "max": 476
+                "min": 3141,
+                "max": 4476
               },
               "baseDamage": {
-                "min": 313,
-                "max": 397
+                "min": 768,
+                "max": 1094
               }
             }
           ]
@@ -61911,35 +61881,35 @@
           },
           "damageTotals": {
             "instantDamage": {
-              "min": 4168,
-              "max": 5246
+              "min": 9592,
+              "max": 15473
             },
             "overTimeDamage": {
               "min": 21,
               "max": 21
             },
             "combinedDamage": {
-              "min": 4189,
-              "max": 5267
+              "min": 9613,
+              "max": 15494
             },
-            "averageInstantDamage": 4707,
-            "averageCombinedDamage": 4728,
+            "averageInstantDamage": 12532.5,
+            "averageCombinedDamage": 12553.5,
             "byElement": {
               "physical": {
                 "min": 1028,
                 "max": 1161
               },
               "fire": {
-                "min": 909,
-                "max": 1116
+                "min": 2717,
+                "max": 4525
               },
               "cold": {
-                "min": 1253,
-                "max": 1822
+                "min": 3061,
+                "max": 5231
               },
               "lightning": {
-                "min": 867,
-                "max": 1021
+                "min": 2675,
+                "max": 4430
               },
               "magic": {
                 "min": 111,
@@ -61961,16 +61931,16 @@
           },
           "totalElementalDamage": {
             "fire": {
-              "min": 909,
-              "max": 1116
+              "min": 2717,
+              "max": 4525
             },
             "cold": {
-              "min": 1253,
-              "max": 1822
+              "min": 3061,
+              "max": 5231
             },
             "lightning": {
-              "min": 867,
-              "max": 1021
+              "min": 2675,
+              "max": 4430
             },
             "magic": {
               "min": 111,
@@ -62002,16 +61972,16 @@
             },
             "elementalDamage": {
               "fire": {
-                "min": 909,
-                "max": 1116
+                "min": 2717,
+                "max": 4525
               },
               "cold": {
-                "min": 1253,
-                "max": 1822
+                "min": 3061,
+                "max": 5231
               },
               "lightning": {
-                "min": 867,
-                "max": 1021
+                "min": 2675,
+                "max": 4430
               },
               "magic": {
                 "min": 111,
@@ -62069,75 +62039,45 @@
               }
             },
             {
-              "label": "Skill: Lightning",
-              "source": "skill",
-              "damageType": "lightning",
-              "timing": "instant",
-              "damage": {
-                "min": 377,
-                "max": 468
-              }
-            },
-            {
-              "label": "Skill: Cold",
-              "source": "skill",
-              "damageType": "cold",
-              "timing": "instant",
-              "damage": {
-                "min": 377,
-                "max": 468
-              }
-            },
-            {
-              "label": "Skill: Fire",
+              "label": "Vengeance fire damage",
               "source": "skill",
               "damageType": "fire",
               "timing": "instant",
               "damage": {
-                "min": 377,
-                "max": 468
-              }
-            },
-            {
-              "label": "Vengeance fire weapon conversion",
-              "source": "skill",
-              "damageType": "fire",
-              "timing": "instant",
-              "damage": {
-                "min": 482,
-                "max": 545
+                "min": 2667,
+                "max": 4422
               },
               "baseDamage": {
-                "min": 482,
-                "max": 545
+                "min": 806,
+                "max": 1336
               }
             },
             {
-              "label": "Vengeance cold weapon conversion",
+              "label": "Vengeance cold damage",
               "source": "skill",
               "damageType": "cold",
               "timing": "instant",
               "damage": {
-                "min": 482,
-                "max": 545
+                "min": 2667,
+                "max": 4422
               },
               "baseDamage": {
-                "min": 482,
-                "max": 545
+                "min": 806,
+                "max": 1336
               }
             },
             {
-              "label": "Vengeance lightning weapon conversion",
+              "label": "Vengeance lightning damage",
               "source": "skill",
               "damageType": "lightning",
               "timing": "instant",
               "damage": {
-                "min": 482,
-                "max": 545
+                "min": 2667,
+                "max": 4422
               },
               "baseDamage": {
-                "min": 482,
-                "max": 545
+                "min": 806,
+                "max": 1336
               }
             },
             {
@@ -63951,11 +63891,11 @@
           "damageMode": "weapon"
         },
         "profile": {
-          "key": "secondary:right:one_handed:f02d979a6b0f42f5664d6a0f530542f4ced369da::Vengeance::none:0::self",
-          "weaponId": "secondary:right:one_handed:f02d979a6b0f42f5664d6a0f530542f4ced369da",
+          "key": "primary:right:unarmed::Vengeance::none:0::self",
+          "weaponId": "primary:right:unarmed",
           "skillId": "Vengeance",
           "skillName": "Vengeance",
-          "skillLevel": 31,
+          "skillLevel": 27,
           "skillDamageMode": "weapon",
           "playerAuraId": "none",
           "playerAuraCarrier": "self",
@@ -63966,60 +63906,60 @@
           },
           "damageTotals": {
             "instantDamage": {
-              "min": 1451,
-              "max": 2342
+              "min": 3262,
+              "max": 5492
             },
             "overTimeDamage": {
               "min": 0,
               "max": 0
             },
             "combinedDamage": {
-              "min": 1451,
-              "max": 2342
+              "min": 3262,
+              "max": 5492
             },
-            "averageInstantDamage": 1896.5,
-            "averageCombinedDamage": 1896.5,
+            "averageInstantDamage": 4377,
+            "averageCombinedDamage": 4377,
             "byElement": {
               "physical": {
-                "min": 297,
-                "max": 546
+                "min": 33,
+                "max": 36
               },
               "fire": {
-                "min": 365,
-                "max": 573
+                "min": 1288,
+                "max": 2178
               },
               "cold": {
-                "min": 425,
-                "max": 676
+                "min": 978,
+                "max": 1665
               },
               "lightning": {
-                "min": 364,
-                "max": 547
+                "min": 963,
+                "max": 1613
               }
             }
           },
           "totalPhysicalDamage": {
-            "min": 297,
-            "max": 546
+            "min": 33,
+            "max": 36
           },
           "totalElementalDamage": {
             "fire": {
-              "min": 365,
-              "max": 573
+              "min": 1288,
+              "max": 2178
             },
             "cold": {
-              "min": 425,
-              "max": 676
+              "min": 978,
+              "max": 1665
             },
             "lightning": {
-              "min": 364,
-              "max": 547
+              "min": 963,
+              "max": 1613
             }
           },
           "breakdown": {
             "weaponDamage": {
-              "min": 89,
-              "max": 172
+              "min": 1,
+              "max": 2
             },
             "flatPhysicalDamage": {
               "min": 10,
@@ -64037,16 +63977,16 @@
             },
             "elementalDamage": {
               "fire": {
-                "min": 365,
-                "max": 573
+                "min": 1288,
+                "max": 2178
               },
               "cold": {
-                "min": 425,
-                "max": 676
+                "min": 978,
+                "max": 1665
               },
               "lightning": {
-                "min": 364,
-                "max": 547
+                "min": 963,
+                "max": 1613
               }
             }
           },
@@ -64057,12 +63997,12 @@
               "damageType": "physical",
               "timing": "instant",
               "damage": {
-                "min": 267,
-                "max": 516
+                "min": 3,
+                "max": 6
               },
               "baseDamage": {
-                "min": 89,
-                "max": 172
+                "min": 1,
+                "max": 2
               }
             },
             {
@@ -64085,8 +64025,8 @@
               "damageType": "fire",
               "timing": "instant",
               "damage": {
-                "min": 5,
-                "max": 30
+                "min": 211,
+                "max": 371
               }
             },
             {
@@ -64105,80 +64045,50 @@
               "damageType": "lightning",
               "timing": "instant",
               "damage": {
-                "min": 4,
-                "max": 4
+                "min": 5,
+                "max": 5
               }
             },
             {
-              "label": "Skill: Lightning",
-              "source": "skill",
-              "damageType": "lightning",
-              "timing": "instant",
-              "damage": {
-                "min": 228,
-                "max": 287
-              }
-            },
-            {
-              "label": "Skill: Cold",
-              "source": "skill",
-              "damageType": "cold",
-              "timing": "instant",
-              "damage": {
-                "min": 228,
-                "max": 287
-              }
-            },
-            {
-              "label": "Skill: Fire",
+              "label": "Vengeance fire damage",
               "source": "skill",
               "damageType": "fire",
               "timing": "instant",
               "damage": {
-                "min": 228,
-                "max": 287
-              }
-            },
-            {
-              "label": "Vengeance fire weapon conversion",
-              "source": "skill",
-              "damageType": "fire",
-              "timing": "instant",
-              "damage": {
-                "min": 132,
-                "max": 256
+                "min": 1077,
+                "max": 1807
               },
               "baseDamage": {
-                "min": 132,
-                "max": 256
+                "min": 379,
+                "max": 636
               }
             },
             {
-              "label": "Vengeance cold weapon conversion",
+              "label": "Vengeance cold damage",
               "source": "skill",
               "damageType": "cold",
               "timing": "instant",
               "damage": {
-                "min": 132,
-                "max": 256
+                "min": 913,
+                "max": 1532
               },
               "baseDamage": {
-                "min": 132,
-                "max": 256
+                "min": 379,
+                "max": 636
               }
             },
             {
-              "label": "Vengeance lightning weapon conversion",
+              "label": "Vengeance lightning damage",
               "source": "skill",
               "damageType": "lightning",
               "timing": "instant",
               "damage": {
-                "min": 132,
-                "max": 256
+                "min": 958,
+                "max": 1608
               },
               "baseDamage": {
-                "min": 132,
-                "max": 256
+                "min": 379,
+                "max": 636
               }
             }
           ]

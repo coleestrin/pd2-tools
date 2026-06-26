@@ -4383,6 +4383,125 @@ function createWeaponElementalDamageComponents(
     .filter((component) => isNonZeroDamageRange(component.damage));
 }
 
+function isVengeanceSkill(skillName: string): boolean {
+  return normalizeSkillName(skillName) === normalizeSkillName("Vengeance");
+}
+
+function getVengeanceFlatElementalDamage(level: number): DamageRange {
+  const skillRow = getGameRow("Skills", "Vengeance");
+  if (!skillRow) {
+    return createEmptyDamageRange();
+  }
+
+  return (
+    getGameLevelScaledRange(
+      "Skills",
+      skillRow,
+      level,
+      "EMin",
+      "EMax",
+      ["EMinLev1", "EMinLev2", "EMinLev3", "EMinLev4", "EMinLev5"],
+      ["EMaxLev1", "EMaxLev2", "EMaxLev3", "EMaxLev4", "EMaxLev5"]
+    ) || createEmptyDamageRange()
+  );
+}
+
+function getVengeanceConvertedItemElementalDamage(
+  itemElementalDamage: Partial<
+    Record<"fire" | "cold" | "lightning" | "magic", DamageRange>
+  >
+): DamageRange {
+  return (["fire", "cold", "lightning"] as const).reduce(
+    (total, element) => addDamageRange(total, itemElementalDamage[element]),
+    createEmptyDamageRange()
+  );
+}
+
+function createVengeanceElementalDamageComponents(
+  skillName: string,
+  level: number,
+  skillMap: Map<string, SkillEntry>,
+  weaponDamage: DamageRange,
+  itemElementalDamage: Partial<
+    Record<"fire" | "cold" | "lightning" | "magic", DamageRange>
+  >,
+  realStats?: CharacterData["realStats"]
+): DamageComponent[] {
+  const skillRow = getGameRow("Skills", skillName);
+  if (!skillRow) {
+    return [];
+  }
+
+  const convertedBaseDamage = addDamageRange(
+    addDamageRange(createEmptyDamageRange(), weaponDamage),
+    getVengeanceConvertedItemElementalDamage(itemElementalDamage)
+  );
+  const flatSkillDamage = getVengeanceFlatElementalDamage(level);
+  const baseDamage = addDamageRange(convertedBaseDamage, flatSkillDamage);
+  if (!isNonZeroDamageRange(baseDamage)) {
+    return [];
+  }
+
+  return getWeaponElementalDamagePercentComponents(
+    skillName,
+    level,
+    skillMap
+  )
+    .map(({ element, percent, calcColumn, descColumn }) => {
+      const afterSkillPercent = floorScaleDamageRange(
+        baseDamage,
+        1 + percent / 100
+      );
+      const elementalBonusPercent = getGameElementalBonusPercent(
+        element,
+        skillMap,
+        realStats,
+        skillName
+      );
+      const damage = scaleDamageRange(
+        afterSkillPercent,
+        elementalBonusPercent
+      );
+
+      return createDamageComponent({
+        id: `skill-vengeance:${element}`,
+        label: `${skillName} ${element} damage`,
+        source: "skill",
+        damageType: element,
+        damage,
+        baseDamage,
+        sourceRefs: [
+          {
+            table: "Skills.txt",
+            row: getGameRowString("Skills", skillRow, "skill") || skillName,
+            columns: [
+              calcColumn,
+              descColumn,
+              "EMin",
+              "EMax",
+              "EMinLev1..5",
+              "EMaxLev1..5",
+              "SrcDam",
+              "HitShift",
+            ],
+            note: "Vengeance converts physical weapon damage plus item fire/cold/lightning damage, adds its flat skill damage, then applies its elemental damage percent and elemental mastery.",
+          },
+          {
+            table: "Armory item text",
+            columns: [
+              "weapon damage",
+              "adds fire damage",
+              "adds cold damage",
+              "adds lightning damage",
+            ],
+            note: "Item fire/cold/lightning damage from equipment and active charms is included in Vengeance's converted base.",
+          },
+        ],
+      });
+    })
+    .filter((component) => isNonZeroDamageRange(component.damage));
+}
+
 function getWeaponSourceDamageModifier(skillName: string): number {
   const skillRow = getGameRow("Skills", skillName);
   const srcDam = skillRow ? getGameRowNumber("Skills", skillRow, "SrcDam") : 0;
@@ -5839,7 +5958,7 @@ function buildProfile(
     auraPercent;
 
   const directDamage =
-    selectedSkillName === "Basic Attack"
+    selectedSkillName === "Basic Attack" || isVengeanceSkill(selectedSkillName)
       ? createEmptyDirectSkillDamage()
       : getDirectSkillDamage(
           selectedSkillName,
@@ -5988,13 +6107,22 @@ function buildProfile(
   const weaponElementalDamageComponents =
     selectedSkillName === "Basic Attack"
       ? []
-      : createWeaponElementalDamageComponents(
-          selectedSkillName,
-          selectedSkillLevel,
-          effectiveSkillMap,
-          carriedWeaponDamage,
-          realStats
-        );
+      : isVengeanceSkill(selectedSkillName)
+        ? createVengeanceElementalDamageComponents(
+            selectedSkillName,
+            selectedSkillLevel,
+            effectiveSkillMap,
+            carriedWeaponDamage,
+            parsedItemDamage.elementalDamage,
+            realStats
+          )
+        : createWeaponElementalDamageComponents(
+            selectedSkillName,
+            selectedSkillLevel,
+            effectiveSkillMap,
+            carriedWeaponDamage,
+            realStats
+          );
 
   const auraElementalComponents: DamageComponent[] = [];
   activeAuras.forEach((aura) => {

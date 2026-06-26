@@ -469,18 +469,10 @@ function getExpectedVengeanceElementalPercentFromSkillsTxt({
   );
 }
 
-function getExpectedVengeanceFlatElementalPayloadFromSkillsTxt({
+function getExpectedVengeanceFlatElementalBaseFromSkillsTxt({
   vengeanceLevel,
-  holyFireBaseLevel,
-  holyFreezeBaseLevel,
-  holyShockBaseLevel,
-  convictionBaseLevel,
 }: {
   vengeanceLevel: number;
-  holyFireBaseLevel: number;
-  holyFreezeBaseLevel: number;
-  holyShockBaseLevel: number;
-  convictionBaseLevel: number;
 }) {
   const skills = loadGameFile("Skills.txt", "skill");
   const row = skills.rowsByKey.get("Vengeance")!;
@@ -498,12 +490,6 @@ function getExpectedVengeanceFlatElementalPayloadFromSkillsTxt({
     "EMaxLev4",
     "EMaxLev5",
   ]);
-  const synergyPercent =
-    (holyFireBaseLevel +
-      holyFreezeBaseLevel +
-      holyShockBaseLevel +
-      convictionBaseLevel) *
-    getGameFileNumber(skills, row, "Param8");
 
   expect(getGameFileCell(skills, row, "EType")).toBe("");
   expect(getGameFileCell(skills, row, "EDmgSymPerCalc")).toContain(
@@ -511,8 +497,8 @@ function getExpectedVengeanceFlatElementalPayloadFromSkillsTxt({
   );
 
   return {
-    min: Math.floor(min * (1 + synergyPercent / 100)),
-    max: Math.floor(max * (1 + synergyPercent / 100)),
+    min,
+    max,
   };
 }
 
@@ -894,9 +880,11 @@ describeWithGameData("damage calculator component model", () => {
     });
   });
 
-  it("models Vengeance flat elemental payload and weapon elemental conversion", () => {
+  it("models Vengeance converted elemental base, flat skill damage, and mastery", () => {
     const vengeanceLevel = 20;
     const synergyBaseLevel = 20;
+    const fireSkillDamage = 10;
+    const coldSkillDamage = 20;
     const character = createCharacter("Vengeance", vengeanceLevel);
     character.character.class = { id: 3, name: "Paladin" };
     character.character.skills = [
@@ -929,6 +917,11 @@ describeWithGameData("damage calculator component model", () => {
         baseLevel: synergyBaseLevel,
       },
     ];
+    character.realStats = {
+      ...character.realStats!,
+      fireSkillDamage,
+      coldSkillDamage,
+    };
     character.items = [
       createWeapon({
         damage: {
@@ -936,6 +929,38 @@ describeWithGameData("damage calculator component model", () => {
           two_handed: {},
           missile: {},
         },
+        properties: ["Adds 10-20 Fire Damage"],
+      }),
+      createSimpleItem({
+        id: "equipped-cold-ring",
+        hash: "equipped-cold-ring",
+        name: "Equipped Cold Ring",
+        location: {
+          zone: "Equipped",
+          storage: "Unknown",
+          zone_id: 1,
+          storage_id: 0,
+          equipment: "Right Ring",
+          equipment_id: 6,
+        },
+        properties: ["Adds 30-40 Cold Damage"],
+      }),
+      createSimpleItem({
+        id: "active-lightning-charm",
+        hash: "active-lightning-charm",
+        name: "Active Lightning Charm",
+        base: {
+          id: "cm1",
+          category: "charm",
+          codes: {},
+          name: "Small Charm",
+          stackable: false,
+          type: "Small Charm",
+          type_code: "scha",
+          size: { height: 1, width: 1 },
+          requirements: { level: 0, strength: 0, dexterity: 0 },
+        },
+        properties: ["Adds 5-7 Lightning Damage"],
       }),
     ];
 
@@ -956,20 +981,62 @@ describeWithGameData("damage calculator component model", () => {
       holyShockBaseLevel: synergyBaseLevel,
       convictionBaseLevel: synergyBaseLevel,
     });
-    const flatPayload = getExpectedVengeanceFlatElementalPayloadFromSkillsTxt({
+    const flatSkillBase = getExpectedVengeanceFlatElementalBaseFromSkillsTxt({
       vengeanceLevel,
-      holyFireBaseLevel: synergyBaseLevel,
-      holyFreezeBaseLevel: synergyBaseLevel,
-      holyShockBaseLevel: synergyBaseLevel,
-      convictionBaseLevel: synergyBaseLevel,
     });
-    const weaponConversion = {
-      min: Math.floor(100 * (percent / 100)),
-      max: Math.floor(200 * (percent / 100)),
+    const normalItemElemental = {
+      fire: { min: 10, max: 20 },
+      cold: { min: 30, max: 40 },
+      lightning: { min: 5, max: 7 },
     };
-    const expectedElementTotal = {
-      min: flatPayload.min + weaponConversion.min,
-      max: flatPayload.max + weaponConversion.max,
+    const convertedWeaponBase = {
+      min:
+        100 +
+        normalItemElemental.fire.min +
+        normalItemElemental.cold.min +
+        normalItemElemental.lightning.min,
+      max:
+        200 +
+        normalItemElemental.fire.max +
+        normalItemElemental.cold.max +
+        normalItemElemental.lightning.max,
+    };
+    const vengeanceBase = {
+      min: convertedWeaponBase.min + flatSkillBase.min,
+      max: convertedWeaponBase.max + flatSkillBase.max,
+    };
+    const withVengeancePercent = {
+      min: Math.floor(vengeanceBase.min * (1 + percent / 100)),
+      max: Math.floor(vengeanceBase.max * (1 + percent / 100)),
+    };
+    const expectedVengeanceDamage = {
+      fire: {
+        min: Math.floor(withVengeancePercent.min * (1 + fireSkillDamage / 100)),
+        max: Math.floor(withVengeancePercent.max * (1 + fireSkillDamage / 100)),
+      },
+      cold: {
+        min: Math.floor(withVengeancePercent.min * (1 + coldSkillDamage / 100)),
+        max: Math.floor(withVengeancePercent.max * (1 + coldSkillDamage / 100)),
+      },
+      lightning: withVengeancePercent,
+    };
+    const expectedElementTotals = {
+      fire: {
+        min: normalItemElemental.fire.min + expectedVengeanceDamage.fire.min,
+        max: normalItemElemental.fire.max + expectedVengeanceDamage.fire.max,
+      },
+      cold: {
+        min: normalItemElemental.cold.min + expectedVengeanceDamage.cold.min,
+        max: normalItemElemental.cold.max + expectedVengeanceDamage.cold.max,
+      },
+      lightning: {
+        min:
+          normalItemElemental.lightning.min +
+          expectedVengeanceDamage.lightning.min,
+        max:
+          normalItemElemental.lightning.max +
+          expectedVengeanceDamage.lightning.max,
+      },
     };
 
     expect(vengeanceOption).toMatchObject({ damageMode: "weapon" });
@@ -979,36 +1046,40 @@ describeWithGameData("damage calculator component model", () => {
       expect(
         vengeanceProfile!.damageComponents.find(
           (component) =>
-            component.label ===
-              `Vengeance ${element} weapon conversion` &&
+            component.label === `Vengeance ${element} damage` &&
             component.damageType === element
         )
       ).toMatchObject({
         source: "skill",
-        damage: weaponConversion,
-        baseDamage: weaponConversion,
-      });
-      expect(
-        vengeanceProfile!.damageComponents.find(
-          (component) =>
-            component.label ===
-              `Skill: ${element[0].toUpperCase()}${element.slice(1)}` &&
-            component.damageType === element
-        )
-      ).toMatchObject({
-        source: "skill",
-        damage: flatPayload,
+        damage: expectedVengeanceDamage[element],
+        baseDamage: vengeanceBase,
       });
       expect(vengeanceProfile!.totalElementalDamage[element]).toEqual(
-        expectedElementTotal
+        expectedElementTotals[element]
       );
     });
 
+    expect(
+      vengeanceProfile!.damageComponents.some((component) =>
+        component.label.startsWith("Skill: ")
+      )
+    ).toBe(false);
+    expect(
+      vengeanceProfile!.damageComponents.some((component) =>
+        component.label.includes("weapon conversion")
+      )
+    ).toBe(false);
     expect(vengeanceProfile!.damageTotals.combinedDamage.min).toBe(
-      100 + expectedElementTotal.min * 3
+      100 +
+        expectedElementTotals.fire.min +
+        expectedElementTotals.cold.min +
+        expectedElementTotals.lightning.min
     );
     expect(vengeanceProfile!.damageTotals.combinedDamage.max).toBe(
-      200 + expectedElementTotal.max * 3
+      200 +
+        expectedElementTotals.fire.max +
+        expectedElementTotals.cold.max +
+        expectedElementTotals.lightning.max
     );
   });
 
