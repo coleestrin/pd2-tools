@@ -69,13 +69,15 @@ Latest local audit after the calculator fixes reports:
 
 ```text
 errors: 0
-warnings: 11
-info: 157
+warnings: 26
+info: 160
 ```
 
 Remaining warnings:
 
+- `Molten Boulder` multi-payload scope: fixture samples include the physical/fire skill payload plus `moltenboulderfirepath` under a generic `per target hit` label.
+- `SRC-DAM-FALLBACK` fixture samples for `Dragon Tail`, `Lightning Strike`, `Charged Strike`, and `Fire Claws`: these use weapon or boot source damage even though the sampled skill row has blank `SrcDam`.
 - `Raise Skeletal Mage` fixture variant coverage: only the lightning mage variant is present.
 - `ulvl` pet-level formulas for `Raven`, `Plague Poppy`, `Oak Sage`, `Summon Spirit Wolf`, `Cycle of Life`, `Heart of Wolverine`, `Summon Fenris`, `Vines`, `Spirit of Barbs`, and `Summon Grizzly`.
 
-These are not pass/fail regressions yet because the calculator does not currently model pet-level behavior from compiled summon logic.
+These are not pass/fail regressions yet because the calculator either scopes the displayed output explicitly, relies on intentional weapon-source fallback behavior for selected skills, or does not currently model pet-level behavior from compiled summon logic.
