@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Anchor,
   Badge,
   Button,
   Card,
@@ -21,22 +20,46 @@ import type {
   DamageCalculatorSectionProps,
   DamageProfile,
   DamageRange,
+  DamageSkillOption,
   DamageTransformationOption,
   DamageWeaponOption,
 } from "../../types";
 import { STAT_COLORS } from "./stat-colors";
 
-const BUG_REPORT_CHANNEL_URL =
-  "https://discordapp.com/channels/1311407302149931128/1311407430122475580";
 const SPELL_AURA_DAMAGE_NOTE =
   "Selected attack aura damage payloads are not applied to spell damage.";
 
-function formatRange(range?: DamageRange) {
+function formatNumber(value: number, round = false) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return "0";
+  }
+
+  return (round ? Math.round(numericValue) : numericValue).toLocaleString();
+}
+
+function formatRange(range?: DamageRange, round = false) {
   if (!range) {
     return "0";
   }
 
-  return `${range.min.toLocaleString()} - ${range.max.toLocaleString()}`;
+  return `${formatNumber(range.min, round)} - ${formatNumber(range.max, round)}`;
+}
+
+function shouldRoundProfileOutput(profile: DamageProfile) {
+  return profile.chargeVariant === "average";
+}
+
+function formatProfileNumber(profile: DamageProfile, value: number) {
+  return formatNumber(value, shouldRoundProfileOutput(profile));
+}
+
+function formatProfileRange(profile: DamageProfile, range?: DamageRange) {
+  return formatRange(range, shouldRoundProfileOutput(profile));
+}
+
+function formatProfilePercent(profile: DamageProfile, value: number) {
+  return `${formatProfileNumber(profile, value)}%`;
 }
 
 function getWeaponSetLabel(weaponSet: DamageWeaponOption["weaponSet"]) {
@@ -112,6 +135,42 @@ function getWeaponOptionSelectLabel(weapon: DamageWeaponOption) {
     weapon.handMode,
     weapon
   )}): ${getWeaponSetLabel(weapon.weaponSet)} ${handLabel}`;
+}
+
+function getSkillOptionSelectLabel(
+  skill: DamageSkillOption,
+  selectedSkillLevel: number
+) {
+  if (skill.name === "Basic Attack") {
+    return "Basic Attack";
+  }
+
+  return `${skill.name} (${
+    skill.damageMode === "spell"
+      ? "spell "
+      : skill.damageMode === "summon"
+        ? "summon "
+        : ""
+  }lvl ${selectedSkillLevel})`;
+}
+
+function getChargeSelectionLabel(skill: DamageSkillOption | null) {
+  return skill?.chargeLabel || "Charge";
+}
+
+function getChargeSelectionOptions(skill: DamageSkillOption | null) {
+  if (!skill?.chargeCount || skill.chargeCount <= 0) {
+    return [];
+  }
+
+  const label = getChargeSelectionLabel(skill);
+  return Array.from({ length: skill.chargeCount }, (_, index) => {
+    const chargeNumber = index + 1;
+    return {
+      value: String(chargeNumber),
+      label: `${label} ${chargeNumber}`,
+    };
+  });
 }
 
 function getSequenceWeaponSelectLabel(
@@ -313,10 +372,24 @@ function getResolvedAuraLevel(
   return selectedBonus.level || auraOption.level || 1;
 }
 
+function profileMatchesChargeSelection(
+  profile: DamageProfile,
+  skillOption: DamageSkillOption | null,
+  chargeNumber: string | null
+) {
+  if (!skillOption?.chargeCount) {
+    return !profile.chargeVariant;
+  }
+
+  return profile.chargeNumber === Number(chargeNumber);
+}
+
 function findPrecomputedAuraProfile(
   damageCalculation: DamageCalculation,
   weaponId: string,
   skillId: string,
+  skillOption: DamageSkillOption | null,
+  chargeNumber: string | null,
   auraOption: DamageAuraOption,
   isParty: boolean,
   level: string | null
@@ -329,6 +402,7 @@ function findPrecomputedAuraProfile(
       (profile) =>
         profile.weaponId === weaponId &&
         profile.skillId === skillId &&
+        profileMatchesChargeSelection(profile, skillOption, chargeNumber) &&
         profile.playerAuraId === auraOption.id &&
         profile.playerAuraCarrier === carrier &&
         profile.playerAuraLevel === numericLevel &&
@@ -431,6 +505,93 @@ function getDamageScopeCountLabel(profile: DamageProfile) {
   return `${scope.count.toLocaleString()} ${scope.countLabel}`;
 }
 
+function getDamageModelDisplayNotes(
+  profile: DamageProfile,
+  weapon?: DamageWeaponOption | null
+) {
+  const notes: string[] = [];
+  const scopeLabel = profile.damageScope.label;
+  const profileNotes = profile.notes.join(" ");
+
+  if (scopeLabel === "target input required") {
+    notes.push(
+      "This skill needs corpse or target data, so that damage is not included in the total."
+    );
+  } else {
+    notes.push(
+      `Damage is shown ${scopeLabel}. It is not multiplied by attack/cast speed, hit chance, target count, duration, or repeated hits.`
+    );
+  }
+
+  if (getDamageScopeCountLabel(profile)) {
+    notes.push(
+      "The count line is informational; the damage total still uses the scope above."
+    );
+  }
+
+  if (profile.chargeVariant === "average") {
+    notes.push("Average uses the modeled charge outputs for this skill.");
+  } else if (profile.chargeVariant === "charge" && profile.chargeNumber) {
+    notes.push(`This output is for charge ${profile.chargeNumber}.`);
+  }
+
+  if (getProfileSequenceHitCount(profile) > 1) {
+    notes.push(
+      "Paired-weapon skills show the modeled weapon sequence, not a full movement or animation hit count."
+    );
+  }
+
+  if (profile.skillDamageMode === "summon") {
+    notes.push(
+      "Summon and trap totals are for one modeled hit or projectile; count, AI, uptime, and attack rate are not included."
+    );
+  }
+
+  if (hasRange(profile.damageTotals.overTimeDamage) || profile.totalPoisonDamage) {
+    notes.push(
+      "Damage over time is included in the combined total for the modeled duration or per-second scope."
+    );
+  }
+
+  if (profile.auraPulseDamageTotals) {
+    notes.push(
+      "Aura pulse damage is shown separately and is not included in the hit total."
+    );
+  }
+
+  if (profile.skillDamageMode === "spell" && profile.selectedPlayerAura) {
+    notes.push("Selected attack aura damage does not apply to spell hits.");
+  }
+
+  if (profileNotes.includes("all-skills bonus")) {
+    notes.push(
+      "This aura's +skills are not changing the selected skill level in this view."
+    );
+  }
+
+  if (profileNotes.includes("applied to summon damage as party aura payloads")) {
+    notes.push("Summons use party-aura damage values from selected attack auras.");
+  }
+
+  if (profileNotes.includes("does not add physical damage to direct spell")) {
+    notes.push(
+      "The selected transformation does not add physical damage to this spell output."
+    );
+  }
+
+  if (weapon?.handMode === "unarmed") {
+    notes.push(
+      "This weapon set uses the unarmed 1-2 base damage fallback because no readable equipped weapon damage was available."
+    );
+  }
+
+  notes.push(
+    "Enemy resistances, target defense, hit chance, and other conditional combat effects are not included."
+  );
+
+  return Array.from(new Set(notes));
+}
+
 function averageRange(range: DamageRange) {
   return Number(((range.min + range.max) / 2).toFixed(1));
 }
@@ -518,12 +679,47 @@ function summaryFieldsFromComponents(
   };
 }
 
+function uniqueDamageComponents(
+  components: DamageProfile["damageComponents"]
+): DamageProfile["damageComponents"] {
+  const seenIds = new Set<string>();
+
+  return components.filter((component) => {
+    if (seenIds.has(component.id)) {
+      return false;
+    }
+
+    seenIds.add(component.id);
+    return true;
+  });
+}
+
+function applyAuraPulseComponents(
+  profile: DamageProfile,
+  components: DamageProfile["damageComponents"]
+): DamageProfile {
+  const auraPulseDamageComponents = uniqueDamageComponents(components).filter(
+    (component) => hasRange(component.damage)
+  );
+
+  return {
+    ...profile,
+    auraPulseDamageComponents,
+    auraPulseDamageTotals:
+      auraPulseDamageComponents.length > 0
+        ? buildDamageTotalsFromComponents(auraPulseDamageComponents)
+        : undefined,
+  };
+}
+
 type RuntimeDamageProfile = Omit<
   DamageProfile,
   | "activeAuras"
   | "breakdown"
   | "damageComponents"
   | "damageTotals"
+  | "auraPulseDamageComponents"
+  | "auraPulseDamageTotals"
   | "totalPhysicalDamage"
   | "totalElementalDamage"
   | "totalPoisonDamage"
@@ -538,6 +734,8 @@ type RuntimeDamageProfile = Omit<
       | "breakdown"
       | "damageComponents"
       | "damageTotals"
+      | "auraPulseDamageComponents"
+      | "auraPulseDamageTotals"
       | "totalPhysicalDamage"
       | "totalElementalDamage"
       | "totalPoisonDamage"
@@ -734,12 +932,24 @@ function normalizeDamageProfile(profile: DamageProfile): DamageProfile {
     getElementalDamageFromTotals(damageTotals);
   const totalPoisonDamage =
     runtimeProfile.totalPoisonDamage ?? damageTotals.poisonDamage;
+  const auraPulseDamageComponents = Array.isArray(
+    runtimeProfile.auraPulseDamageComponents
+  )
+    ? runtimeProfile.auraPulseDamageComponents
+    : [];
+  const auraPulseDamageTotals =
+    runtimeProfile.auraPulseDamageTotals ??
+    (auraPulseDamageComponents.length > 0
+      ? buildDamageTotalsFromComponents(auraPulseDamageComponents)
+      : undefined);
 
   return {
     ...profile,
     activeAuras: runtimeProfile.activeAuras ?? [],
     damageComponents,
     damageTotals,
+    auraPulseDamageComponents,
+    auraPulseDamageTotals,
     totalPhysicalDamage:
       cloneRange(runtimeProfile.totalPhysicalDamage) ??
       cloneRange(damageTotals.byElement.physical) ??
@@ -1161,6 +1371,9 @@ export function DamageCalculatorSection({
   const isCompact = variant === "compact";
   const [weaponId, setWeaponId] = useState<string | null>(null);
   const [skillId, setSkillId] = useState<string | null>(null);
+  const [chargeNumberBySkillId, setChargeNumberBySkillId] = useState<
+    Record<string, string>
+  >({});
   const [auraRows, setAuraRows] = useState<AuraSelectionRow[]>(() => [
     createAuraSelectionRow(),
   ]);
@@ -1261,6 +1474,33 @@ export function DamageCalculatorSection({
       null
     );
   }, [damageCalculation, skillId]);
+  const selectedChargeOptions = useMemo(
+    () => getChargeSelectionOptions(selectedSkillOption),
+    [selectedSkillOption]
+  );
+  const selectedChargeNumber = useMemo(() => {
+    if (!selectedSkillOption?.chargeCount || !skillId) {
+      return null;
+    }
+
+    const savedChargeNumber = chargeNumberBySkillId[skillId];
+    if (
+      savedChargeNumber &&
+      selectedChargeOptions.some((option) => option.value === savedChargeNumber)
+    ) {
+      return savedChargeNumber;
+    }
+
+    return String(
+      selectedSkillOption.defaultChargeNumber ||
+        selectedSkillOption.chargeCount
+    );
+  }, [
+    chargeNumberBySkillId,
+    selectedChargeOptions,
+    selectedSkillOption,
+    skillId,
+  ]);
 
   const availableWeaponOptions = useMemo(() => {
     if (!damageCalculation) {
@@ -1626,6 +1866,17 @@ export function DamageCalculatorSection({
     setWeaponId(value);
   };
 
+  const handleChargeNumberChange = (value: string | null) => {
+    if (!skillId || !value) {
+      return;
+    }
+
+    setChargeNumberBySkillId((current) => ({
+      ...current,
+      [skillId]: value,
+    }));
+  };
+
   const selectedProfile = useMemo(() => {
     if (
       !damageCalculation ||
@@ -1640,6 +1891,11 @@ export function DamageCalculatorSection({
       (profile) =>
         profile.weaponId === weaponId &&
         profile.skillId === skillId &&
+        profileMatchesChargeSelection(
+          profile,
+          selectedSkillOption,
+          selectedChargeNumber
+        ) &&
         profile.playerAuraId === "none" &&
         profile.playerAuraCarrier === "self" &&
         profile.transformationId === "none"
@@ -1663,7 +1919,8 @@ export function DamageCalculatorSection({
 
         return (
           selectedBonus.skillLevelBonus > 0 ||
-          Boolean(selectedBonus.poisonDamage)
+          selectedBonus.physicalBonusPercent !== 0 ||
+          getAuraBonusScore(selectedBonus) > 0
         );
       }
     );
@@ -1676,6 +1933,8 @@ export function DamageCalculatorSection({
           damageCalculation,
           weaponId,
           skillId,
+          selectedSkillOption,
+          selectedChargeNumber,
           precomputedAuraProfileRow.auraOption,
           precomputedAuraProfileRow.row.isParty ||
             normalizedBaseProfile.skillDamageMode === "summon",
@@ -1695,10 +1954,37 @@ export function DamageCalculatorSection({
         applyAuraToProfile(profile, auraOption, row.isParty, row.level),
       auraBaseProfile
     );
+    const clientAppliedAuraPulseComponents = clientAppliedAuraRows.flatMap(
+      ({ row, auraOption }) => {
+        const auraAppliesAsParty =
+          row.isParty || normalizedBaseProfile.skillDamageMode === "summon";
+        const auraProfile = findPrecomputedAuraProfile(
+          damageCalculation,
+          weaponId,
+          skillId,
+          selectedSkillOption,
+          selectedChargeNumber,
+          auraOption,
+          auraAppliesAsParty,
+          row.level
+        );
+
+        return auraProfile
+          ? normalizeDamageProfile(auraProfile).auraPulseDamageComponents || []
+          : [];
+      }
+    );
+    const profileWithAuraPulses = applyAuraPulseComponents(
+      auraAdjustedProfile,
+      [
+        ...(auraAdjustedProfile.auraPulseDamageComponents || []),
+        ...clientAppliedAuraPulseComponents,
+      ]
+    );
 
     return normalizeDamageProfile(
       applyTransformationToProfile(
-        auraAdjustedProfile,
+        profileWithAuraPulses,
         effectiveTransformationOption,
         effectiveTransformationLevel
       )
@@ -1710,34 +1996,51 @@ export function DamageCalculatorSection({
     skillId,
     selectedAuraRows,
     selectedTransformationProfileId,
+    selectedSkillOption,
+    selectedChargeNumber,
     effectiveTransformationOption,
     effectiveTransformationLevel,
   ]);
-
-  const skillSelectOptions = useMemo(
+  const damageModelDisplayNotes = useMemo(
     () =>
-      damageCalculation?.skillOptions.map((skill) => {
-        const selectedSkillLevel =
-          skill.id === skillId && selectedProfile
-            ? selectedProfile.skillLevel
-            : skill.level;
-
-        return {
-          value: skill.id,
-          label:
-            skill.name === "Basic Attack"
-              ? "Basic Attack"
-              : `${skill.name} (${
-                  skill.damageMode === "spell"
-                    ? "spell "
-                    : skill.damageMode === "summon"
-                      ? "summon "
-                      : ""
-                }lvl ${selectedSkillLevel})`,
-        };
-      }) ?? [],
-    [damageCalculation, selectedProfile, skillId]
+      selectedProfile
+        ? getDamageModelDisplayNotes(selectedProfile, selectedWeaponOption)
+        : [],
+    [selectedProfile, selectedWeaponOption]
   );
+
+  const skillSelectOptions = useMemo(() => {
+    if (!damageCalculation) {
+      return [];
+    }
+
+    return damageCalculation.skillOptions.map((skill) => {
+      const noAuraProfilesForSkill = damageCalculation.profiles.filter(
+        (profile) =>
+          profile.skillId === skill.id &&
+          profile.playerAuraId === "none" &&
+          profile.playerAuraCarrier === "self" &&
+          profile.transformationId === "none"
+      );
+      const profileSkillLevel =
+        (weaponId
+          ? noAuraProfilesForSkill.find(
+              (profile) => profile.weaponId === weaponId
+            )
+          : undefined)?.skillLevel ??
+        noAuraProfilesForSkill[0]?.skillLevel ??
+        skill.level;
+      const selectedSkillLevel =
+        skill.id === skillId && selectedProfile
+          ? selectedProfile.skillLevel
+          : profileSkillLevel;
+
+      return {
+        value: skill.id,
+        label: getSkillOptionSelectLabel(skill, selectedSkillLevel),
+      };
+    });
+  }, [damageCalculation, selectedProfile, skillId, weaponId]);
 
   const skillSelect = (
     <Select
@@ -1799,6 +2102,16 @@ export function DamageCalculatorSection({
       allowDeselect={false}
     />
   );
+  const chargeSelect =
+    selectedChargeOptions.length > 0 ? (
+      <Select
+        label={getChargeSelectionLabel(selectedSkillOption)}
+        value={selectedChargeNumber}
+        onChange={handleChargeNumberChange}
+        data={selectedChargeOptions}
+        allowDeselect={false}
+      />
+    ) : null;
   const fullCalculatorButton = fullCalculatorUrl ? (
     <Button
       component="a"
@@ -1834,9 +2147,15 @@ export function DamageCalculatorSection({
         </Group>
       ) : isCompact ? (
         <Stack gap="md">
-          <SimpleGrid cols={{ base: 1, sm: hasSequenceWeaponControls ? 3 : 2 }}>
+          <SimpleGrid
+            cols={{
+              base: 1,
+              sm: hasSequenceWeaponControls || chargeSelect ? 3 : 2,
+            }}
+          >
             {skillSelect}
             {weaponSelect}
+            {chargeSelect}
           </SimpleGrid>
 
           {selectedProfile ? (
@@ -1862,15 +2181,30 @@ export function DamageCalculatorSection({
                       ),
                     }}
                   >
-                    {formatRange(selectedProfile.damageTotals.combinedDamage)}
+                    {formatProfileRange(
+                      selectedProfile,
+                      selectedProfile.damageTotals.combinedDamage
+                    )}
                   </Text>
                   <Text size="xs" c="dimmed">
                     Avg{" "}
-                    {selectedProfile.damageTotals.averageCombinedDamage.toLocaleString()}
+                    {formatProfileNumber(
+                      selectedProfile,
+                      selectedProfile.damageTotals.averageCombinedDamage
+                    )}
                   </Text>
                   {getDamageScopeCountLabel(selectedProfile) ? (
                     <Text size="xs" c="dimmed">
                       {getDamageScopeCountLabel(selectedProfile)}
+                    </Text>
+                  ) : null}
+                  {selectedProfile.auraPulseDamageTotals ? (
+                    <Text size="xs" c="dimmed">
+                      Pulse{" "}
+                      {formatProfileRange(
+                        selectedProfile,
+                        selectedProfile.auraPulseDamageTotals.combinedDamage
+                      )}
                     </Text>
                   ) : null}
                 </div>
@@ -1889,10 +2223,15 @@ export function DamageCalculatorSection({
       ) : (
         <Stack gap="md">
           <SimpleGrid
-            cols={{ base: 1, sm: 2, lg: hasSequenceWeaponControls ? 5 : 4 }}
+            cols={{
+              base: 1,
+              sm: 2,
+              lg: hasSequenceWeaponControls ? 6 : chargeSelect ? 5 : 4,
+            }}
           >
             {skillSelect}
             {weaponSelect}
+            {chargeSelect}
 
             <Select
               label="Transformation"
@@ -2022,11 +2361,17 @@ export function DamageCalculatorSection({
                       ),
                     }}
                   >
-                    {formatRange(selectedProfile.damageTotals.combinedDamage)}
+                    {formatProfileRange(
+                      selectedProfile,
+                      selectedProfile.damageTotals.combinedDamage
+                    )}
                   </Text>
                   <Text size="xs" c="dimmed">
                     Avg{" "}
-                    {selectedProfile.damageTotals.averageCombinedDamage.toLocaleString()}
+                    {formatProfileNumber(
+                      selectedProfile,
+                      selectedProfile.damageTotals.averageCombinedDamage
+                    )}
                   </Text>
                   {getDamageScopeCountLabel(selectedProfile) ? (
                     <Text size="xs" c="dimmed">
@@ -2055,11 +2400,17 @@ export function DamageCalculatorSection({
                       ),
                     }}
                   >
-                    {formatRange(selectedProfile.damageTotals.instantDamage)}
+                    {formatProfileRange(
+                      selectedProfile,
+                      selectedProfile.damageTotals.instantDamage
+                    )}
                   </Text>
                   <Text size="xs" c="dimmed">
                     Avg{" "}
-                    {selectedProfile.damageTotals.averageInstantDamage.toLocaleString()}
+                    {formatProfileNumber(
+                      selectedProfile,
+                      selectedProfile.damageTotals.averageInstantDamage
+                    )}
                   </Text>
                 </Card>
 
@@ -2083,10 +2434,16 @@ export function DamageCalculatorSection({
                       ),
                     }}
                   >
-                    {formatRange(selectedProfile.totalPhysicalDamage)}
+                    {formatProfileRange(
+                      selectedProfile,
+                      selectedProfile.totalPhysicalDamage
+                    )}
                   </Text>
                   <Text size="xs" c="dimmed">
-                    +{selectedProfile.breakdown.physicalBonusPercent.total}%
+                    {`+${formatProfilePercent(
+                      selectedProfile,
+                      selectedProfile.breakdown.physicalBonusPercent.total
+                    )}`}{" "}
                     total bonus
                   </Text>
                 </Card>
@@ -2145,14 +2502,18 @@ export function DamageCalculatorSection({
                           ),
                         }}
                       >
-                        {formatRange(
+                        {formatProfileRange(
+                          selectedProfile,
                           selectedProfile.damageTotals.overTimeDamage
                         )}
                       </Text>
                       {selectedProfile.totalPoisonDamage ? (
                         <Text size="xs" c="dimmed">
                           poison total{" "}
-                          {selectedProfile.totalPoisonDamage.total.toLocaleString()}{" "}
+                          {formatProfileNumber(
+                            selectedProfile,
+                            selectedProfile.totalPoisonDamage.total
+                          )}{" "}
                           over{" "}
                           {selectedProfile.totalPoisonDamage.durationSeconds}s
                         </Text>
@@ -2165,6 +2526,62 @@ export function DamageCalculatorSection({
                   )}
                 </Card>
               </SimpleGrid>
+
+              {selectedProfile.auraPulseDamageTotals ? (
+                <Card
+                  withBorder
+                  padding="sm"
+                  style={{
+                    borderTop: `0.1875rem solid ${STAT_COLORS.fasterCastRate}`,
+                  }}
+                >
+                  <Group justify="space-between" align="flex-start" gap="md">
+                    <div>
+                      <Text size="xs" c="dimmed" tt="uppercase">
+                        Aura Pulse Damage
+                      </Text>
+                      <Text
+                        size="lg"
+                        fw={700}
+                        style={{
+                          color: getRangeColor(
+                            selectedProfile.auraPulseDamageTotals
+                              .combinedDamage,
+                            STAT_COLORS.fasterCastRate
+                          ),
+                        }}
+                      >
+                        {formatProfileRange(
+                          selectedProfile,
+                          selectedProfile.auraPulseDamageTotals.combinedDamage
+                        )}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        Separate from player per-hit damage
+                      </Text>
+                    </div>
+                    <Stack gap={4} style={{ minWidth: 0 }}>
+                      {(selectedProfile.auraPulseDamageComponents || []).map(
+                        (component) => (
+                          <Text
+                            key={component.id}
+                            size="xs"
+                            c="dimmed"
+                            ta="right"
+                            style={{ wordBreak: "break-word" }}
+                          >
+                            {component.label}:{" "}
+                            {formatProfileRange(
+                              selectedProfile,
+                              component.damage
+                            )}
+                          </Text>
+                        )
+                      )}
+                    </Stack>
+                  </Group>
+                </Card>
+              ) : null}
 
               <Card withBorder padding="sm">
                 <Text fw={600} mb="xs">
@@ -2228,7 +2645,10 @@ export function DamageCalculatorSection({
                               ),
                             }}
                           >
-                            {formatRange(component.damage)}
+                            {formatProfileRange(
+                              selectedProfile,
+                              component.damage
+                            )}
                           </Text>
                         </Group>
                       );
@@ -2257,7 +2677,7 @@ export function DamageCalculatorSection({
                           <StatLine
                             key={element}
                             label={element[0].toUpperCase() + element.slice(1)}
-                            value={formatRange(range)}
+                            value={formatProfileRange(selectedProfile, range)}
                             color={getRangeColor(range, color)}
                             isLast={index === elements.length - 1}
                           />
@@ -2278,7 +2698,8 @@ export function DamageCalculatorSection({
                           ? "Summon base"
                           : "Weapon damage"
                       }
-                      value={formatRange(
+                      value={formatProfileRange(
+                        selectedProfile,
                         selectedProfile.breakdown.weaponDamage
                       )}
                       color={getRangeColor(
@@ -2288,7 +2709,8 @@ export function DamageCalculatorSection({
                     />
                     <StatLine
                       label="Flat damage"
-                      value={formatRange(
+                      value={formatProfileRange(
+                        selectedProfile,
                         selectedProfile.breakdown.flatPhysicalDamage
                       )}
                       color={getRangeColor(
@@ -2298,7 +2720,10 @@ export function DamageCalculatorSection({
                     />
                     <StatLine
                       label="Stat bonus"
-                      value={`${selectedProfile.breakdown.physicalBonusPercent.stat}%`}
+                      value={formatProfilePercent(
+                        selectedProfile,
+                        selectedProfile.breakdown.physicalBonusPercent.stat
+                      )}
                       color={getPercentColor(
                         selectedProfile.breakdown.physicalBonusPercent.stat,
                         STAT_COLORS.physicalDamageReduction
@@ -2306,7 +2731,10 @@ export function DamageCalculatorSection({
                     />
                     <StatLine
                       label="Non-weapon ED"
-                      value={`${selectedProfile.breakdown.physicalBonusPercent.nonWeapon}%`}
+                      value={formatProfilePercent(
+                        selectedProfile,
+                        selectedProfile.breakdown.physicalBonusPercent.nonWeapon
+                      )}
                       color={getPercentColor(
                         selectedProfile.breakdown.physicalBonusPercent
                           .nonWeapon,
@@ -2315,7 +2743,10 @@ export function DamageCalculatorSection({
                     />
                     <StatLine
                       label="Passive bonuses"
-                      value={`${selectedProfile.breakdown.physicalBonusPercent.passive}%`}
+                      value={formatProfilePercent(
+                        selectedProfile,
+                        selectedProfile.breakdown.physicalBonusPercent.passive
+                      )}
                       color={getPercentColor(
                         selectedProfile.breakdown.physicalBonusPercent.passive,
                         STAT_COLORS.physicalDamageReduction
@@ -2323,7 +2754,11 @@ export function DamageCalculatorSection({
                     />
                     <StatLine
                       label="Selected skill"
-                      value={`${selectedProfile.breakdown.physicalBonusPercent.selectedSkill}%`}
+                      value={formatProfilePercent(
+                        selectedProfile,
+                        selectedProfile.breakdown.physicalBonusPercent
+                          .selectedSkill
+                      )}
                       color={getPercentColor(
                         selectedProfile.breakdown.physicalBonusPercent
                           .selectedSkill,
@@ -2332,7 +2767,11 @@ export function DamageCalculatorSection({
                     />
                     <StatLine
                       label="Skill synergies"
-                      value={`${selectedProfile.breakdown.physicalBonusPercent.selectedSkillSynergy}%`}
+                      value={formatProfilePercent(
+                        selectedProfile,
+                        selectedProfile.breakdown.physicalBonusPercent
+                          .selectedSkillSynergy
+                      )}
                       color={getPercentColor(
                         selectedProfile.breakdown.physicalBonusPercent
                           .selectedSkillSynergy,
@@ -2341,7 +2780,11 @@ export function DamageCalculatorSection({
                     />
                     <StatLine
                       label="Transformation"
-                      value={`${selectedProfile.breakdown.physicalBonusPercent.transformation}%`}
+                      value={formatProfilePercent(
+                        selectedProfile,
+                        selectedProfile.breakdown.physicalBonusPercent
+                          .transformation
+                      )}
                       color={getPercentColor(
                         selectedProfile.breakdown.physicalBonusPercent
                           .transformation,
@@ -2350,7 +2793,11 @@ export function DamageCalculatorSection({
                     />
                     <StatLine
                       label="Auras"
-                      value={`${selectedProfile.breakdown.physicalBonusPercent.activeAuras}%`}
+                      value={formatProfilePercent(
+                        selectedProfile,
+                        selectedProfile.breakdown.physicalBonusPercent
+                          .activeAuras
+                      )}
                       color={getPercentColor(
                         selectedProfile.breakdown.physicalBonusPercent
                           .activeAuras,
@@ -2363,9 +2810,7 @@ export function DamageCalculatorSection({
               </SimpleGrid>
 
               {!isCompact &&
-                (selectedProfile.notes.length > 0 ||
-                  Boolean(selectedProfile.damageScope?.note) ||
-                  damageCalculation.notes.length > 0) && (
+                damageModelDisplayNotes.length > 0 && (
                   <>
                     <Divider />
                     <Stack gap="xs">
@@ -2397,30 +2842,7 @@ export function DamageCalculatorSection({
                       </Group>
                       <Collapse in={notesExpanded}>
                         <Stack gap="xs">
-                          <Text size="sm" c="dimmed">
-                            This calculator is intended to be a close model, not
-                            a perfect guarantee. If you notice a significant
-                            difference from the damage you expect,{" "}
-                            <Anchor
-                              href={BUG_REPORT_CHANNEL_URL}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              make a #bug-report
-                            </Anchor>
-                            .
-                          </Text>
-                          {selectedProfile.damageScope?.note ? (
-                            <Text size="sm" c="dimmed">
-                              {selectedProfile.damageScope.note}
-                            </Text>
-                          ) : null}
-                          {selectedProfile.notes.map((note) => (
-                            <Text key={note} size="sm" c="dimmed">
-                              {note}
-                            </Text>
-                          ))}
-                          {damageCalculation.notes.map((note) => (
+                          {damageModelDisplayNotes.map((note) => (
                             <Text key={note} size="sm" c="dimmed">
                               {note}
                             </Text>

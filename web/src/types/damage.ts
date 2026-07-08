@@ -92,6 +92,11 @@ export interface DamageSkillOption {
   damageMode: "weapon" | "spell" | "summon";
   sourceSkillName?: string;
   summonVariant?: string;
+  chargeVariant?: "average" | "charge";
+  chargeNumber?: number;
+  chargeCount?: number;
+  defaultChargeNumber?: number;
+  chargeLabel?: string;
   canUseTransformation: boolean;
   allowedTransformationIds: string[];
 }
@@ -188,6 +193,10 @@ export interface DamageProfile {
   skillName: string;
   sourceSkillName?: string;
   summonVariant?: string;
+  chargeVariant?: "average" | "charge";
+  chargeNumber?: number;
+  chargeCount?: number;
+  chargeLabel?: string;
   skillLevel: number;
   sequenceHits?: DamageSequenceHit[];
   selectedPlayerAura?: {
@@ -203,6 +212,8 @@ export interface DamageProfile {
   damageScope: DamageProfileScope;
   damageComponents: DamageComponent[];
   damageTotals: DamageTotals;
+  auraPulseDamageComponents?: DamageComponent[];
+  auraPulseDamageTotals?: DamageTotals;
   totalPhysicalDamage: DamageRange;
   totalElementalDamage: Partial<
     Record<Exclude<DamageElement, "physical" | "poison">, DamageRange>

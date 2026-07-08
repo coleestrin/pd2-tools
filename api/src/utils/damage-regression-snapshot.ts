@@ -25,6 +25,10 @@ export interface DamageRegressionExpectedProfile {
   skillName: string;
   sourceSkillName?: string;
   summonVariant?: string;
+  chargeVariant?: DamageProfile["chargeVariant"];
+  chargeNumber?: number;
+  chargeCount?: number;
+  chargeLabel?: string;
   skillLevel: number;
   skillDamageMode: DamageProfile["skillDamageMode"];
   playerAuraId: string;
@@ -33,11 +37,13 @@ export interface DamageRegressionExpectedProfile {
   transformationId: string;
   damageScope: Pick<DamageProfile["damageScope"], "label" | "count" | "countLabel">;
   damageTotals: DamageTotals;
+  auraPulseDamageTotals?: DamageTotals;
   totalPhysicalDamage: DamageRange;
   totalElementalDamage: DamageProfile["totalElementalDamage"];
   totalPoisonDamage?: PoisonDamage;
   breakdown: DamageProfile["breakdown"];
   damageComponents: DamageRegressionComponentSummary[];
+  auraPulseDamageComponents?: DamageRegressionComponentSummary[];
 }
 
 export interface DamageRegressionExpected {
@@ -49,6 +55,9 @@ export interface DamageRegressionExpected {
     | "damageMode"
     | "sourceSkillName"
     | "summonVariant"
+    | "chargeCount"
+    | "defaultChargeNumber"
+    | "chargeLabel"
   >;
   profile: DamageRegressionExpectedProfile;
 }
@@ -101,6 +110,10 @@ export function getSkillOptionsForSourceSkill(
 ): DamageSkillOption[] {
   const normalizedSkillName = normalizeRegressionSkillName(sourceSkillName);
   return calculation.skillOptions.filter((skillOption) => {
+    if (skillOption.chargeVariant === "charge") {
+      return false;
+    }
+
     const optionName = normalizeRegressionSkillName(skillOption.name);
     const optionSourceName = skillOption.sourceSkillName
       ? normalizeRegressionSkillName(skillOption.sourceSkillName)
@@ -175,7 +188,7 @@ export function summarizeDamageRegressionProfile(
   skillOption: DamageSkillOption,
   profile: DamageProfile
 ): DamageRegressionExpected {
-  return {
+  const summary: DamageRegressionExpected = {
     skillOption: {
       id: skillOption.id,
       name: skillOption.name,
@@ -183,6 +196,9 @@ export function summarizeDamageRegressionProfile(
       damageMode: skillOption.damageMode,
       sourceSkillName: skillOption.sourceSkillName,
       summonVariant: skillOption.summonVariant,
+      chargeCount: skillOption.chargeCount,
+      defaultChargeNumber: skillOption.defaultChargeNumber,
+      chargeLabel: skillOption.chargeLabel,
     },
     profile: {
       key: profile.key,
@@ -191,6 +207,10 @@ export function summarizeDamageRegressionProfile(
       skillName: profile.skillName,
       sourceSkillName: profile.sourceSkillName,
       summonVariant: profile.summonVariant,
+      chargeVariant: profile.chargeVariant,
+      chargeNumber: profile.chargeNumber,
+      chargeCount: profile.chargeCount,
+      chargeLabel: profile.chargeLabel,
       skillLevel: profile.skillLevel,
       skillDamageMode: profile.skillDamageMode,
       playerAuraId: profile.playerAuraId,
@@ -203,6 +223,7 @@ export function summarizeDamageRegressionProfile(
         countLabel: profile.damageScope.countLabel,
       },
       damageTotals: profile.damageTotals,
+      auraPulseDamageTotals: profile.auraPulseDamageTotals,
       totalPhysicalDamage: profile.totalPhysicalDamage,
       totalElementalDamage: profile.totalElementalDamage,
       totalPoisonDamage: profile.totalPoisonDamage,
@@ -216,6 +237,23 @@ export function summarizeDamageRegressionProfile(
         baseDamage: component.baseDamage,
         poisonDamage: component.poisonDamage,
       })),
+      ...(profile.auraPulseDamageComponents?.length
+        ? {
+            auraPulseDamageComponents: profile.auraPulseDamageComponents.map(
+              (component) => ({
+                label: component.label,
+                source: component.source,
+                damageType: component.damageType,
+                timing: component.timing,
+                damage: component.damage,
+                baseDamage: component.baseDamage,
+                poisonDamage: component.poisonDamage,
+              })
+            ),
+          }
+        : {}),
     },
   };
+
+  return JSON.parse(JSON.stringify(summary)) as DamageRegressionExpected;
 }

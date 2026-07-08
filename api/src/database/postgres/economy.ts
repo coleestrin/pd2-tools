@@ -415,17 +415,23 @@ export class EconomyDB {
 
     if (season !== undefined) {
       query = `
-                SELECT DISTINCT item_name
-                FROM listings
-                WHERE season = $1
-                ORDER BY item_name
+                SELECT item_name
+                FROM (
+                  SELECT DISTINCT item_name
+                  FROM listings
+                  WHERE season = $1
+                ) unique_items
+                ORDER BY LOWER(item_name), item_name
             `;
       params = [season];
     } else {
       query = `
-                SELECT DISTINCT item_name
-                FROM listings
-                ORDER BY item_name
+                SELECT item_name
+                FROM (
+                  SELECT DISTINCT item_name
+                  FROM listings
+                ) unique_items
+                ORDER BY LOWER(item_name), item_name
             `;
     }
 
