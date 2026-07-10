@@ -599,10 +599,13 @@ function averageRange(range: DamageRange) {
 function buildDamageTotalsFromComponents(
   components: DamageProfile["damageComponents"]
 ): DamageProfile["damageTotals"] {
+  const includedComponents = components.filter(
+    (component) => component.includedInTotal !== false
+  );
   const byElement: DamageProfile["damageTotals"]["byElement"] = {};
   let poisonDamage: DamageProfile["damageTotals"]["poisonDamage"];
 
-  components.forEach((component) => {
+  includedComponents.forEach((component) => {
     if (!hasRange(component.damage)) {
       return;
     }
@@ -631,13 +634,13 @@ function buildDamageTotalsFromComponents(
     }
   });
 
-  const instantDamage = components
+  const instantDamage = includedComponents
     .filter((component) => component.timing === "instant")
     .reduce(
       (total, component) => addRange(total, component.damage),
       createEmptyRange()
     );
-  const overTimeDamage = components
+  const overTimeDamage = includedComponents
     .filter((component) => component.timing === "over_time")
     .reduce(
       (total, component) => addRange(total, component.damage),
@@ -2617,6 +2620,11 @@ export function DamageCalculatorSection({
                               <Badge size="xs" variant="outline">
                                 {component.source}
                               </Badge>
+                              {component.includedInTotal === false ? (
+                                <Badge size="xs" variant="light" color="yellow">
+                                  excluded from total
+                                </Badge>
+                              ) : null}
                               <Text
                                 size="sm"
                                 fw={500}

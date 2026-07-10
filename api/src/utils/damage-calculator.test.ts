@@ -199,6 +199,31 @@ function createBoot(overrides: Partial<IItem> = {}): IItem {
   } as unknown as IItem;
 }
 
+function createBow(): IItem {
+  return createWeapon({
+    id: "test-bow",
+    hash: "test-bow",
+    name: "Test Bow",
+    base_code: "hbw",
+    base: {
+      id: "hbw",
+      category: "weapon",
+      codes: {},
+      name: "Hunter's Bow",
+      stackable: false,
+      type: "Bow",
+      type_code: "bow",
+      size: { height: 3, width: 2 },
+      requirements: { level: 0, strength: 0, dexterity: 0 },
+    },
+    damage: {
+      one_handed: {},
+      two_handed: { minimum: 10, maximum: 20 },
+      missile: {},
+    },
+  } as Partial<IItem>);
+}
+
 function createSimpleItem(overrides: Partial<IItem> = {}): IItem {
   return {
     id: overrides.id ?? "test-item",
@@ -1448,6 +1473,36 @@ describeWithGameData("damage calculator component model", () => {
     });
   });
 
+  it("shows gear poison without folding uncertain stacking into totals", () => {
+    const character = createCharacter("Basic Attack", 1);
+    character.items = [
+      createWeapon({
+        properties: ["Adds 120 Poison Damage over 3 Seconds"],
+      } as Partial<IItem>),
+    ];
+
+    const profile = calculateDamage(character).profiles.find(
+      (candidate) =>
+        candidate.skillName === "Basic Attack" &&
+        candidate.playerAuraId === "none" &&
+        candidate.weaponId.startsWith("primary:right:one_handed")
+    );
+    const itemPoison = profile?.damageComponents.find(
+      (component) => component.label === "Item poison"
+    );
+
+    expect(itemPoison).toEqual(
+      expect.objectContaining({
+        damage: { min: 120, max: 120 },
+        includedInTotal: false,
+      })
+    );
+    expect(profile?.damageTotals.poisonDamage).toBeUndefined();
+    expect(profile?.damageTotals.combinedDamage).toEqual(
+      profile?.damageTotals.byElement.physical
+    );
+  });
+
   it("counts plus-prefixed off-weapon enhanced damage from equipped items and active charms", () => {
     const character = createCharacter("Rabies", 1);
     character.items = [
@@ -1896,6 +1951,58 @@ describeWithGameData("damage calculator component model", () => {
     ).toBe(true);
   });
 
+  it("keeps direct elemental attack payloads in instant damage", () => {
+    for (const [skillName, characterClass] of [
+      ["Magic Arrow", "Amazon"],
+      ["Cold Arrow", "Amazon"],
+      ["Fire Arrow", "Amazon"],
+      ["Fire Claws", "Druid"],
+    ] as const) {
+      const character = createCharacter(skillName, 20);
+      character.character.class = { id: 1, name: characterClass };
+      if (skillName.endsWith("Arrow")) {
+        character.items = [createBow()];
+      }
+
+      const calculation = calculateDamage(character);
+      const profile = calculation.profiles.find(
+        (candidate) =>
+          candidate.skillName === skillName && candidate.playerAuraId === "none"
+      );
+      const directElementalComponents = profile?.damageComponents.filter(
+        (component) =>
+          component.source === "skill" && component.damageType !== "poison"
+      );
+
+      expect(profile).toBeDefined();
+      expect(directElementalComponents?.length).toBeGreaterThan(0);
+      expect(directElementalComponents).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ timing: "instant" }),
+        ])
+      );
+      expect(directElementalComponents).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ timing: "over_time" }),
+        ])
+      );
+    }
+
+    const fireArrow = createCharacter("Fire Arrow", 20);
+    fireArrow.character.class = { id: 1, name: "Amazon" };
+    fireArrow.items = [createBow()];
+    const fireArrowProfile = calculateDamage(fireArrow).profiles.find(
+      (profile) =>
+        profile.skillName === "Fire Arrow" && profile.playerAuraId === "none"
+    );
+
+    expect(
+      fireArrowProfile?.damageComponents.find(
+        (component) => component.label === "Missile: Firearrow Firewall"
+      )?.timing
+    ).toBe("over_time");
+  });
+
   it("does not count client-only missile children as damage payloads", () => {
     const getDamageSourceRows = (skillName: string, characterClass: string) => {
       const character = createCharacter(skillName, 20);
@@ -2071,6 +2178,49 @@ describeWithGameData("damage calculator component model", () => {
       "per impact plus ground fire"
     );
     expect(meteorProfile!.damageScope.note).toContain("meteorfire");
+
+    const moltenBoulderCharacter = createCharacter("Molten Boulder", 20);
+
+    const moltenBoulderCalculation = calculateDamage(moltenBoulderCharacter);
+    const moltenBoulderProfile = moltenBoulderCalculation.profiles.find(
+      (profile) =>
+        profile.skillName === "Molten Boulder" && profile.playerAuraId === "none"
+    );
+
+    expect(moltenBoulderProfile).toBeDefined();
+    expect(moltenBoulderProfile!.damageScope.label).toBe(
+      "per impact plus fire path"
+    );
+    expect(moltenBoulderProfile!.damageScope.note).toContain(
+      "moltenboulderfirepath"
+    );
+
+    for (const [skillName, expectedLabel, expectedNote] of [
+      ["Fire Arrow", "per impact plus fire wall", "firearrow firewall"],
+      [
+        "Immolation Arrow",
+        "per impact plus fire patches",
+        "server-reachable fire patch",
+      ],
+      ["Armageddon", "per impact plus ground fire", "armageddonfire"],
+      ["Thunder Storm", "per strike plus nova", "thunderstormnova"],
+    ] as const) {
+      const character = createCharacter(skillName, 20);
+      if (skillName.endsWith("Arrow")) {
+        character.character.class = { id: 1, name: "Amazon" };
+        character.items = [createBow()];
+      }
+      const profile = calculateDamage(character).profiles.find(
+        (candidate) =>
+          candidate.skillName === skillName && candidate.playerAuraId === "none"
+      );
+
+      if (!profile) {
+        throw new Error(`Expected a damage profile for ${skillName}`);
+      }
+      expect(profile!.damageScope.label).toBe(expectedLabel);
+      expect(profile!.damageScope.note).toContain(expectedNote);
+    }
   });
 
   it("does not add Fists of Fire meteor physical payload as direct damage", () => {
@@ -2210,10 +2360,23 @@ describeWithGameData("damage calculator component model", () => {
     expect(fistsCharge1Rows).not.toEqual(
       expect.arrayContaining(["fistsoffirenova", "fofmeteor"])
     );
-    expect(fistsCharge2Rows).toContain("fistsoffirenova");
+    expect(fistsCharge2Rows).toEqual(
+      expect.arrayContaining([
+        "Fists of Fire",
+        "fistsoffirefirewall",
+        "fistsoffirenova",
+      ])
+    );
     expect(fistsCharge2Rows).not.toContain("fofmeteor");
-    expect(fistsCharge3Rows).toContain("fofmeteor");
-    expect(fistsCharge3Rows).not.toContain("fistsoffirenova");
+    expect(fistsCharge3Rows).toEqual(
+      expect.arrayContaining([
+        "Fists of Fire",
+        "fistsoffirefirewall",
+        "fistsoffirenova",
+        "fofmeteor",
+      ])
+    );
+    expect(fistsCharge3.damageScope.note).toContain("charges 1 through 3");
 
     const tigerCharge1 = getProfile("Tiger Strike", 1)!;
     const tigerCharge2 = getProfile("Tiger Strike", 2)!;
@@ -2238,10 +2401,17 @@ describeWithGameData("damage calculator component model", () => {
       expect.arrayContaining(["royalstrikemeteor"])
     );
     expect(getRows(phoenixCharge2)).toEqual(
-      expect.arrayContaining(["royalstrikechainlightning"])
+      expect.arrayContaining([
+        "royalstrikemeteor",
+        "royalstrikechainlightning",
+      ])
     );
     expect(getRows(phoenixCharge3)).toEqual(
-      expect.arrayContaining(["royalstrikechaosice"])
+      expect.arrayContaining([
+        "royalstrikemeteor",
+        "royalstrikechainlightning",
+        "royalstrikechaosice",
+      ])
     );
   });
 
@@ -2901,7 +3071,8 @@ describeWithGameData("damage calculator component model", () => {
       (option) => option.weaponSet === "primary"
     );
     const bowOption = primaryWeaponOptions.find(
-      (option) => option.itemName === "Test Bow"
+      (option) =>
+        option.itemName === "Test Bow" && option.handMode === "missile"
     );
     const magicArrowProfile = calculation.profiles.find(
       (profile) =>
@@ -2924,6 +3095,49 @@ describeWithGameData("damage calculator component model", () => {
     expect(magicArrowProfile?.damageTotals.combinedDamage.max).toBeGreaterThan(
       0
     );
+  });
+
+  it("uses bow melee damage mode for melee-range shape-shift attacks", () => {
+    const character = createCharacter("Fire Claws", 20);
+    character.character.class = { id: 5, name: "Druid" };
+    const quiver = createSimpleItem({
+      id: "test-quiver",
+      hash: "test-quiver",
+      name: "Test Quiver",
+      location: {
+        zone: "Equipped",
+        storage: "Equipped",
+        zone_id: 1,
+        storage_id: 0,
+        equipment: "Left Hand",
+        equipment_id: 5,
+      },
+    } as Partial<IItem>);
+    character.items = [createBow(), quiver];
+
+    const calculation = calculateDamage(character);
+    const profiles = calculation.profiles.filter(
+      (profile) =>
+        profile.skillName === "Fire Claws" && profile.playerAuraId === "none"
+    );
+    const handModes = profiles.map(
+      (profile) =>
+        calculation.weaponOptions.find((option) => option.id === profile.weaponId)
+          ?.handMode
+    );
+
+    expect(profiles.length).toBeGreaterThan(0);
+    expect(handModes).toContain("two_handed");
+    expect(handModes).not.toContain("missile");
+    expect(profiles.some((profile) => profile.weaponId.includes("test-bow")))
+      .toBe(true);
+    expect(
+      profiles.every(
+        (profile) =>
+          profile.damageScope.label ===
+          "per weapon hit plus one fire payload"
+      )
+    ).toBe(true);
   });
 
   it("uses equipped boots as the source item for kick skills", () => {

@@ -51,6 +51,7 @@ export interface DamageComponent {
   damage: DamageRange;
   baseDamage?: DamageRange;
   poisonDamage?: PoisonDamage;
+  includedInTotal?: boolean;
   sourceRefs: DamageSourceReference[];
   notes: string[];
 }

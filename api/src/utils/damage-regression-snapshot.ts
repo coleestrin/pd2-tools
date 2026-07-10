@@ -16,6 +16,8 @@ export interface DamageRegressionComponentSummary {
   damage: DamageRange;
   baseDamage?: DamageRange;
   poisonDamage?: PoisonDamage;
+  includedInTotal?: boolean;
+  sourceRefs: DamageComponent["sourceRefs"];
 }
 
 export interface DamageRegressionExpectedProfile {
@@ -35,7 +37,10 @@ export interface DamageRegressionExpectedProfile {
   playerAuraCarrier: DamageProfile["playerAuraCarrier"];
   playerAuraLevel: number;
   transformationId: string;
-  damageScope: Pick<DamageProfile["damageScope"], "label" | "count" | "countLabel">;
+  damageScope: Pick<
+    DamageProfile["damageScope"],
+    "label" | "count" | "countLabel" | "note"
+  >;
   damageTotals: DamageTotals;
   auraPulseDamageTotals?: DamageTotals;
   totalPhysicalDamage: DamageRange;
@@ -138,6 +143,24 @@ export function getBestNoManualAuraProfileForSkillOption(
   );
 }
 
+export function getBestNoManualAuraProfileForSkillOptionId(
+  calculation: DamageCalculation,
+  skillOptionId: string
+): { skillOption: DamageSkillOption; profile: DamageProfile } | undefined {
+  const skillOption = calculation.skillOptions.find(
+    (option) => option.id === skillOptionId
+  );
+  if (!skillOption) {
+    return undefined;
+  }
+
+  const profile = getBestNoManualAuraProfileForSkillOption(
+    calculation,
+    skillOption
+  );
+  return profile ? { skillOption, profile } : undefined;
+}
+
 export function getBestNoManualAuraProfile(
   calculation: DamageCalculation
 ): DamageProfile | undefined {
@@ -221,6 +244,7 @@ export function summarizeDamageRegressionProfile(
         label: profile.damageScope.label,
         count: profile.damageScope.count,
         countLabel: profile.damageScope.countLabel,
+        note: profile.damageScope.note,
       },
       damageTotals: profile.damageTotals,
       auraPulseDamageTotals: profile.auraPulseDamageTotals,
@@ -236,6 +260,8 @@ export function summarizeDamageRegressionProfile(
         damage: component.damage,
         baseDamage: component.baseDamage,
         poisonDamage: component.poisonDamage,
+        includedInTotal: component.includedInTotal,
+        sourceRefs: component.sourceRefs,
       })),
       ...(profile.auraPulseDamageComponents?.length
         ? {
@@ -248,6 +274,8 @@ export function summarizeDamageRegressionProfile(
                 damage: component.damage,
                 baseDamage: component.baseDamage,
                 poisonDamage: component.poisonDamage,
+                includedInTotal: component.includedInTotal,
+                sourceRefs: component.sourceRefs,
               })
             ),
           }

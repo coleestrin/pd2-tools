@@ -101,6 +101,154 @@ const DEFAULT_DAMAGE_SCOPE: DamageProfile["damageScope"] = {
 };
 
 const SKILL_DAMAGE_SCOPE_DEFINITIONS: Record<string, DamageScopeDefinition> = {
+  [normalizeSkillName("Charged Strike").toLowerCase()]: {
+    label: "per weapon hit plus one bolt",
+    countColumn: "calc1",
+    countLabel: "released bolts",
+    note: "Charged Strike totals include the weapon hit plus one modeled lightning-bolt payload. Skills.txt calc1 exposes released bolt count; bolt overlap, target size, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Lightning Strike").toLowerCase()]: {
+    label: "per weapon hit plus one chain hit",
+    countColumn: "calc2",
+    countLabel: "chain hits",
+    note: "Lightning Strike totals include the weapon hit plus one modeled chain-lightning hit. Skills.txt calc2 exposes maximum chain hits; target count, repeated jumps, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Lightning Fury").toLowerCase()]: {
+    label: "per throw plus one released bolt",
+    countColumn: "calc1",
+    countLabel: "target bolts",
+    note: "Lightning Fury totals are for the thrown hit plus one modeled released lightning payload. Skills.txt calc1 exposes target count; released bolt count, overlap, pierce, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Chain Lightning").toLowerCase()]: {
+    label: "per chain hit",
+    countColumn: "calc1",
+    countLabel: "chain hits",
+    note: "Chain Lightning totals are per chain hit. Skills.txt calc1 exposes maximum hits; jump count, target selection, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Holy Bolt").toLowerCase()]: {
+    label: "per bolt",
+    countColumn: "calc1",
+    countLabel: "bolts",
+    note: "Holy Bolt totals are per bolt. Skills.txt calc1 exposes bolts fired; projectile overlap, healing, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Bone Spear").toLowerCase()]: {
+    label: "per spear",
+    countColumn: "calc1",
+    countLabel: "spears",
+    note: "Bone Spear totals are per spear. Skills.txt calc1 exposes spear count; pierce, projectile overlap, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Psychic Hammer").toLowerCase()]: {
+    label: "per hit",
+    countColumn: "calc1",
+    countLabel: "hits",
+    note: "Psychic Hammer totals are for the first modeled hit. Skills.txt calc1 exposes hit count and calc2 exposes damage reduction per later hit; later-hit decay, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Ice Barrage").toLowerCase()]: {
+    label: "per missile",
+    countColumn: "calc1",
+    countLabel: "missiles",
+    note: "Ice Barrage totals are per missile. Skills.txt calc1 exposes missile count; overlap, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Combustion").toLowerCase()]: {
+    label: "per missile",
+    countColumn: "calc2",
+    countLabel: "missiles",
+    note: "Combustion totals are per missile. Skills.txt calc2 exposes missile count; overlap, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Twister").toLowerCase()]: {
+    label: "per missile",
+    countColumn: "calc1",
+    countLabel: "missiles",
+    note: "Twister totals are per missile. Skills.txt calc1 exposes missile count; overlap, repeated contacts, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Shock Wave").toLowerCase()]: {
+    label: "per missile",
+    countColumn: "calc1",
+    countLabel: "missiles",
+    note: "Shock Wave totals are per missile. Skills.txt calc1 exposes missile count; overlap, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Fire Claws").toLowerCase()]: {
+    label: "per weapon hit plus one fire payload",
+    countColumn: "calc2",
+    countLabel: "fire missiles",
+    note: "Fire Claws totals include the melee weapon hit plus one modeled fire payload. Skills.txt calc2 exposes fire missile count; overlap, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Zeal").toLowerCase()]: {
+    label: "per weapon hit",
+    countColumn: "calc1",
+    countLabel: "maximum targets",
+    note: "Zeal totals are per weapon hit. Skills.txt calc1 exposes maximum targets; the full attack sequence, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Fury").toLowerCase()]: {
+    label: "per weapon hit",
+    countColumn: "calc1",
+    countLabel: "maximum targets",
+    note: "Fury totals are per weapon hit. Skills.txt calc1 exposes maximum targets; the full attack sequence, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Fend").toLowerCase()]: {
+    label: "per weapon hit",
+    countColumn: "calc1",
+    countLabel: "maximum targets",
+    note: "Fend totals are per weapon hit. Skills.txt calc1 exposes maximum targets; the full attack sequence, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Dragon Talon").toLowerCase()]: {
+    label: "per kick",
+    countColumn: "calc1",
+    countLabel: "kicks",
+    note: "Dragon Talon totals are per boot-sourced kick. Skills.txt calc1 exposes kick count; the full kick sequence, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Jab").toLowerCase()]: {
+    label: "per weapon hit",
+    note: "Jab totals are per weapon hit. The sequence count is controlled by compiled skill behavior and is not inferred from the tables; hit chance, target count, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Exploding Arrow").toLowerCase()]: {
+    label: "per arrow impact plus one cluster payload",
+    countColumn: "calc2",
+    countLabel: "cluster bombs",
+    note: "Exploding Arrow totals include the weapon/fire impact plus one modeled cluster payload. Skills.txt calc2 exposes cluster-bomb count; cluster overlap, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Blizzard").toLowerCase()]: {
+    label: "per shard impact",
+    note: "Blizzard totals are per modeled shard impact. Skills.txt calc2 exposes frequency, but storm duration, shard count, random placement, overlap, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Eruption").toLowerCase()]: {
+    label: "per eruption impact",
+    note: "Eruption totals are per modeled impact. Skills.txt calc2 exposes frequency, but duration, repeated impacts, overlap, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Blade Shield").toLowerCase()]: {
+    label: "per pulse hit",
+    note: "Blade Shield totals are per modeled pulse hit. Skills.txt periodic/perdelay controls repeat timing; duration, pulse count, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Blade Fury").toLowerCase()]: {
+    label: "per projectile hit",
+    note: "Blade Fury totals are per projectile hit. Channel duration, projectile count, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Frenzy").toLowerCase()]: {
+    label: "per weapon hit",
+    countColumn: "calc4",
+    countLabel: "maximum state charges",
+    note: "Frenzy totals are per weapon hit. Skills.txt calc4 exposes maximum state charges, but the table damage formula is not charge-dependent; sequence timing, state uptime, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Sacrifice").toLowerCase()]: {
+    label: "per weapon hit",
+    note: "Sacrifice totals are outgoing damage per weapon hit. Skills.txt calc2 self-damage and calc3 explosion radius are not added to outgoing damage; secondary targets, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Dark Pact").toLowerCase()]: {
+    label: "per one-curse payload",
+    note: "Dark Pact totals are for the modeled one-curse payload. Additional curse state, area growth, target count, and cast rate are controlled by compiled behavior and are not multiplied into totals.",
+  },
+  [normalizeSkillName("Vengeance").toLowerCase()]: {
+    label: "per weapon hit",
+    note: "Vengeance totals are per weapon hit with modeled elemental conversion. Skills.txt calc4 exposes chain percent rather than a deterministic chain count; chained targets, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Fire Arrow").toLowerCase()]: {
+    label: "per impact plus fire wall",
+    note: "Fire Arrow totals include the weapon/fire impact plus one modeled firearrow firewall payload. Ground-fire duration, repeated ticks, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Immolation Arrow").toLowerCase()]: {
+    label: "per impact plus fire patches",
+    note: "Immolation Arrow totals include the weapon/fire impact plus one modeled instance of each server-reachable fire patch payload. Patch duration, repeated ticks, overlap, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
   [normalizeSkillName("Charged Bolt").toLowerCase()]: {
     label: "per bolt",
     countColumn: "calc1",
@@ -151,6 +299,10 @@ const SKILL_DAMAGE_SCOPE_DEFINITIONS: Record<string, DamageScopeDefinition> = {
     label: "per impact plus ground fire",
     note: "Meteor totals include the impact physical/fire payload plus one modeled meteorfire ground-fire payload. Impact radius, target count, burn duration, and repeated ground-fire ticks are not multiplied into totals.",
   },
+  [normalizeSkillName("Molten Boulder").toLowerCase()]: {
+    label: "per impact plus fire path",
+    note: "Molten Boulder totals include the direct physical/fire impact payload plus one modeled moltenboulderfirepath payload. Boulder travel, repeated contacts, fire path duration, and target count are not multiplied into totals.",
+  },
   [normalizeSkillName("Volcano").toLowerCase()]: {
     label: "per impact",
     note: "Volcano totals are per modeled impact from Skills.txt damage fields. Eruption timing, target overlap, and repeated impacts are not multiplied into totals.",
@@ -184,16 +336,16 @@ const SKILL_DAMAGE_SCOPE_DEFINITIONS: Record<string, DamageScopeDefinition> = {
     note: "Firestorm totals use Skills.txt stream damage scaled to a per-second value. Stream overlap, target count, and cast rate are not multiplied into totals.",
   },
   [normalizeSkillName("Thunder Storm").toLowerCase()]: {
-    label: "per projectile hit",
-    note: "Thunder Storm totals are per projectile hit. Storm duration, strike frequency, target selection, and repeated strikes are not multiplied into totals.",
+    label: "per strike plus nova",
+    note: "Thunder Storm totals include the direct lightning strike plus one modeled thunderstormnova payload. Storm duration, strike frequency, nova target count, and repeated strikes are not multiplied into totals.",
   },
   [normalizeSkillName("Hurricane").toLowerCase()]: {
     label: "per projectile hit",
     note: "Hurricane totals are per modeled projectile hit from Skills.txt damage fields. Aura duration, pulse frequency, target count, and repeated hits are not multiplied into totals.",
   },
   [normalizeSkillName("Armageddon").toLowerCase()]: {
-    label: "per projectile hit",
-    note: "Armageddon totals are per modeled projectile hit from Skills.txt damage fields. Storm duration, rock count, target count, and repeated impacts are not multiplied into totals.",
+    label: "per impact plus ground fire",
+    note: "Armageddon totals include the physical/fire impact plus one modeled armageddonfire ground-fire payload. Storm duration, rock count, ground-fire duration, target count, and repeated impacts are not multiplied into totals.",
   },
   [normalizeSkillName("Blade Sentinel").toLowerCase()]: {
     label: "per projectile hit",
@@ -1473,7 +1625,7 @@ function getChargeDamageScope(
   }`;
   const note = isStack
     ? `${displaySkillName} stack ${chargeNumber} totals include one weapon hit with the stack ${chargeNumber} damage percent exposed by Skills.txt. Stack buildup, duration, hit chance, attack speed, and target count are not multiplied into totals.`
-    : `${displaySkillName} charge ${chargeNumber} totals include normal hit damage plus the modeled charge ${chargeNumber} payload exposed by Skills.txt and referenced Missiles.txt rows. Charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals.`;
+    : `${displaySkillName} charge ${chargeNumber} totals include normal hit damage plus every modeled payload from charges 1 through ${chargeNumber}, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals.`;
 
   return {
     label,
@@ -2032,9 +2184,10 @@ function applyGameDotMultiplier(
 
 function getGameComponentTiming(
   elementType: string,
-  dotMultiplier: number
+  dotMultiplier: number,
+  isDirectAttackPayload = false
 ): "instant" | "over_time" {
-  return elementType === "pois" || dotMultiplier !== 1
+  return elementType === "pois" || (!isDirectAttackPayload && dotMultiplier !== 1)
     ? "over_time"
     : "instant";
 }
@@ -2273,7 +2426,11 @@ function getGameSkillComponents(
             ],
           },
         ],
-        getGameComponentTiming(eType, multiplier)
+        getGameComponentTiming(
+          eType,
+          multiplier,
+          isGameWeaponAttackSkill(skillName)
+        )
       )
     );
   }
@@ -3142,9 +3299,8 @@ function getWeaponOptions(characterData: CharacterData): WeaponSelection[] {
       }
 
       if (
-        !isBowWeapon &&
-        slot === "right" &&
-        !leftHandOccupied &&
+        (isBowWeapon || slot === "right") &&
+        (isBowWeapon || !leftHandOccupied) &&
         hasDamageRange(item.damage?.two_handed)
       ) {
         selections.push({
@@ -3903,6 +4059,7 @@ function createDamageComponent(component: {
   damage: DamageRange;
   baseDamage?: DamageRange;
   poisonDamage?: PoisonDamage;
+  includedInTotal?: boolean;
   sourceRefs?: DamageSourceReference[];
   notes?: string[];
 }): DamageComponent {
@@ -3917,6 +4074,7 @@ function createDamageComponent(component: {
       ? normalizeDamageRange(component.baseDamage)
       : undefined,
     poisonDamage: component.poisonDamage,
+    includedInTotal: component.includedInTotal,
     sourceRefs: component.sourceRefs || [],
     notes: component.notes || [],
   };
@@ -3951,10 +4109,13 @@ function sumDamageComponents(
 function buildDamageTotals(
   components: readonly DamageComponent[]
 ): DamageTotals {
+  const includedComponents = components.filter(
+    (component) => component.includedInTotal !== false
+  );
   const byElement: Partial<Record<DamageElement, DamageRange>> = {};
   let poisonDamage: PoisonDamage | undefined;
 
-  components.forEach((component) => {
+  includedComponents.forEach((component) => {
     if (!isNonZeroDamageRange(component.damage)) {
       return;
     }
@@ -3976,11 +4137,11 @@ function buildDamageTotals(
   });
 
   const instantDamage = sumDamageComponents(
-    components,
+    includedComponents,
     (component) => component.timing === "instant"
   );
   const overTimeDamage = sumDamageComponents(
-    components,
+    includedComponents,
     (component) => component.timing === "over_time"
   );
   const combinedDamage = addDamageRange(instantDamage, overTimeDamage);
@@ -4093,14 +4254,16 @@ function getChargeVariantDamageComponents(
     return components;
   }
 
-  return components.filter(
-    (component) =>
-      getChargeNumberForDamageComponent(
-        component,
-        definition,
-        sourceSkillName
-      ) === skillOption.chargeNumber
-  );
+  return components.filter((component) => {
+    const componentCharge = getChargeNumberForDamageComponent(
+      component,
+      definition,
+      sourceSkillName
+    );
+    return Boolean(
+      componentCharge && componentCharge <= skillOption.chargeNumber!
+    );
+  });
 }
 
 function directSummonDamageToComponents(
@@ -6246,6 +6409,28 @@ function isWeaponSelectionCompatibleWithSkill(
     return false;
   }
 
+  const sourceSkillRow = getGameRow("Skills", sourceSkillName);
+  const skillRange = sourceSkillRow
+    ? getGameRowString("Skills", sourceSkillRow, "range")
+    : "";
+  const isBowMeleeSelection =
+    isBowOrCrossbow(weaponSelection.item) &&
+    weaponSelection.option.handMode === "two_handed";
+  if (
+    isBowMeleeSelection &&
+    (skillOption.damageMode !== "weapon" || skillRange !== "h2h")
+  ) {
+    return false;
+  }
+
+  if (
+    skillOption.damageMode === "weapon" &&
+    skillRange === "h2h" &&
+    weaponSelection.option.handMode === "missile"
+  ) {
+    return false;
+  }
+
   const requiredHandMode = getRequiredWeaponSequenceHandMode(sourceSkillName);
 
   if (requiredHandMode) {
@@ -7162,11 +7347,15 @@ function buildProfile(
             max: parsedItemDamage.poisonDamage.total,
           },
           poisonDamage: parsedItemDamage.poisonDamage,
+          includedInTotal: false,
           sourceRefs: [
             {
               table: "Armory item text",
               columns: ["poison damage"],
             },
+          ],
+          notes: [
+            "Gear poison is shown separately and excluded from totals because poison rate/length stacking with other sources is not derivable from the armory text payload.",
           ],
         }),
       ]
@@ -7311,6 +7500,55 @@ function getProfileSkillOptions(
     chargeVariant: "charge" as const,
     chargeNumber: index + 1,
   }));
+}
+
+export function getModeledDamageMechanicCoverage() {
+  const skills = getGameTable("Skills");
+  return Object.keys(skills.rowsByKey)
+    .filter(
+      (skillName) => {
+        const row = skills.rowsByKey[skillName];
+        return (
+          isInGamePlayerSkill(row) &&
+          (isSelectableAttackSkill(skillName) ||
+            isSelectableSpellSkill(skillName) ||
+            isSelectableSummonSkill(skillName))
+        );
+      }
+    )
+    .map((skillName) => {
+      const row = skills.rowsByKey[skillName];
+      const damageMode: DamageSkillOption["damageMode"] =
+        isSelectableSummonSkill(skillName)
+          ? "summon"
+          : isSelectableAttackSkill(skillName)
+            ? "weapon"
+            : "spell";
+      return {
+        skillName,
+        damageScope: getDamageScope(
+          skillName,
+          20,
+          new Map([[skillName, { level: 20, baseLevel: 20 }]]),
+          damageMode,
+          createUnarmedSelection("primary")
+        ),
+        periodic: getGameRowString("Skills", row, "periodic") === "1",
+        targetCorpse:
+          damageMode !== "summon" &&
+          getGameRowString("Skills", row, "TargetCorpse") === "1",
+        countCalcs: [1, 2, 3, 4]
+          .map((index) => ({
+            column: `calc${index}`,
+            description: getGameRowString(
+              "Skills",
+              row,
+              `*calc${index} desc`
+            ),
+          }))
+          .filter((calc) => calc.description),
+      };
+    });
 }
 
 export function calculateDamage(

@@ -5,7 +5,7 @@ import { enrichArmoryPayload } from "./armory-payload";
 import { calculateDamage } from "./damage-calculator";
 import {
   DamageRegressionExpected,
-  getBestProfileForSourceSkill,
+  getBestNoManualAuraProfileForSkillOptionId,
   summarizeDamageRegressionProfile,
 } from "./damage-regression-snapshot";
 
@@ -119,9 +119,9 @@ describe("damage regression snapshot", () => {
       ) as CharacterData;
       enrichArmoryPayload(character);
       const calculation = calculateDamage(character);
-      const target = getBestProfileForSourceSkill(
+      const target = getBestNoManualAuraProfileForSkillOptionId(
         calculation,
-        sample.skillName
+        sample.expected.skillOption.id
       );
 
       expect(target).toBeDefined();
@@ -132,5 +132,25 @@ describe("damage regression snapshot", () => {
         )
       ).toEqual(sample.expected);
     });
+  });
+
+  it("covers every modeled Raise Skeletal Mage variant", () => {
+    const variants = new Set(
+      snapshot.samples
+        .filter((sample) => sample.skillName === "Raise Skeletal Mage")
+        .map(
+          (sample) =>
+            sample.expected.skillOption.summonVariant ||
+            sample.expected.profile.summonVariant
+        )
+        .filter(Boolean)
+    );
+
+    expect(Array.from(variants).sort()).toEqual([
+      "cold-mage",
+      "fire-mage",
+      "lightning-mage",
+      "poison-mage",
+    ]);
   });
 });
