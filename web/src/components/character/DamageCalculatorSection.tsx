@@ -2439,7 +2439,7 @@ export function DamageCalculatorSection({
                     spacing="sm"
                   >
                     <Select
-                      aria-label="Aura or buff"
+                      label="Skill"
                       value={auraIsSelected ? row.auraId : null}
                       placeholder="Select"
                       onChange={(value) =>
@@ -2461,11 +2461,10 @@ export function DamageCalculatorSection({
                             ),
                         }))}
                       allowDeselect={false}
-                      mt={{ base: 0, sm: 24 }}
                     />
 
                     <Select
-                      label="Aura Level"
+                      label="Level"
                       value={row.level}
                       onChange={(value) =>
                         handlePlayerAuraLevelChange(row.rowId, value)
