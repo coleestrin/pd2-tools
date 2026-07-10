@@ -258,7 +258,6 @@ type AuraSelectionRow = {
   isParty: boolean;
   automaticLevel?: number;
   automaticSource?: ActiveAuraSummary["source"];
-  automaticCarrier?: ActiveAuraSummary["carrier"];
 };
 
 type ResolvedAuraSelectionRow = AuraSelectionRow & {
@@ -365,7 +364,6 @@ function getInitialAuraSelectionRows(
         isParty: aura.carrier === "party",
         automaticLevel: aura.level,
         automaticSource: aura.source,
-        automaticCarrier: aura.carrier,
       })
     );
   };
@@ -1801,9 +1799,7 @@ export function DamageCalculatorSection({
           level: automaticWins
             ? String(row.automaticLevel)
             : row.level,
-          isParty: automaticWins
-            ? row.automaticCarrier === "party"
-            : row.isParty,
+          isParty: row.isParty,
           source: automaticWins
             ? row.automaticSource || "manual"
             : auraOption.source === "character_skill" && !row.isParty
@@ -1900,7 +1896,6 @@ export function DamageCalculatorSection({
           level: getAuraDefaultLevel(auraOption),
           automaticLevel: undefined,
           automaticSource: undefined,
-          automaticCarrier: undefined,
         };
       })
     );
@@ -2431,7 +2426,7 @@ export function DamageCalculatorSection({
                 </Text>
               </Group>
 
-              {auraRows.map((row, index) => {
+              {auraRows.map((row) => {
                 const auraOption = auraOptionById.get(row.auraId) ?? null;
                 const auraIsSelected = Boolean(
                   auraOption && auraOption.id !== "none"
@@ -2444,7 +2439,7 @@ export function DamageCalculatorSection({
                     spacing="sm"
                   >
                     <Select
-                      label={index === 0 ? "Aura" : "Additional Aura"}
+                      aria-label="Aura or buff"
                       value={auraIsSelected ? row.auraId : null}
                       placeholder="Select"
                       onChange={(value) =>
@@ -2466,6 +2461,7 @@ export function DamageCalculatorSection({
                             ),
                         }))}
                       allowDeselect={false}
+                      mt={{ base: 0, sm: 24 }}
                     />
 
                     <Select
@@ -2499,11 +2495,7 @@ export function DamageCalculatorSection({
                           event.currentTarget.checked
                         )
                       }
-                      disabled={
-                        !auraIsSelected ||
-                        (row.automaticLevel !== undefined &&
-                          Number(row.level) <= row.automaticLevel)
-                      }
+                      disabled={!auraIsSelected}
                       mt={{ base: 0, sm: 28 }}
                     />
 
