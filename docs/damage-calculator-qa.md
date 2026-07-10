@@ -10,6 +10,7 @@ This is the single process reference for damage-calculator changes. Keep it shor
 - Martial Arts release profiles include every payload from charge 1 through the selected charge. Charge payloads from other skills are excluded.
 - Direct attack payloads are instant damage. Poison and source-backed stream/ground effects remain damage over time.
 - Gear poison is shown as an excluded component. It is not folded into combined totals because exact poison rate/length stacking cannot be derived safely from the available item payload. Skill and aura poison remain modeled when their source duration is known.
+- Detected item/mercenary auras and allocated castable buffs initialize the same removable selection rows used for manual choices; base profiles contain no hidden aura contribution. Same-name sources use the highest automatic level, and a user-selected level overrides it only when higher.
 - Corpse life, target current life, compiled server-function behavior, and other missing runtime inputs must be explicitly excluded or scoped. Do not invent a precise value.
 - Summon results are per source-backed summon hit. Pet count, attack cadence, AI choice, hit chance, and uptime are excluded.
 

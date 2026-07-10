@@ -3576,6 +3576,19 @@ function dedupeAuras(auraSources: AuraSource[]): AuraSource[] {
   );
 }
 
+function isDefaultActivePlayerBuff(definition: PlayerAuraDefinition): boolean {
+  if (definition.sourceSkillNames?.length) {
+    return false;
+  }
+
+  const skillRow = getGameRow("Skills", definition.skillName);
+  return Boolean(
+    skillRow &&
+      (isGameSelfOrPartyBuffSkill(definition.skillName) ||
+        isGameSelfOnlyPoisonBuffSkill(skillRow))
+  );
+}
+
 function collectPlayerAuraOptions(
   contexts: Record<WeaponSet, WeaponSetContext>
 ): DamageAuraOption[] {
@@ -3584,6 +3597,7 @@ function collectPlayerAuraOptions(
       id: "none",
       name: "No active aura",
       level: 0,
+      defaultActive: false,
       levelOptions: [0],
       levelBonuses: [],
       selfLevelBonuses: [],
@@ -3593,6 +3607,7 @@ function collectPlayerAuraOptions(
   ];
 
   const auraLevels = new Map<string, number>();
+  const allocatedBuffIds = new Set<string>();
 
   Object.values(contexts).forEach((context) => {
     Array.from(context.skillMap.entries())
@@ -3606,6 +3621,13 @@ function collectPlayerAuraOptions(
           auraId,
           Math.max(auraLevels.get(auraId) || 0, entry.level)
         );
+        if (
+          definition &&
+          entry.baseLevel > 0 &&
+          isDefaultActivePlayerBuff(definition)
+        ) {
+          allocatedBuffIds.add(auraId);
+        }
       });
   });
 
@@ -3622,6 +3644,7 @@ function collectPlayerAuraOptions(
       id: definition.id,
       name: definition.name,
       level: ownedLevel || 1,
+      defaultActive: ownedLevel > 0 && allocatedBuffIds.has(definition.id),
       levelOptions,
       levelBonuses: selfLevelBonuses,
       selfLevelBonuses,
@@ -6519,7 +6542,7 @@ function buildSummonProfile(
   playerAuraSelection: AuraSelection
 ): DamageProfile {
   const { option: playerAuraOption } = playerAuraSelection;
-  const { alwaysActiveAuras, realStats, skillMap } = context;
+  const { realStats, skillMap } = context;
   const sourceSkillName = skillOption.sourceSkillName || skillOption.name;
   const variantDefinition = getSummonVariantDefinition(
     sourceSkillName,
@@ -6540,7 +6563,6 @@ function buildSummonProfile(
           carrier: "party",
         });
   const activeAuras = dedupeAuras([
-    ...alwaysActiveAuras.map(getSummonAuraSource),
     ...(selectedPlayerAura ? [selectedPlayerAura] : []),
   ]);
   const effectiveSkillMap = applyAuraSkillLevelBonuses(skillMap, activeAuras);
@@ -6734,7 +6756,7 @@ function buildSpellProfile(
 ): DamageProfile {
   const { option: playerAuraOption, carrier: playerAuraCarrier } =
     playerAuraSelection;
-  const { alwaysActiveAuras, realStats, skillMap } = context;
+  const { realStats, skillMap } = context;
   const selectedPlayerAura =
     playerAuraOption.id === "none"
       ? undefined
@@ -6751,7 +6773,6 @@ function buildSpellProfile(
           carrier: playerAuraCarrier,
         };
   const activeAuras = dedupeAuras([
-    ...alwaysActiveAuras,
     ...(selectedPlayerAura ? [selectedPlayerAura] : []),
   ]);
   const effectiveSkillMap = applyAuraSkillLevelBonuses(skillMap, activeAuras);
@@ -7011,7 +7032,7 @@ function buildProfile(
 
   const { option: playerAuraOption, carrier: playerAuraCarrier } =
     playerAuraSelection;
-  const { alwaysActiveAuras, playerItems, realStats, skillMap } = context;
+  const { playerItems, realStats, skillMap } = context;
   const characterClass = characterData.character.class.name;
   const displaySkillName = skillOption.name;
   const selectedSkillName = skillOption.sourceSkillName || skillOption.name;
@@ -7033,7 +7054,6 @@ function buildProfile(
         };
 
   const activeAuras = dedupeAuras([
-    ...alwaysActiveAuras,
     ...(selectedPlayerAura ? [selectedPlayerAura] : []),
   ]);
   const effectiveSkillMap = applyAuraSkillLevelBonuses(skillMap, activeAuras);

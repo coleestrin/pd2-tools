@@ -256,6 +256,13 @@ type AuraSelectionRow = {
   auraId: string;
   level: string;
   isParty: boolean;
+  automaticLevel?: number;
+  automaticSource?: ActiveAuraSummary["source"];
+  automaticCarrier?: ActiveAuraSummary["carrier"];
+};
+
+type ResolvedAuraSelectionRow = AuraSelectionRow & {
+  source: ActiveAuraSummary["source"];
 };
 
 let auraSelectionRowSequence = 0;
@@ -304,6 +311,101 @@ function normalizeAuraSelectionRows(
   });
 
   return [...selectedRows, createAuraSelectionRow()];
+}
+
+function getAuraSourcePriority(source?: ActiveAuraSummary["source"]): number {
+  switch (source) {
+    case "player_skill":
+      return 4;
+    case "player_item":
+      return 3;
+    case "mercenary_native":
+      return 2;
+    case "mercenary_item":
+      return 1;
+    case "manual":
+    default:
+      return 0;
+  }
+}
+
+function getInitialAuraSelectionRows(
+  damageCalculation: DamageCalculation
+): AuraSelectionRow[] {
+  const rowsByAuraId = new Map<string, AuraSelectionRow>();
+  const auraOptionsByName = new Map(
+    damageCalculation.playerAuraOptions.map((option) => [option.name, option])
+  );
+  const addAutomaticRow = (
+    auraOption: DamageAuraOption | undefined,
+    aura: ActiveAuraSummary
+  ) => {
+    if (!auraOption || auraOption.id === "none") {
+      return;
+    }
+
+    const current = rowsByAuraId.get(auraOption.id);
+    if (current) {
+      const currentLevel = Number(current.level);
+      if (
+        currentLevel > aura.level ||
+        (currentLevel === aura.level &&
+          getAuraSourcePriority(current.automaticSource) >=
+            getAuraSourcePriority(aura.source))
+      ) {
+        return;
+      }
+    }
+
+    rowsByAuraId.set(
+      auraOption.id,
+      createAuraSelectionRow({
+        auraId: auraOption.id,
+        level: String(aura.level),
+        isParty: aura.carrier === "party",
+        automaticLevel: aura.level,
+        automaticSource: aura.source,
+        automaticCarrier: aura.carrier,
+      })
+    );
+  };
+
+  damageCalculation.alwaysActiveAuras.forEach((aura) =>
+    addAutomaticRow(auraOptionsByName.get(aura.name), aura)
+  );
+  damageCalculation.playerAuraOptions
+    .filter((option) => option.defaultActive)
+    .forEach((option) =>
+      addAutomaticRow(option, {
+        name: option.name,
+        level: option.level,
+        source: "player_skill",
+        carrier: "self",
+      })
+    );
+
+  const defaultAuraId = damageCalculation.defaultSelection?.playerAuraId;
+  if (defaultAuraId && defaultAuraId !== "none") {
+    const option = damageCalculation.playerAuraOptions.find(
+      (auraOption) => auraOption.id === defaultAuraId
+    );
+    addAutomaticRow(option, {
+      name: option?.name || defaultAuraId,
+      level:
+        damageCalculation.defaultSelection?.playerAuraLevel ||
+        option?.level ||
+        1,
+      source:
+        option?.source === "character_skill" ? "player_skill" : "manual",
+      carrier:
+        damageCalculation.defaultSelection?.playerAuraCarrier || "self",
+    });
+  }
+
+  return normalizeAuraSelectionRows(
+    Array.from(rowsByAuraId.values()),
+    damageCalculation.playerAuraOptions
+  );
 }
 
 function getDamageTypeColor(damageType: string | null | undefined) {
@@ -408,6 +510,17 @@ function findPrecomputedAuraProfile(
         profile.playerAuraLevel === numericLevel &&
         profile.transformationId === "none"
     ) ?? null
+  );
+}
+
+function canUsePrecomputedAuraProfile(
+  row: ResolvedAuraSelectionRow,
+  auraOption: DamageAuraOption
+): boolean {
+  return (
+    row.source === "player_skill" ||
+    row.source === "manual" ||
+    auraOption.source === "manual"
   );
 }
 
@@ -1010,15 +1123,17 @@ function rescalePhysicalComponents(
 function buildAuraSummary(
   auraOption: DamageAuraOption,
   level: number,
-  isParty: boolean
+  isParty: boolean,
+  source?: ActiveAuraSummary["source"]
 ): ActiveAuraSummary {
   return {
     name: auraOption.name,
     level,
     source:
-      auraOption.source === "character_skill" && !isParty
+      source ||
+      (auraOption.source === "character_skill" && !isParty
         ? "player_skill"
-        : "manual",
+        : "manual"),
     carrier: isParty ? "party" : "self",
   };
 }
@@ -1037,7 +1152,8 @@ function applyAuraToProfile(
   profile: DamageProfile,
   auraOption: DamageAuraOption | null,
   isParty: boolean,
-  level: string | null
+  level: string | null,
+  source?: ActiveAuraSummary["source"]
 ): DamageProfile {
   if (!auraOption || auraOption.id === "none") {
     return profile;
@@ -1053,7 +1169,8 @@ function applyAuraToProfile(
   const selectedAura = buildAuraSummary(
     auraOption,
     numericLevel,
-    auraAppliesAsParty
+    auraAppliesAsParty,
+    source
   );
   const skillLevelNote =
     selectedBonus.skillLevelBonus > 0
@@ -1073,6 +1190,20 @@ function applyAuraToProfile(
     ...profile.notes,
     ...noteAdditions.filter((note) => !profile.notes.includes(note)),
   ];
+  const existingAura = profile.activeAuras.find(
+    (activeAura) => activeAura.name === auraOption.name
+  );
+  const existingBonus = existingAura
+    ? getAuraLevelBonus(
+        auraOption,
+        existingAura.level,
+        existingAura.carrier === "party"
+      )
+    : getAuraLevelBonus(null, null);
+  const existingAuraIsStronger =
+    Boolean(existingAura) && existingAura!.level >= numericLevel;
+  const effectiveAura = existingAuraIsStronger ? existingAura! : selectedAura;
+  const nextBonus = existingAuraIsStronger ? existingBonus : selectedBonus;
 
   if (profile.skillDamageMode === "spell") {
     return {
@@ -1086,30 +1217,11 @@ function applyAuraToProfile(
         level: numericLevel,
         carrier: selectedAura.carrier,
       },
-      activeAuras: replaceAuraSummary(profile.activeAuras, selectedAura),
+      activeAuras: replaceAuraSummary(profile.activeAuras, effectiveAura),
       notes,
     };
   }
 
-  const existingAura = profile.activeAuras.find(
-    (activeAura) => activeAura.name === auraOption.name
-  );
-  const existingBonus = existingAura
-    ? getAuraLevelBonus(
-        auraOption,
-        existingAura.level,
-        existingAura.carrier === "party"
-      )
-    : getAuraLevelBonus(null, null);
-  const selectedBonusScore = getAuraBonusScore(selectedBonus);
-  const existingBonusScore = getAuraBonusScore(existingBonus);
-  const existingAuraIsStronger =
-    Boolean(existingAura) &&
-    (existingBonusScore > selectedBonusScore ||
-      (existingBonusScore === selectedBonusScore &&
-        existingBonus.level >= selectedBonus.level));
-  const effectiveAura = existingAuraIsStronger ? existingAura! : selectedAura;
-  const nextBonus = existingAuraIsStronger ? existingBonus : selectedBonus;
   const physicalBonusDelta =
     nextBonus.physicalBonusPercent - existingBonus.physicalBonusPercent;
   const elementalDelta = getElementalDelta(
@@ -1387,34 +1499,12 @@ export function DamageCalculatorSection({
   const [notesExpanded, setNotesExpanded] = useState(false);
 
   useEffect(() => {
-    const defaultAuraId =
-      damageCalculation?.defaultSelection?.playerAuraId ?? null;
-    const defaultAura = damageCalculation?.playerAuraOptions.find(
-      (option) => option.id === defaultAuraId
-    );
-
     setWeaponId(damageCalculation?.defaultSelection?.weaponId ?? null);
     setSkillId(damageCalculation?.defaultSelection?.skillId ?? null);
     setAuraRows(
-      normalizeAuraSelectionRows(
-        defaultAuraId && defaultAuraId !== "none"
-          ? [
-              createAuraSelectionRow({
-                auraId: defaultAuraId,
-                isParty:
-                  damageCalculation?.defaultSelection?.playerAuraCarrier ===
-                  "party",
-                level: String(
-                  damageCalculation?.defaultSelection?.playerAuraLevel ??
-                    defaultAura?.level ??
-                    defaultAura?.levelOptions[0] ??
-                    1
-                ),
-              }),
-            ]
-          : [],
-        damageCalculation?.playerAuraOptions ?? []
-      )
+      damageCalculation
+        ? getInitialAuraSelectionRows(damageCalculation)
+        : [createAuraSelectionRow()]
     );
 
     if (!damageCalculation) {
@@ -1699,10 +1789,29 @@ export function DamageCalculatorSection({
     () =>
       auraRows.flatMap((row) => {
         const auraOption = auraOptionById.get(row.auraId);
+        if (!auraOption || auraOption.id === "none") {
+          return [];
+        }
 
-        return auraOption && auraOption.id !== "none"
-          ? [{ row, auraOption }]
-          : [];
+        const automaticWins =
+          row.automaticLevel !== undefined &&
+          row.automaticLevel >= Number(row.level);
+        const resolvedRow: ResolvedAuraSelectionRow = {
+          ...row,
+          level: automaticWins
+            ? String(row.automaticLevel)
+            : row.level,
+          isParty: automaticWins
+            ? row.automaticCarrier === "party"
+            : row.isParty,
+          source: automaticWins
+            ? row.automaticSource || "manual"
+            : auraOption.source === "character_skill" && !row.isParty
+              ? "player_skill"
+              : "manual",
+        };
+
+        return [{ row: resolvedRow, auraOption }];
       }),
     [auraOptionById, auraRows]
   );
@@ -1789,6 +1898,9 @@ export function DamageCalculatorSection({
           ...row,
           auraId,
           level: getAuraDefaultLevel(auraOption),
+          automaticLevel: undefined,
+          automaticSource: undefined,
+          automaticCarrier: undefined,
         };
       })
     );
@@ -1807,6 +1919,12 @@ export function DamageCalculatorSection({
       currentRows.map((row) =>
         row.rowId === rowId ? { ...row, isParty: checked } : row
       )
+    );
+  };
+
+  const handlePlayerAuraRemove = (rowId: string) => {
+    updateAuraRows((currentRows) =>
+      currentRows.filter((row) => row.rowId !== rowId)
     );
   };
 
@@ -1912,6 +2030,10 @@ export function DamageCalculatorSection({
     const effectiveAuraRows = isCompact ? [] : selectedAuraRows;
     const precomputedAuraProfileIndex = effectiveAuraRows.findIndex(
       ({ row, auraOption }) => {
+        if (!canUsePrecomputedAuraProfile(row, auraOption)) {
+          return false;
+        }
+
         const auraAppliesAsParty =
           row.isParty || normalizedBaseProfile.skillDamageMode === "summon";
         const selectedBonus = getAuraLevelBonus(
@@ -1945,7 +2067,31 @@ export function DamageCalculatorSection({
         )
       : null;
     const auraBaseProfile = precomputedAuraProfile
-      ? normalizeDamageProfile(precomputedAuraProfile)
+      ? (() => {
+          const normalizedProfile = normalizeDamageProfile(
+            precomputedAuraProfile
+          );
+          const row = precomputedAuraProfileRow!.row;
+          const auraOption = precomputedAuraProfileRow!.auraOption;
+          const auraAppliesAsParty =
+            row.isParty || normalizedBaseProfile.skillDamageMode === "summon";
+          return {
+            ...normalizedProfile,
+            activeAuras: replaceAuraSummary(
+              normalizedProfile.activeAuras,
+              buildAuraSummary(
+                auraOption,
+                getResolvedAuraLevel(
+                  auraOption,
+                  row.level,
+                  auraAppliesAsParty
+                ),
+                auraAppliesAsParty,
+                row.source
+              )
+            ),
+          };
+        })()
       : normalizedBaseProfile;
     const clientAppliedAuraRows = precomputedAuraProfile
       ? effectiveAuraRows.filter(
@@ -1954,23 +2100,31 @@ export function DamageCalculatorSection({
       : effectiveAuraRows;
     const auraAdjustedProfile = clientAppliedAuraRows.reduce(
       (profile, { row, auraOption }) =>
-        applyAuraToProfile(profile, auraOption, row.isParty, row.level),
+        applyAuraToProfile(
+          profile,
+          auraOption,
+          row.isParty,
+          row.level,
+          row.source
+        ),
       auraBaseProfile
     );
     const clientAppliedAuraPulseComponents = clientAppliedAuraRows.flatMap(
       ({ row, auraOption }) => {
         const auraAppliesAsParty =
           row.isParty || normalizedBaseProfile.skillDamageMode === "summon";
-        const auraProfile = findPrecomputedAuraProfile(
-          damageCalculation,
-          weaponId,
-          skillId,
-          selectedSkillOption,
-          selectedChargeNumber,
-          auraOption,
-          auraAppliesAsParty,
-          row.level
-        );
+        const auraProfile = canUsePrecomputedAuraProfile(row, auraOption)
+          ? findPrecomputedAuraProfile(
+              damageCalculation,
+              weaponId,
+              skillId,
+              selectedSkillOption,
+              selectedChargeNumber,
+              auraOption,
+              auraAppliesAsParty,
+              row.level
+            )
+          : null;
 
         return auraProfile
           ? normalizeDamageProfile(auraProfile).auraPulseDamageComponents || []
@@ -2270,10 +2424,10 @@ export function DamageCalculatorSection({
           <Card withBorder padding="sm">
             <Stack gap="sm">
               <Group justify="space-between" gap="xs">
-                <Text fw={600}>Selected Auras</Text>
+                <Text fw={600}>Auras and Buffs</Text>
                 <Text size="xs" c="dimmed">
-                  Selecting an aura adds another row; choose No aura to remove
-                  one.
+                  Selecting an aura or buff adds another row. Remove it when it
+                  is no longer active.
                 </Text>
               </Group>
 
@@ -2286,24 +2440,31 @@ export function DamageCalculatorSection({
                 return (
                   <SimpleGrid
                     key={row.rowId}
-                    cols={{ base: 1, sm: 3 }}
+                    cols={{ base: 1, sm: auraIsSelected ? 4 : 3 }}
                     spacing="sm"
                   >
                     <Select
                       label={index === 0 ? "Aura" : "Additional Aura"}
-                      value={row.auraId}
+                      value={auraIsSelected ? row.auraId : null}
+                      placeholder="Select"
                       onChange={(value) =>
                         handlePlayerAuraChange(row.rowId, value)
                       }
-                      data={damageCalculation.playerAuraOptions.map((aura) => ({
-                        value: aura.id,
-                        label:
-                          aura.id === "none"
-                            ? aura.name
-                            : aura.source === "character_skill"
+                      data={damageCalculation.playerAuraOptions
+                        .filter((aura) => aura.id !== "none")
+                        .map((aura) => ({
+                          value: aura.id,
+                          label:
+                            aura.source === "character_skill"
                               ? `${aura.name} (owned lvl ${aura.level})`
                               : aura.name,
-                      }))}
+                          disabled:
+                            aura.id !== row.auraId &&
+                            selectedAuraRows.some(
+                              ({ auraOption: selectedAura }) =>
+                                selectedAura.id === aura.id
+                            ),
+                        }))}
                       allowDeselect={false}
                     />
 
@@ -2314,10 +2475,16 @@ export function DamageCalculatorSection({
                         handlePlayerAuraLevelChange(row.rowId, value)
                       }
                       data={
-                        auraOption?.levelOptions.map((level) => ({
-                          value: String(level),
-                          label: level === 0 ? "N/A" : String(level),
-                        })) ?? []
+                        auraOption?.levelOptions
+                          .filter(
+                            (level) =>
+                              row.automaticLevel === undefined ||
+                              level >= row.automaticLevel
+                          )
+                          .map((level) => ({
+                            value: String(level),
+                            label: level === 0 ? "N/A" : String(level),
+                          })) ?? []
                       }
                       disabled={!auraIsSelected}
                       allowDeselect={false}
@@ -2332,9 +2499,24 @@ export function DamageCalculatorSection({
                           event.currentTarget.checked
                         )
                       }
-                      disabled={!auraIsSelected}
+                      disabled={
+                        !auraIsSelected ||
+                        (row.automaticLevel !== undefined &&
+                          Number(row.level) <= row.automaticLevel)
+                      }
                       mt={{ base: 0, sm: 28 }}
                     />
+
+                    {auraIsSelected ? (
+                      <Button
+                        variant="light"
+                        color="red"
+                        onClick={() => handlePlayerAuraRemove(row.rowId)}
+                        mt={{ base: 0, sm: 24 }}
+                      >
+                        Remove
+                      </Button>
+                    ) : null}
                   </SimpleGrid>
                 );
               })}

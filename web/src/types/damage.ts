@@ -106,6 +106,7 @@ export interface DamageAuraOption {
   id: string;
   name: string;
   level: number;
+  defaultActive: boolean;
   levelOptions: number[];
   levelBonuses: DamageAuraLevelBonus[];
   selfLevelBonuses: DamageAuraLevelBonus[];

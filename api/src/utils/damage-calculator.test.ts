@@ -1728,6 +1728,10 @@ describeWithGameData("damage calculator component model", () => {
       );
 
     expect(holyFireProfile).toBeDefined();
+    expect(
+      calculation.playerAuraOptions.find((aura) => aura.name === "Holy Fire")
+        ?.defaultActive
+    ).toBe(false);
     expect(weaponHitAuraComponent).toBeDefined();
     expect(pulseComponent).toBeDefined();
     expect(holyFireProfile!.auraPulseDamageTotals!.combinedDamage.max).toBe(
@@ -1806,6 +1810,7 @@ describeWithGameData("damage calculator component model", () => {
     );
 
     expect(battleCommand).toBeDefined();
+    expect(battleCommand!.defaultActive).toBe(true);
     expect(
       battleCommand!.selfLevelBonuses.find((bonus) => bonus.level === 20)
     ).toMatchObject({
@@ -1833,6 +1838,48 @@ describeWithGameData("damage calculator component model", () => {
         }),
       ])
     );
+  });
+
+  it("keeps allocated attack buffs active without adding them to direct spells", () => {
+    const character = createCharacter("Fire Ball", 20);
+    character.character.class = { id: 1, name: "Sorceress" };
+    character.character.skills = [
+      { id: 47, name: "Fire Ball", level: 20 },
+      { id: 52, name: "Enchant", level: 20 },
+    ];
+    character.realSkills = [
+      { skill: "Fire Ball", level: 20, baseLevel: 20 },
+      { skill: "Enchant", level: 20, baseLevel: 20 },
+    ];
+
+    const calculation = calculateDamage(character);
+    const enchant = calculation.playerAuraOptions.find(
+      (aura) => aura.name === "Enchant"
+    );
+    const baseProfile = calculation.profiles.find(
+      (profile) =>
+        profile.skillName === "Fire Ball" && profile.playerAuraId === "none"
+    );
+    const enchantProfile = calculation.profiles.find(
+      (profile) =>
+        profile.weaponId === baseProfile?.weaponId &&
+        profile.skillName === "Fire Ball" &&
+        profile.playerAuraId === "Enchant" &&
+        profile.playerAuraCarrier === "self"
+    );
+
+    expect(enchant?.defaultActive).toBe(true);
+    expect(enchantProfile?.activeAuras).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "Enchant",
+          level: 20,
+          source: "player_skill",
+          carrier: "self",
+        }),
+      ])
+    );
+    expect(enchantProfile?.damageTotals).toEqual(baseProfile?.damageTotals);
   });
 
   it("reports direct physical skill synergies in spell breakdowns", () => {
@@ -2521,6 +2568,7 @@ describeWithGameData("damage calculator component model", () => {
     );
 
     expect(venom).toBeDefined();
+    expect(venom!.defaultActive).toBe(true);
     expect(
       venom!.selfLevelBonuses.find((bonus) => bonus.level === venomLevel)
     ).toMatchObject({
@@ -2558,7 +2606,7 @@ describeWithGameData("damage calculator component model", () => {
     ).toBe(false);
   });
 
-  it("uses item-granted aura levels without borrowing native skill synergies", () => {
+  it("exposes item-granted aura levels as automatic selection metadata", () => {
     const character = createCharacter("Rabies", 20);
     character.items[0].properties = ["Level 12 Sanctuary Aura When Equipped"];
     character.realSkills = [
@@ -2570,13 +2618,81 @@ describeWithGameData("damage calculator component model", () => {
     const profile = calculation.profiles.find(
       (candidate) => candidate.playerAuraId === "none"
     );
-    const sanctuaryComponent = profile!.damageComponents.find(
-      (component) => component.id === "aura-Sanctuary-12-self-magic"
+
+    expect(calculation.alwaysActiveAuras).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "Sanctuary",
+          level: 12,
+          source: "player_item",
+          carrier: "self",
+        }),
+      ])
+    );
+    expect(
+      profile!.damageComponents.some(
+        (component) => component.id === "aura-Sanctuary-12-self-magic"
+      )
+    ).toBe(false);
+  });
+
+  it("keeps automatic auras out of the removable base profile", () => {
+    const character = createCharacter("Basic Attack", 1);
+    character.items[0].properties = ["Level 5 Might Aura When Equipped"];
+
+    const calculation = calculateDamage(character);
+    const profile = calculation.profiles.find(
+      (candidate) =>
+        candidate.skillName === "Basic Attack" &&
+        candidate.playerAuraId === "none"
     );
 
-    expect(sanctuaryComponent!.damage).toEqual(
-      getExpectedAuraPayloadsFromSkillsTxt("Sanctuary", 12).self
+    expect(calculation.alwaysActiveAuras).toEqual([
+      expect.objectContaining({ name: "Might", level: 5 }),
+    ]);
+    expect(profile?.activeAuras).toEqual([]);
+    expect(profile?.breakdown.physicalBonusPercent.activeAuras).toBe(0);
+  });
+
+  it("uses only the strongest level when automatic aura sources overlap", () => {
+    const character = createCharacter("Basic Attack", 1);
+    character.items[0].properties = ["Level 5 Might Aura When Equipped"];
+    character.mercenary = {
+      id: 1,
+      name_id: 1,
+      type: 1,
+      experience: 0,
+      name: "Aura Mercenary",
+      description: "Test",
+      items: [
+        createSimpleItem({
+          id: "merc-might",
+          hash: "merc-might",
+          properties: ["Level 10 Might Aura When Equipped"],
+        }),
+      ],
+    };
+
+    const calculation = calculateDamage(character);
+    const profile = calculation.profiles.find(
+      (candidate) =>
+        candidate.skillName === "Basic Attack" &&
+        candidate.playerAuraId === "none"
     );
+    const mightAuras = calculation.alwaysActiveAuras.filter(
+      (aura) => aura.name === "Might"
+    );
+
+    expect(mightAuras).toEqual([
+      expect.objectContaining({
+        name: "Might",
+        level: 10,
+        source: "mercenary_item",
+        carrier: "party",
+      }),
+    ]);
+    expect(profile?.activeAuras).toEqual([]);
+    expect(profile?.breakdown.physicalBonusPercent.activeAuras).toBe(0);
   });
 
   it("adds source-backed two-weapon sequence profiles for optional dual-wield cycles", () => {
