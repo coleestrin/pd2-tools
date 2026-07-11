@@ -1840,6 +1840,54 @@ describeWithGameData("damage calculator component model", () => {
     );
   });
 
+  it.each([
+    ["primary", "Right Hand", 3, 4],
+    ["secondary", "Right Hand Switch", 5, 6],
+  ])(
+    "exposes Call to Arms Battle Command from the %s weapon set",
+    (_weaponSet, equipment, battleCommandLevel, expectedLevel) => {
+      const character = createCharacter("Fire Ball", 20);
+      character.character.class = { id: 1, name: "Sorceress" };
+      character.items = [
+        createWeapon({
+          id: `call-to-arms-${equipment}`,
+          hash: `call-to-arms-${equipment}`,
+          name: "Call to Arms",
+          is_runeword: true,
+          location: {
+            zone: "Equipped",
+            storage: "Equipped",
+            zone_id: 1,
+            storage_id: 0,
+            equipment,
+            equipment_id: equipment === "Right Hand" ? 4 : 11,
+          },
+          properties: [
+            "+1 to All Skills",
+            `+${battleCommandLevel} to Battle Command`,
+          ],
+        }),
+      ];
+
+      const calculation = calculateDamage(character);
+      const battleCommand = calculation.playerAuraOptions.find(
+        (aura) => aura.name === "Battle Command"
+      );
+
+      expect(battleCommand?.defaultActive).toBe(false);
+      expect(calculation.alwaysActiveAuras).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: "Battle Command",
+            level: expectedLevel,
+            source: "player_item",
+            carrier: "self",
+          }),
+        ])
+      );
+    }
+  );
+
   it("keeps allocated attack buffs active without adding them to direct spells", () => {
     const character = createCharacter("Fire Ball", 20);
     character.character.class = { id: 1, name: "Sorceress" };

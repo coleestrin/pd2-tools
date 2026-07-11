@@ -2899,6 +2899,7 @@ function buildWeaponSetContext(
     ...characterData,
     realSkills,
   } as CharacterData;
+  const skillMap = getSkillMap(setAwareCharacterData);
   const playerItems = getPlayerItemsForWeaponSet(
     characterData.items,
     weaponSet
@@ -2907,10 +2908,17 @@ function buildWeaponSetContext(
   return {
     weaponSet,
     realStats,
-    skillMap: getSkillMap(setAwareCharacterData),
+    skillMap,
     playerItems,
     alwaysActiveAuras: dedupeAuras(
-      collectAlwaysActiveAuras(playerItems, characterData.mercenary)
+      [
+        ...collectAlwaysActiveAuras(playerItems, characterData.mercenary),
+        ...collectCallToArmsBattleCommand(
+          playerItems,
+          skillMap,
+          characterData.character.class.name
+        ),
+      ]
     ),
   };
 }
@@ -3475,6 +3483,61 @@ function isDamageAura(auraName: string): boolean {
     (hasAnyGameStat(skillRow, SUPPORTED_AURA_DAMAGE_STATS) ||
       GAME_ETYPES[getGameRowString("Skills", skillRow, "EType")])
   );
+}
+
+function collectCallToArmsBattleCommand(
+  playerItems: IItem[],
+  skillMap: Map<string, SkillEntry>,
+  characterClass: string
+): AuraSource[] {
+  const activeItems = playerItems.filter(
+    (item) => isEquippedItem(item) || isActiveInventoryCharm(item)
+  );
+  const callToArmsItems = activeItems.filter(
+    (item) =>
+      item.name.trim().toLowerCase() === "call to arms" &&
+      ALL_HAND_EQUIPMENT_SLOTS.has(item.location?.equipment || "")
+  );
+  const directLevel = callToArmsItems.reduce(
+    (total, item) =>
+      total +
+      item.properties.reduce((itemTotal, property) => {
+        const match = property?.match(/^\+(\d+) to Battle Command$/i);
+        return itemTotal + (match ? Number(match[1]) : 0);
+      }, 0),
+    0
+  );
+
+  if (directLevel <= 0) {
+    return [];
+  }
+
+  const allSkillsLevel = activeItems.reduce(
+    (total, item) =>
+      total +
+      item.properties.reduce((itemTotal, property) => {
+        const match = property?.match(/^\+(\d+) to All Skills$/i);
+        return itemTotal + (match ? Number(match[1]) : 0);
+      }, 0),
+    0
+  );
+  const existingBattleCommand = getSkillEntry(skillMap, "Battle Command");
+  const itemGrantedLevel =
+    (characterClass.toLowerCase() === "barbarian"
+      ? Math.min(directLevel, 3)
+      : directLevel) + allSkillsLevel;
+
+  return [
+    {
+      name: "Battle Command",
+      level:
+        existingBattleCommand.baseLevel > 0
+          ? existingBattleCommand.level
+          : itemGrantedLevel,
+      source: "player_item",
+      carrier: "self",
+    },
+  ];
 }
 
 function collectAlwaysActiveAuras(
