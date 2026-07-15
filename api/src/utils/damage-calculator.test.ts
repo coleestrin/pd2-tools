@@ -2368,7 +2368,7 @@ describeWithGameData("damage calculator component model", () => {
     );
 
     expect(fistsOfFireProfile).toBeDefined();
-    expect(fistsOfFireProfile!.damageScope.label).toBe("charge 3 release");
+    expect(fistsOfFireProfile!.damageScope.label).toBe("charge 3 hit");
     expect(missilePhysicalComponents).toHaveLength(0);
     expect(meteorFireComponent).toBeDefined();
   });
@@ -2446,32 +2446,28 @@ describeWithGameData("damage calculator component model", () => {
     const fistsCharge2Rows = getRows(fistsCharge2);
     const fistsCharge3Rows = getRows(fistsCharge3);
 
-    expect(fistsCharge1.damageScope.label).toBe("charge 1 release");
-    expect(fistsCharge2.damageScope.label).toBe("charge 2 release");
-    expect(fistsCharge3.damageScope.label).toBe("charge 3 release");
+    expect(fistsCharge1.damageScope.label).toBe("charge 1 hit");
+    expect(fistsCharge2.damageScope.label).toBe("charge 2 hit");
+    expect(fistsCharge3.damageScope.label).toBe("charge 3 hit");
     expect(fistsCharge1Rows).toEqual(
       expect.arrayContaining(["Fists of Fire", "fistsoffirefirewall"])
     );
     expect(fistsCharge1Rows).not.toEqual(
       expect.arrayContaining(["fistsoffirenova", "fofmeteor"])
     );
-    expect(fistsCharge2Rows).toEqual(
-      expect.arrayContaining([
-        "Fists of Fire",
-        "fistsoffirefirewall",
-        "fistsoffirenova",
-      ])
-    );
+    expect(fistsCharge2Rows).toContain("fistsoffirenova");
+    expect(fistsCharge2Rows).not.toContain("fistsoffirefirewall");
     expect(fistsCharge2Rows).not.toContain("fofmeteor");
     expect(fistsCharge3Rows).toEqual(
       expect.arrayContaining([
-        "Fists of Fire",
-        "fistsoffirefirewall",
-        "fistsoffirenova",
         "fofmeteor",
       ])
     );
-    expect(fistsCharge3.damageScope.note).toContain("charges 1 through 3");
+    expect(fistsCharge3Rows).not.toContain("fistsoffirefirewall");
+    expect(fistsCharge3Rows).not.toContain("fistsoffirenova");
+    expect(fistsCharge3.damageScope.note).toContain(
+      "only the modeled charge 3 payload"
+    );
 
     const tigerCharge1 = getProfile("Tiger Strike", 1)!;
     const tigerCharge2 = getProfile("Tiger Strike", 2)!;
@@ -2496,17 +2492,15 @@ describeWithGameData("damage calculator component model", () => {
       expect.arrayContaining(["royalstrikemeteor"])
     );
     expect(getRows(phoenixCharge2)).toEqual(
-      expect.arrayContaining([
-        "royalstrikemeteor",
-        "royalstrikechainlightning",
-      ])
+      expect.arrayContaining(["royalstrikechainlightning"])
     );
+    expect(getRows(phoenixCharge2)).not.toContain("royalstrikemeteor");
     expect(getRows(phoenixCharge3)).toEqual(
-      expect.arrayContaining([
-        "royalstrikemeteor",
-        "royalstrikechainlightning",
-        "royalstrikechaosice",
-      ])
+      expect.arrayContaining(["royalstrikechaosice"])
+    );
+    expect(getRows(phoenixCharge3)).not.toContain("royalstrikemeteor");
+    expect(getRows(phoenixCharge3)).not.toContain(
+      "royalstrikechainlightning"
     );
   });
 

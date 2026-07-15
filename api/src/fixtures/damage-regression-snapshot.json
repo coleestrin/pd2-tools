@@ -111542,10 +111542,10 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 3 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Cobra Strike charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Cobra Strike charge 3 totals include normal hit damage plus only the modeled charge 3 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
@@ -111553,15 +111553,15 @@
               "max": 2016
             },
             "overTimeDamage": {
-              "min": 33150,
-              "max": 33344
+              "min": 18606,
+              "max": 18716
             },
             "combinedDamage": {
-              "min": 34599,
-              "max": 35360
+              "min": 20055,
+              "max": 20732
             },
             "averageInstantDamage": 1732.5,
-            "averageCombinedDamage": 34979.5,
+            "averageCombinedDamage": 20393.5,
             "byElement": {
               "physical": {
                 "min": 1434,
@@ -111572,12 +111572,12 @@
                 "max": 45
               },
               "poison": {
-                "min": 33150,
-                "max": 33344
+                "min": 18606,
+                "max": 18716
               }
             },
             "poisonDamage": {
-              "total": 33247,
+              "total": 18661,
               "durationSeconds": 1
             }
           },
@@ -111592,7 +111592,7 @@
             }
           },
           "totalPoisonDamage": {
-            "total": 33247,
+            "total": 18661,
             "durationSeconds": 1
           },
           "breakdown": {
@@ -111621,7 +111621,7 @@
               }
             },
             "poisonDamage": {
-              "total": 33247,
+              "total": 18661,
               "durationSeconds": 1
             }
           },
@@ -111680,38 +111680,6 @@
                     "adds cold damage",
                     "minimum cold damage",
                     "maximum cold damage"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Cobrastrikepoisonbolt",
-              "source": "missile",
-              "damageType": "poison",
-              "timing": "over_time",
-              "damage": {
-                "min": 14544,
-                "max": 14628
-              },
-              "poisonDamage": {
-                "total": 14586,
-                "durationSeconds": 1
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "cobrastrikepoisonbolt",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
                   ]
                 }
               ]
@@ -113257,78 +113225,86 @@
           "chargeLabel": "Charge"
         },
         "profile": {
-          "key": "secondary:left:one_handed:4237533a4bf9ee1e9be483b4c15c228c16000ca8::Cobra Strike::charge:3::none:0::self",
-          "weaponId": "secondary:left:one_handed:4237533a4bf9ee1e9be483b4c15c228c16000ca8",
+          "key": "primary:right:one_handed:a39a53f8617a08a2c1d35643c77001865a5d27de::Cobra Strike::charge:3::none:0::self",
+          "weaponId": "primary:right:one_handed:a39a53f8617a08a2c1d35643c77001865a5d27de",
           "skillId": "Cobra Strike",
           "skillName": "Cobra Strike",
           "chargeVariant": "charge",
           "chargeNumber": 3,
           "chargeCount": 3,
           "chargeLabel": "Charge",
-          "skillLevel": 30,
+          "skillLevel": 29,
           "skillDamageMode": "weapon",
           "playerAuraId": "none",
           "playerAuraCarrier": "self",
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 3 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Cobra Strike charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Cobra Strike charge 3 totals include normal hit damage plus only the modeled charge 3 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
-              "min": 289,
-              "max": 457
+              "min": 1690,
+              "max": 2254
             },
             "overTimeDamage": {
-              "min": 16087,
-              "max": 16220
+              "min": 7720,
+              "max": 7795
             },
             "combinedDamage": {
-              "min": 16376,
-              "max": 16677
+              "min": 9410,
+              "max": 10049
             },
-            "averageInstantDamage": 373,
-            "averageCombinedDamage": 16526.5,
+            "averageInstantDamage": 1972,
+            "averageCombinedDamage": 9729.5,
             "byElement": {
               "physical": {
-                "min": 274,
-                "max": 412
+                "min": 1579,
+                "max": 2073
+              },
+              "fire": {
+                "min": 96,
+                "max": 136
               },
               "cold": {
                 "min": 15,
                 "max": 45
               },
               "poison": {
-                "min": 16087,
-                "max": 16220
+                "min": 7720,
+                "max": 7795
               }
             },
             "poisonDamage": {
-              "total": 16153,
+              "total": 7757,
               "durationSeconds": 1
             }
           },
           "totalPhysicalDamage": {
-            "min": 274,
-            "max": 412
+            "min": 1579,
+            "max": 2073
           },
           "totalElementalDamage": {
+            "fire": {
+              "min": 96,
+              "max": 136
+            },
             "cold": {
               "min": 15,
               "max": 45
             }
           },
           "totalPoisonDamage": {
-            "total": 16153,
+            "total": 7757,
             "durationSeconds": 1
           },
           "breakdown": {
             "weaponDamage": {
-              "min": 25,
-              "max": 45
+              "min": 240,
+              "max": 319
             },
             "flatPhysicalDamage": {
               "min": 19,
@@ -113337,21 +113313,25 @@
             "physicalBonusPercent": {
               "stat": 204,
               "nonWeapon": 131,
-              "passive": 190,
+              "passive": 175,
               "selectedSkill": 0,
               "selectedSkillSynergy": 0,
               "transformation": 0,
               "activeAuras": 0,
-              "total": 525
+              "total": 510
             },
             "elementalDamage": {
+              "fire": {
+                "min": 96,
+                "max": 136
+              },
               "cold": {
                 "min": 15,
                 "max": 45
               }
             },
             "poisonDamage": {
-              "total": 16153,
+              "total": 7757,
               "durationSeconds": 1
             }
           },
@@ -113362,17 +113342,17 @@
               "damageType": "physical",
               "timing": "instant",
               "damage": {
-                "min": 156,
-                "max": 281
+                "min": 1464,
+                "max": 1945
               },
               "baseDamage": {
-                "min": 25,
-                "max": 45
+                "min": 240,
+                "max": 319
               },
               "sourceRefs": [
                 {
                   "table": "Character equipment",
-                  "row": "Witch-hunter's Greater Talons of the Wraith",
+                  "row": "Natalya's Mark",
                   "columns": [
                     "weapon damage"
                   ]
@@ -113395,8 +113375,8 @@
               "damageType": "physical",
               "timing": "instant",
               "damage": {
-                "min": 118,
-                "max": 131
+                "min": 115,
+                "max": 128
               },
               "baseDamage": {
                 "min": 19,
@@ -113409,6 +113389,31 @@
                     "+minimum damage",
                     "+maximum damage",
                     "adds damage"
+                  ]
+                }
+              ]
+            },
+            {
+              "label": "Item fire",
+              "source": "item",
+              "damageType": "fire",
+              "timing": "instant",
+              "damage": {
+                "min": 96,
+                "max": 136
+              },
+              "baseDamage": {
+                "min": 96,
+                "max": 136
+              },
+              "sourceRefs": [
+                {
+                  "table": "Properties.txt / ItemStatCost.txt / Armory item modifiers",
+                  "columns": [
+                    "elemental min/max stats",
+                    "adds fire damage",
+                    "minimum fire damage",
+                    "maximum fire damage"
                   ]
                 }
               ]
@@ -113439,48 +113444,16 @@
               ]
             },
             {
-              "label": "Missile: Cobrastrikepoisonbolt",
-              "source": "missile",
-              "damageType": "poison",
-              "timing": "over_time",
-              "damage": {
-                "min": 7110,
-                "max": 7167
-              },
-              "poisonDamage": {
-                "total": 7138,
-                "durationSeconds": 1
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "cobrastrikepoisonbolt",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
               "label": "Missile: Cobrastrikepoisoncloud",
               "source": "missile",
               "damageType": "poison",
               "timing": "over_time",
               "damage": {
-                "min": 8977,
-                "max": 9053
+                "min": 7720,
+                "max": 7795
               },
               "poisonDamage": {
-                "total": 9015,
+                "total": 7757,
                 "durationSeconds": 1
               },
               "sourceRefs": [
@@ -115180,10 +115153,10 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 3 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Cobra Strike charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Cobra Strike charge 3 totals include normal hit damage plus only the modeled charge 3 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
@@ -115191,15 +115164,15 @@
               "max": 2725
             },
             "overTimeDamage": {
-              "min": 7843,
-              "max": 7952
+              "min": 4359,
+              "max": 4421
             },
             "combinedDamage": {
-              "min": 10033,
-              "max": 10677
+              "min": 6549,
+              "max": 7146
             },
             "averageInstantDamage": 2457.5,
-            "averageCombinedDamage": 10355,
+            "averageCombinedDamage": 6847.5,
             "byElement": {
               "physical": {
                 "min": 2174,
@@ -115214,12 +115187,12 @@
                 "max": 1
               },
               "poison": {
-                "min": 7843,
-                "max": 7952
+                "min": 4359,
+                "max": 4421
               }
             },
             "poisonDamage": {
-              "total": 7897,
+              "total": 4390,
               "durationSeconds": 1
             }
           },
@@ -115238,7 +115211,7 @@
             }
           },
           "totalPoisonDamage": {
-            "total": 7897,
+            "total": 4390,
             "durationSeconds": 1
           },
           "breakdown": {
@@ -115271,7 +115244,7 @@
               }
             },
             "poisonDamage": {
-              "total": 7897,
+              "total": 4390,
               "durationSeconds": 1
             }
           },
@@ -115379,38 +115352,6 @@
                     "adds lightning damage",
                     "minimum lightning damage",
                     "maximum lightning damage"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Cobrastrikepoisonbolt",
-              "source": "missile",
-              "damageType": "poison",
-              "timing": "over_time",
-              "damage": {
-                "min": 3484,
-                "max": 3531
-              },
-              "poisonDamage": {
-                "total": 3507,
-                "durationSeconds": 1
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "cobrastrikepoisonbolt",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
                   ]
                 }
               ]
@@ -161106,34 +161047,34 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 3 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Fists of Fire charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Fists of Fire charge 3 totals include normal hit damage plus only the modeled charge 3 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
-              "min": 19866,
-              "max": 26703
+              "min": 1141,
+              "max": 2409
             },
             "overTimeDamage": {
-              "min": 13779,
-              "max": 14895
+              "min": 13395,
+              "max": 14407
             },
             "combinedDamage": {
-              "min": 33645,
-              "max": 41598
+              "min": 14536,
+              "max": 16816
             },
-            "averageInstantDamage": 23284.5,
-            "averageCombinedDamage": 37621.5,
+            "averageInstantDamage": 1775,
+            "averageCombinedDamage": 15676,
             "byElement": {
               "physical": {
                 "min": 641,
                 "max": 1566
               },
               "fire": {
-                "min": 33004,
-                "max": 40032
+                "min": 13895,
+                "max": 15250
               }
             }
           },
@@ -161143,8 +161084,8 @@
           },
           "totalElementalDamage": {
             "fire": {
-              "min": 33004,
-              "max": 40032
+              "min": 13895,
+              "max": 15250
             }
           },
           "breakdown": {
@@ -161168,8 +161109,8 @@
             },
             "elementalDamage": {
               "fire": {
-                "min": 33004,
-                "max": 40032
+                "min": 13895,
+                "max": 15250
               }
             }
           },
@@ -161230,89 +161171,6 @@
                     "maximum fire damage"
                   ],
                   "note": "Item fire damage is scaled by +48% fire skill damage."
-                }
-              ]
-            },
-            {
-              "label": "Skill: Fire",
-              "source": "skill",
-              "damageType": "fire",
-              "timing": "instant",
-              "damage": {
-                "min": 7186,
-                "max": 10730
-              },
-              "sourceRefs": [
-                {
-                  "table": "Skills.txt",
-                  "row": "Fists of Fire",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "EMax",
-                    "EMinLev1..5",
-                    "EMaxLev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Fistsoffirefirewall",
-              "source": "missile",
-              "damageType": "fire",
-              "timing": "over_time",
-              "damage": {
-                "min": 384,
-                "max": 488
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "fistsoffirefirewall",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Fistsoffirenova",
-              "source": "missile",
-              "damageType": "fire",
-              "timing": "instant",
-              "damage": {
-                "min": 11539,
-                "max": 13564
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "fistsoffirenova",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
-                  ]
                 }
               ]
             },
@@ -163003,34 +162861,34 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 3 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Fists of Fire charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Fists of Fire charge 3 totals include normal hit damage plus only the modeled charge 3 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
-              "min": 16925,
-              "max": 23283
+              "min": 1446,
+              "max": 3176
             },
             "overTimeDamage": {
-              "min": 11405,
-              "max": 12392
+              "min": 11075,
+              "max": 11970
             },
             "combinedDamage": {
-              "min": 28330,
-              "max": 35675
+              "min": 12521,
+              "max": 15146
             },
-            "averageInstantDamage": 20104,
-            "averageCombinedDamage": 32002.5,
+            "averageInstantDamage": 2311,
+            "averageCombinedDamage": 13833.5,
             "byElement": {
               "physical": {
                 "min": 997,
                 "max": 2441
               },
               "fire": {
-                "min": 27333,
-                "max": 33234
+                "min": 11524,
+                "max": 12705
               }
             }
           },
@@ -163040,8 +162898,8 @@
           },
           "totalElementalDamage": {
             "fire": {
-              "min": 27333,
-              "max": 33234
+              "min": 11524,
+              "max": 12705
             }
           },
           "breakdown": {
@@ -163065,8 +162923,8 @@
             },
             "elementalDamage": {
               "fire": {
-                "min": 27333,
-                "max": 33234
+                "min": 11524,
+                "max": 12705
               }
             }
           },
@@ -163127,89 +162985,6 @@
                     "maximum fire damage"
                   ],
                   "note": "Item fire damage is scaled by +40% fire skill damage."
-                }
-              ]
-            },
-            {
-              "label": "Skill: Fire",
-              "source": "skill",
-              "damageType": "fire",
-              "timing": "instant",
-              "damage": {
-                "min": 5968,
-                "max": 8905
-              },
-              "sourceRefs": [
-                {
-                  "table": "Skills.txt",
-                  "row": "Fists of Fire",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "EMax",
-                    "EMinLev1..5",
-                    "EMaxLev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Fistsoffirefirewall",
-              "source": "missile",
-              "damageType": "fire",
-              "timing": "over_time",
-              "damage": {
-                "min": 330,
-                "max": 422
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "fistsoffirefirewall",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Fistsoffirenova",
-              "source": "missile",
-              "damageType": "fire",
-              "timing": "instant",
-              "damage": {
-                "min": 9511,
-                "max": 11202
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "fistsoffirenova",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
-                  ]
                 }
               ]
             },
@@ -164859,34 +164634,34 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 3 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Fists of Fire charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Fists of Fire charge 3 totals include normal hit damage plus only the modeled charge 3 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
-              "min": 13168,
-              "max": 18333
+              "min": 1371,
+              "max": 2996
             },
             "overTimeDamage": {
-              "min": 8700,
-              "max": 9481
+              "min": 8442,
+              "max": 9150
             },
             "combinedDamage": {
-              "min": 21868,
-              "max": 27814
+              "min": 9813,
+              "max": 12146
             },
-            "averageInstantDamage": 15750.5,
-            "averageCombinedDamage": 24841,
+            "averageInstantDamage": 2183.5,
+            "averageCombinedDamage": 10979.5,
             "byElement": {
               "physical": {
                 "min": 1025,
                 "max": 2398
               },
               "fire": {
-                "min": 20827,
-                "max": 25370
+                "min": 8772,
+                "max": 9702
               },
               "cold": {
                 "min": 15,
@@ -164904,8 +164679,8 @@
           },
           "totalElementalDamage": {
             "fire": {
-              "min": 20827,
-              "max": 25370
+              "min": 8772,
+              "max": 9702
             },
             "cold": {
               "min": 15,
@@ -164937,8 +164712,8 @@
             },
             "elementalDamage": {
               "fire": {
-                "min": 20827,
-                "max": 25370
+                "min": 8772,
+                "max": 9702
               },
               "cold": {
                 "min": 15,
@@ -165080,89 +164855,6 @@
                     "adds lightning damage",
                     "minimum lightning damage",
                     "maximum lightning damage"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Skill: Fire",
-              "source": "skill",
-              "damageType": "fire",
-              "timing": "instant",
-              "damage": {
-                "min": 4562,
-                "max": 6803
-              },
-              "sourceRefs": [
-                {
-                  "table": "Skills.txt",
-                  "row": "Fists of Fire",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "EMax",
-                    "EMinLev1..5",
-                    "EMaxLev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Fistsoffirefirewall",
-              "source": "missile",
-              "damageType": "fire",
-              "timing": "over_time",
-              "damage": {
-                "min": 258,
-                "max": 331
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "fistsoffirefirewall",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Fistsoffirenova",
-              "source": "missile",
-              "damageType": "fire",
-              "timing": "instant",
-              "damage": {
-                "min": 7235,
-                "max": 8534
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "fistsoffirenova",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
                   ]
                 }
               ]
@@ -171410,10 +171102,10 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 3 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Tiger Strike charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Tiger Strike charge 3 totals include normal hit damage plus only the modeled charge 3 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
@@ -173159,10 +172851,10 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 3 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Tiger Strike charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Tiger Strike charge 3 totals include normal hit damage plus only the modeled charge 3 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
@@ -174493,10 +174185,10 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 3 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Tiger Strike charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Tiger Strike charge 3 totals include normal hit damage plus only the modeled charge 3 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
@@ -284952,12 +284644,12 @@
           "chargeLabel": "Charge"
         },
         "profile": {
-          "key": "primary:right:one_handed:bc80d6d4557396ee1983416c49089ba3367d3228::Claws of Thunder::charge:3::none:0::self",
+          "key": "primary:right:one_handed:bc80d6d4557396ee1983416c49089ba3367d3228::Claws of Thunder::charge:2::none:0::self",
           "weaponId": "primary:right:one_handed:bc80d6d4557396ee1983416c49089ba3367d3228",
           "skillId": "Claws of Thunder",
           "skillName": "Claws of Thunder",
           "chargeVariant": "charge",
-          "chargeNumber": 3,
+          "chargeNumber": 2,
           "chargeCount": 3,
           "chargeLabel": "Charge",
           "skillLevel": 30,
@@ -284967,26 +284659,26 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 2 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Claws of Thunder charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Claws of Thunder charge 2 totals include normal hit damage plus only the modeled charge 2 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
-              "min": 6229,
-              "max": 20050
+              "min": 4495,
+              "max": 6553
             },
             "overTimeDamage": {
               "min": 0,
               "max": 0
             },
             "combinedDamage": {
-              "min": 6229,
-              "max": 20050
+              "min": 4495,
+              "max": 6553
             },
-            "averageInstantDamage": 13139.5,
-            "averageCombinedDamage": 13139.5,
+            "averageInstantDamage": 5524,
+            "averageCombinedDamage": 5524,
             "byElement": {
               "physical": {
                 "min": 844,
@@ -284997,8 +284689,8 @@
                 "max": 29
               },
               "lightning": {
-                "min": 5368,
-                "max": 18862
+                "min": 3634,
+                "max": 5365
               }
             }
           },
@@ -285012,8 +284704,8 @@
               "max": 29
             },
             "lightning": {
-              "min": 5368,
-              "max": 18862
+              "min": 3634,
+              "max": 5365
             }
           },
           "breakdown": {
@@ -285041,8 +284733,8 @@
                 "max": 29
               },
               "lightning": {
-                "min": 5368,
-                "max": 18862
+                "min": 3634,
+                "max": 5365
               }
             }
           },
@@ -285132,33 +284824,6 @@
               ]
             },
             {
-              "label": "Skill: Lightning",
-              "source": "skill",
-              "damageType": "lightning",
-              "timing": "instant",
-              "damage": {
-                "min": 4,
-                "max": 6835
-              },
-              "sourceRefs": [
-                {
-                  "table": "Skills.txt",
-                  "row": "Claws of Thunder",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "EMax",
-                    "EMinLev1..5",
-                    "EMaxLev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
               "label": "Missile: Clawsofthundernova",
               "source": "missile",
               "damageType": "lightning",
@@ -285171,62 +284836,6 @@
                 {
                   "table": "Missiles.txt",
                   "row": "clawsofthundernova",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Clawsofthunderbolt",
-              "source": "missile",
-              "damageType": "lightning",
-              "timing": "instant",
-              "damage": {
-                "min": 865,
-                "max": 3331
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "clawsofthunderbolt",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Cotthunderstorm",
-              "source": "missile",
-              "damageType": "lightning",
-              "timing": "instant",
-              "damage": {
-                "min": 865,
-                "max": 3331
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "cotthunderstorm",
                   "columns": [
                     "EType",
                     "EMin",
@@ -286770,26 +286379,26 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 3 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Claws of Thunder charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Claws of Thunder charge 3 totals include normal hit damage plus only the modeled charge 3 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
-              "min": 3038,
-              "max": 10144
+              "min": 1459,
+              "max": 4138
             },
             "overTimeDamage": {
               "min": 0,
               "max": 0
             },
             "combinedDamage": {
-              "min": 3038,
-              "max": 10144
+              "min": 1459,
+              "max": 4138
             },
-            "averageInstantDamage": 6591,
-            "averageCombinedDamage": 6591,
+            "averageInstantDamage": 2798.5,
+            "averageCombinedDamage": 2798.5,
             "byElement": {
               "physical": {
                 "min": 564,
@@ -286800,8 +286409,8 @@
                 "max": 9
               },
               "lightning": {
-                "min": 2469,
-                "max": 9366
+                "min": 890,
+                "max": 3360
               }
             }
           },
@@ -286815,8 +286424,8 @@
               "max": 9
             },
             "lightning": {
-              "min": 2469,
-              "max": 9366
+              "min": 890,
+              "max": 3360
             }
           },
           "breakdown": {
@@ -286844,8 +286453,8 @@
                 "max": 9
               },
               "lightning": {
-                "min": 2469,
-                "max": 9366
+                "min": 890,
+                "max": 3360
               }
             }
           },
@@ -286928,61 +286537,6 @@
                     "adds fire damage",
                     "minimum fire damage",
                     "maximum fire damage"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Skill: Lightning",
-              "source": "skill",
-              "damageType": "lightning",
-              "timing": "instant",
-              "damage": {
-                "min": 4,
-                "max": 3528
-              },
-              "sourceRefs": [
-                {
-                  "table": "Skills.txt",
-                  "row": "Claws of Thunder",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "EMax",
-                    "EMinLev1..5",
-                    "EMaxLev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Clawsofthundernova",
-              "source": "missile",
-              "damageType": "lightning",
-              "timing": "instant",
-              "damage": {
-                "min": 1575,
-                "max": 2478
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "clawsofthundernova",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
                   ]
                 }
               ]
@@ -288271,26 +287825,26 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 3 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Claws of Thunder charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Claws of Thunder charge 3 totals include normal hit damage plus only the modeled charge 3 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
-              "min": 4152,
-              "max": 16390
+              "min": 1862,
+              "max": 7521
             },
             "overTimeDamage": {
               "min": 0,
               "max": 0
             },
             "combinedDamage": {
-              "min": 4152,
-              "max": 16390
+              "min": 1862,
+              "max": 7521
             },
-            "averageInstantDamage": 10271,
-            "averageCombinedDamage": 10271,
+            "averageInstantDamage": 4691.5,
+            "averageCombinedDamage": 4691.5,
             "byElement": {
               "physical": {
                 "min": 522,
@@ -288301,8 +287855,8 @@
                 "max": 15
               },
               "lightning": {
-                "min": 3615,
-                "max": 13852
+                "min": 1325,
+                "max": 4983
               }
             }
           },
@@ -288316,8 +287870,8 @@
               "max": 15
             },
             "lightning": {
-              "min": 3615,
-              "max": 13852
+              "min": 1325,
+              "max": 4983
             }
           },
           "breakdown": {
@@ -288345,8 +287899,8 @@
                 "max": 15
               },
               "lightning": {
-                "min": 3615,
-                "max": 13852
+                "min": 1325,
+                "max": 4983
               }
             }
           },
@@ -288456,61 +288010,6 @@
                     "maximum lightning damage"
                   ],
                   "note": "Item lightning damage is scaled by +60% lightning skill damage."
-                }
-              ]
-            },
-            {
-              "label": "Skill: Lightning",
-              "source": "skill",
-              "damageType": "lightning",
-              "timing": "instant",
-              "damage": {
-                "min": 6,
-                "max": 5241
-              },
-              "sourceRefs": [
-                {
-                  "table": "Skills.txt",
-                  "row": "Claws of Thunder",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "EMax",
-                    "EMinLev1..5",
-                    "EMaxLev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Clawsofthundernova",
-              "source": "missile",
-              "damageType": "lightning",
-              "timing": "instant",
-              "damage": {
-                "min": 2284,
-                "max": 3628
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "clawsofthundernova",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
-                  ]
                 }
               ]
             },
@@ -310888,12 +310387,12 @@
           "chargeLabel": "Charge"
         },
         "profile": {
-          "key": "primary:right:one_handed:0620a275c02abe7dac7e1887241a5847e0922972::Blades of Ice::charge:3::none:0::self",
+          "key": "primary:right:one_handed:0620a275c02abe7dac7e1887241a5847e0922972::Blades of Ice::charge:2::none:0::self",
           "weaponId": "primary:right:one_handed:0620a275c02abe7dac7e1887241a5847e0922972",
           "skillId": "Blades of Ice",
           "skillName": "Blades of Ice",
           "chargeVariant": "charge",
-          "chargeNumber": 3,
+          "chargeNumber": 2,
           "chargeCount": 3,
           "chargeLabel": "Charge",
           "skillLevel": 34,
@@ -310903,34 +310402,34 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 2 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Blades of Ice charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Blades of Ice charge 2 totals include normal hit damage plus only the modeled charge 2 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
-              "min": 29422,
-              "max": 33643
+              "min": 16791,
+              "max": 18311
             },
             "overTimeDamage": {
               "min": 0,
               "max": 0
             },
             "combinedDamage": {
-              "min": 29422,
-              "max": 33643
+              "min": 16791,
+              "max": 18311
             },
-            "averageInstantDamage": 31532.5,
-            "averageCombinedDamage": 31532.5,
+            "averageInstantDamage": 17551,
+            "averageCombinedDamage": 17551,
             "byElement": {
               "physical": {
                 "min": 1677,
                 "max": 2035
               },
               "cold": {
-                "min": 27745,
-                "max": 31608
+                "min": 15114,
+                "max": 16276
               }
             }
           },
@@ -310940,8 +310439,8 @@
           },
           "totalElementalDamage": {
             "cold": {
-              "min": 27745,
-              "max": 31608
+              "min": 15114,
+              "max": 16276
             }
           },
           "breakdown": {
@@ -310965,8 +310464,8 @@
             },
             "elementalDamage": {
               "cold": {
-                "min": 27745,
-                "max": 31608
+                "min": 15114,
+                "max": 16276
               }
             }
           },
@@ -311031,33 +310530,6 @@
               ]
             },
             {
-              "label": "Skill: Cold",
-              "source": "skill",
-              "damageType": "cold",
-              "timing": "instant",
-              "damage": {
-                "min": 6268,
-                "max": 6780
-              },
-              "sourceRefs": [
-                {
-                  "table": "Skills.txt",
-                  "row": "Blades of Ice",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "EMax",
-                    "EMinLev1..5",
-                    "EMaxLev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
               "label": "Missile: Boiwavemaker",
               "source": "missile",
               "damageType": "cold",
@@ -311070,34 +310542,6 @@
                 {
                   "table": "Missiles.txt",
                   "row": "boiwavemaker",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Boichaosice",
-              "source": "missile",
-              "damageType": "cold",
-              "timing": "instant",
-              "damage": {
-                "min": 6363,
-                "max": 8552
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "boichaosice",
                   "columns": [
                     "EType",
                     "EMin",
@@ -312750,12 +312194,12 @@
           "chargeLabel": "Charge"
         },
         "profile": {
-          "key": "primary:right:one_handed:c6fc6bcaff6e2693bb39aa129a9dd066d209c304::Blades of Ice::charge:3::none:0::self",
+          "key": "primary:right:one_handed:c6fc6bcaff6e2693bb39aa129a9dd066d209c304::Blades of Ice::charge:2::none:0::self",
           "weaponId": "primary:right:one_handed:c6fc6bcaff6e2693bb39aa129a9dd066d209c304",
           "skillId": "Blades of Ice",
           "skillName": "Blades of Ice",
           "chargeVariant": "charge",
-          "chargeNumber": 3,
+          "chargeNumber": 2,
           "chargeCount": 3,
           "chargeLabel": "Charge",
           "skillLevel": 34,
@@ -312765,34 +312209,34 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 2 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Blades of Ice charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Blades of Ice charge 2 totals include normal hit damage plus only the modeled charge 2 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
-              "min": 28923,
-              "max": 33351
+              "min": 16574,
+              "max": 18361
             },
             "overTimeDamage": {
               "min": 0,
               "max": 0
             },
             "combinedDamage": {
-              "min": 28923,
-              "max": 33351
+              "min": 16574,
+              "max": 18361
             },
-            "averageInstantDamage": 31137,
-            "averageCombinedDamage": 31137,
+            "averageInstantDamage": 17467.5,
+            "averageCombinedDamage": 17467.5,
             "byElement": {
               "physical": {
                 "min": 1756,
                 "max": 2405
               },
               "cold": {
-                "min": 27167,
-                "max": 30946
+                "min": 14818,
+                "max": 15956
               }
             }
           },
@@ -312802,8 +312246,8 @@
           },
           "totalElementalDamage": {
             "cold": {
-              "min": 27167,
-              "max": 30946
+              "min": 14818,
+              "max": 15956
             }
           },
           "breakdown": {
@@ -312827,8 +312271,8 @@
             },
             "elementalDamage": {
               "cold": {
-                "min": 27167,
-                "max": 30946
+                "min": 14818,
+                "max": 15956
               }
             }
           },
@@ -312893,33 +312337,6 @@
               ]
             },
             {
-              "label": "Skill: Cold",
-              "source": "skill",
-              "damageType": "cold",
-              "timing": "instant",
-              "damage": {
-                "min": 6128,
-                "max": 6629
-              },
-              "sourceRefs": [
-                {
-                  "table": "Skills.txt",
-                  "row": "Blades of Ice",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "EMax",
-                    "EMinLev1..5",
-                    "EMaxLev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
               "label": "Missile: Boiwavemaker",
               "source": "missile",
               "damageType": "cold",
@@ -312932,34 +312349,6 @@
                 {
                   "table": "Missiles.txt",
                   "row": "boiwavemaker",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Boichaosice",
-              "source": "missile",
-              "damageType": "cold",
-              "timing": "instant",
-              "damage": {
-                "min": 6221,
-                "max": 8361
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "boichaosice",
                   "columns": [
                     "EType",
                     "EMin",
@@ -314588,12 +313977,12 @@
           "chargeLabel": "Charge"
         },
         "profile": {
-          "key": "primary:right:one_handed:62ea29e2c7156e679bf1bacdadca1723ae116b5b::Blades of Ice::charge:3::none:0::self",
+          "key": "primary:right:one_handed:62ea29e2c7156e679bf1bacdadca1723ae116b5b::Blades of Ice::charge:2::none:0::self",
           "weaponId": "primary:right:one_handed:62ea29e2c7156e679bf1bacdadca1723ae116b5b",
           "skillId": "Blades of Ice",
           "skillName": "Blades of Ice",
           "chargeVariant": "charge",
-          "chargeNumber": 3,
+          "chargeNumber": 2,
           "chargeCount": 3,
           "chargeLabel": "Charge",
           "skillLevel": 33,
@@ -314603,34 +313992,34 @@
           "playerAuraLevel": 0,
           "transformationId": "none",
           "damageScope": {
-            "label": "charge 3 release",
+            "label": "charge 2 hit",
             "count": 3,
             "countLabel": "charges",
-            "note": "Blades of Ice charge 3 totals include normal hit damage plus every modeled payload from charges 1 through 3, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
+            "note": "Blades of Ice charge 2 totals include normal hit damage plus only the modeled charge 2 payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals."
           },
           "damageTotals": {
             "instantDamage": {
-              "min": 25875,
-              "max": 29920
+              "min": 14776,
+              "max": 16417
             },
             "overTimeDamage": {
               "min": 0,
               "max": 0
             },
             "combinedDamage": {
-              "min": 25875,
-              "max": 29920
+              "min": 14776,
+              "max": 16417
             },
-            "averageInstantDamage": 27897.5,
-            "averageCombinedDamage": 27897.5,
+            "averageInstantDamage": 15596.5,
+            "averageCombinedDamage": 15596.5,
             "byElement": {
               "physical": {
                 "min": 1426,
                 "max": 1950
               },
               "cold": {
-                "min": 24448,
-                "max": 27969
+                "min": 13349,
+                "max": 14466
               },
               "lightning": {
                 "min": 1,
@@ -314644,8 +314033,8 @@
           },
           "totalElementalDamage": {
             "cold": {
-              "min": 24448,
-              "max": 27969
+              "min": 13349,
+              "max": 14466
             },
             "lightning": {
               "min": 1,
@@ -314673,8 +314062,8 @@
             },
             "elementalDamage": {
               "cold": {
-                "min": 24448,
-                "max": 27969
+                "min": 13349,
+                "max": 14466
               },
               "lightning": {
                 "min": 1,
@@ -314768,33 +314157,6 @@
               ]
             },
             {
-              "label": "Skill: Cold",
-              "source": "skill",
-              "damageType": "cold",
-              "timing": "instant",
-              "damage": {
-                "min": 5487,
-                "max": 5958
-              },
-              "sourceRefs": [
-                {
-                  "table": "Skills.txt",
-                  "row": "Blades of Ice",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "EMax",
-                    "EMinLev1..5",
-                    "EMaxLev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
               "label": "Missile: Boiwavemaker",
               "source": "missile",
               "damageType": "cold",
@@ -314807,34 +314169,6 @@
                 {
                   "table": "Missiles.txt",
                   "row": "boiwavemaker",
-                  "columns": [
-                    "EType",
-                    "EMin",
-                    "Emax",
-                    "MinELev1..5",
-                    "MaxELev1..5",
-                    "EDmgSymPerCalc",
-                    "ELen",
-                    "ELevLen1..3",
-                    "DamageRate",
-                    "HitShift"
-                  ]
-                }
-              ]
-            },
-            {
-              "label": "Missile: Boichaosice",
-              "source": "missile",
-              "damageType": "cold",
-              "timing": "instant",
-              "damage": {
-                "min": 5612,
-                "max": 7545
-              },
-              "sourceRefs": [
-                {
-                  "table": "Missiles.txt",
-                  "row": "boichaosice",
                   "columns": [
                     "EType",
                     "EMin",

@@ -1620,12 +1620,10 @@ function getChargeDamageScope(
   const chargeLabel = definition.chargeLabel || "Charge";
   const chargeLabelLower = chargeLabel.toLowerCase();
   const isStack = chargeLabelLower === "stack";
-  const label = `${chargeLabelLower} ${chargeNumber} ${
-    isStack ? "hit" : "release"
-  }`;
+  const label = `${chargeLabelLower} ${chargeNumber} hit`;
   const note = isStack
     ? `${displaySkillName} stack ${chargeNumber} totals include one weapon hit with the stack ${chargeNumber} damage percent exposed by Skills.txt. Stack buildup, duration, hit chance, attack speed, and target count are not multiplied into totals.`
-    : `${displaySkillName} charge ${chargeNumber} totals include normal hit damage plus every modeled payload from charges 1 through ${chargeNumber}, matching PD2's cumulative charge release. Charges from other skills, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals.`;
+    : `${displaySkillName} charge ${chargeNumber} totals include normal hit damage plus only the modeled charge ${chargeNumber} payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals.`;
 
   return {
     label,
@@ -4346,9 +4344,7 @@ function getChargeVariantDamageComponents(
       definition,
       sourceSkillName
     );
-    return Boolean(
-      componentCharge && componentCharge <= skillOption.chargeNumber!
-    );
+    return componentCharge === skillOption.chargeNumber;
   });
 }
 
