@@ -36,6 +36,10 @@ export default class CharacterStatParser {
 
       crushingBlow: 0,
       deadlyStrike: 0,
+      maxDeadlyStrike: 75,
+      deadlyStrikeMultiplier: 0,
+      criticalStrike: 0,
+      criticalStrikeMultiplier: 0,
       lifeLeech: 0,
       manaLeech: 0,
       openWounds: 0,
@@ -298,6 +302,30 @@ export default class CharacterStatParser {
         const deadlyStrike = this.matchInt(/(\d+)% Deadly Strike/, property);
         if (deadlyStrike) {
           this.characterStats.deadlyStrike += deadlyStrike;
+          continue;
+        }
+
+        const maxDeadlyStrike = this.matchInt(/(\d+)% to Maximum Deadly Strike/, property);
+        if (maxDeadlyStrike) {
+          this.characterStats.maxDeadlyStrike += maxDeadlyStrike;
+          continue;
+        }
+
+        const deadlyStrikeMultiplier = this.matchInt(/(\d+)% Deadly Strike Multiplier/, property);
+        if (deadlyStrikeMultiplier) {
+          this.characterStats.deadlyStrikeMultiplier += deadlyStrikeMultiplier;
+          continue;
+        }
+
+        const criticalStrike = this.matchInt(/(\d+)% Chance of Critical Strike/, property) || this.matchInt(/Critical Strike (\d+)%/, property);
+        if (criticalStrike) {
+          this.characterStats.criticalStrike += criticalStrike;
+          continue;
+        }
+
+        const criticalStrikeMultiplier = this.matchInt(/(\d+)% Critical Strike Multiplier/, property);
+        if (criticalStrikeMultiplier) {
+          this.characterStats.criticalStrikeMultiplier += criticalStrikeMultiplier;
           continue;
         }
 

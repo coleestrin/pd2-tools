@@ -4462,6 +4462,42 @@ function getTransformationDamagePercent(
   return 0;
 }
 
+function getPassiveSkillCriticalStrikeChance(
+  characterClass: string,
+  weaponSelection: WeaponSelection,
+  skillMap: Map<string, SkillEntry>
+): number {
+  let total = 0;
+
+  total += getGameSkillPassiveStatValue("Critical Strike", ["passive_critical_strike"], skillMap) || 0;
+  total += getGameSkillPassiveStatValue("Joust", ["passive_critical_strike"], skillMap) || 0;
+
+  if (isClawWeapon(weaponSelection.item)) {
+    total += getGameSkillPassiveStatValue("Claw Mastery", ["passive_mastery_melee_crit"], skillMap) || 0;
+  }
+
+  if (characterClass.toLowerCase() === "barbarian") {
+    total += getGameSkillPassiveStatValue("One Hand Mastery", ["passive_mastery_melee_crit"], skillMap) || 0;
+    total += getGameSkillPassiveStatValue("Throwing Mastery", ["passive_mastery_throw_crit"], skillMap) || 0;
+  }
+
+  return total;
+}
+
+function getPassiveSkillCriticalStrikeMultiplier(
+  _characterClass: string,
+  weaponSelection: WeaponSelection,
+  skillMap: Map<string, SkillEntry>
+): number {
+  let total = 0;
+
+  if (isJavelinOrSpear(weaponSelection.item)) {
+    total += getGameSkillPassiveStatValue("Javelin and Spear Mastery", ["item_crit_multiplier"], skillMap) || 0;
+  }
+
+  return total;
+}
+
 function getPassiveSkillDamagePercent(
   characterClass: string,
   weaponSelection: WeaponSelection,
@@ -4783,6 +4819,63 @@ function getGameAuraStatValue(
         : "scaled",
     }
   );
+}
+
+function getAuraDeadlyStrikeChance(aura: AuraSource): number {
+  const skillMap = new Map<string, SkillEntry>();
+  const gameSelfValue =
+    aura.carrier === "self"
+      ? getGameAuraStatValue(aura, ["item_deadlystrike", "passive_deadlystrike"], "self", skillMap)
+      : undefined;
+  const gamePartyValue = getGameAuraStatValue(
+    aura,
+    ["item_deadlystrike", "passive_deadlystrike"],
+    "party",
+    skillMap
+  );
+  const gameValue =
+    aura.carrier === "self"
+      ? (gameSelfValue ?? gamePartyValue)
+      : gamePartyValue;
+  return gameValue ?? 0;
+}
+
+function getAuraDeadlyStrikeMultiplier(aura: AuraSource): number {
+  const skillMap = new Map<string, SkillEntry>();
+  const gameSelfValue =
+    aura.carrier === "self"
+      ? getGameAuraStatValue(aura, ["item_deadlystrike_multiplier"], "self", skillMap)
+      : undefined;
+  const gamePartyValue = getGameAuraStatValue(
+    aura,
+    ["item_deadlystrike_multiplier"],
+    "party",
+    skillMap
+  );
+  const gameValue =
+    aura.carrier === "self"
+      ? (gameSelfValue ?? gamePartyValue)
+      : gamePartyValue;
+  return gameValue ?? 0;
+}
+
+function getAuraMaxDeadlyStrike(aura: AuraSource): number {
+  const skillMap = new Map<string, SkillEntry>();
+  const gameSelfValue =
+    aura.carrier === "self"
+      ? getGameAuraStatValue(aura, ["item_maxdeadlystrike"], "self", skillMap)
+      : undefined;
+  const gamePartyValue = getGameAuraStatValue(
+    aura,
+    ["item_maxdeadlystrike"],
+    "party",
+    skillMap
+  );
+  const gameValue =
+    aura.carrier === "self"
+      ? (gameSelfValue ?? gamePartyValue)
+      : gamePartyValue;
+  return gameValue ?? 0;
 }
 
 function getAuraPhysicalDamagePercent(aura: AuraSource): number {
@@ -5891,7 +5984,29 @@ function buildProfile(
     parsedItemDamage.flatPhysicalDamage,
     directDamage.physical
   );
-  const physicalMultiplier = 1 + totalPhysicalBonusPercent / 100;
+
+  const itemCS = realStats?.criticalStrike || 0;
+  const passiveCS = getPassiveSkillCriticalStrikeChance(characterClass, weaponSelection, effectiveSkillMap);
+  const CC = Math.min(75, itemCS + passiveCS) / 100.0;
+
+  const itemCMM = realStats?.criticalStrikeMultiplier || 0;
+  const passiveCMM = getPassiveSkillCriticalStrikeMultiplier(characterClass, weaponSelection, effectiveSkillMap);
+  const CM = 2.0 + (itemCMM + passiveCMM) / 100.0;
+
+  const itemDS = realStats?.deadlyStrike || 0;
+  const passiveDS = activeAuras.reduce((total, aura) => total + getAuraDeadlyStrikeChance(aura), 0);
+  const maxDSExtra = activeAuras.reduce((total, aura) => total + getAuraMaxDeadlyStrike(aura), 0);
+  const maxDS = Math.max(0, (realStats?.maxDeadlyStrike || 75) + maxDSExtra);
+  const DC = Math.min(maxDS, itemDS + passiveDS) / 100.0;
+
+  const itemDMM = realStats?.deadlyStrikeMultiplier || 0;
+  const passiveDMM = activeAuras.reduce((total, aura) => total + getAuraDeadlyStrikeMultiplier(aura), 0);
+  const DM = 1.5 + (itemDMM + passiveDMM) / 100.0;
+
+  const eDC = DC * (1.0 - CC);
+  const averageDamageMultiplier = (CC * CM) + (eDC * DM) + (1.0 - CC - eDC);
+
+  const physicalMultiplier = (1 + totalPhysicalBonusPercent / 100) * averageDamageMultiplier;
   const physicalBaseComponents: DamageComponent[] = [];
 
   if (isNonZeroDamageRange(carriedWeaponDamage)) {
