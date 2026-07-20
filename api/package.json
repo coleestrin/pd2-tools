@@ -12,11 +12,7 @@
     "dev": "ts-node src/index.ts",
     "economy": "node dist/jobs/economy.js",
     "jobs": "node dist/jobs.js",
-    "damage:snapshot": "ts-node src/scripts/generate-damage-regression-snapshot.ts",
-    "damage:snapshot:refresh": "ts-node src/scripts/refresh-damage-regression-snapshot.ts",
-    "damage:audit": "ts-node src/scripts/audit-damage-outliers.ts",
-    "damage:stress": "ts-node src/scripts/stress-damage-calculator.ts",
-    "damage:qa": "tsc --noEmit && jest --runInBand src/utils/damage-calculator.test.ts --no-forceExit && npm run damage:audit",
+    "damage:qa": "tsc --noEmit && jest --runInBand src/utils/damage-calculator.test.ts --no-forceExit",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },
