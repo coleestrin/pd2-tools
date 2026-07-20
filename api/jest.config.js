@@ -14,4 +14,6 @@ module.exports = {
   verbose: true,
   // Increase timeout for slow CI environment
   testTimeout: 60000,
+  // Force exit after tests complete to handle unclosed database connections
+  forceExit: true,
 };
