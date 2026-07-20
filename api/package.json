@@ -12,7 +12,7 @@
     "dev": "ts-node src/index.ts",
     "economy": "node dist/jobs/economy.js",
     "jobs": "node dist/jobs.js",
-    "damage:snapshot": "ts-node src/scripts/generate-damage-regression-snapshot.ts",
+    "damage:qa": "tsc --noEmit && jest --runInBand src/utils/damage-calculator.test.ts --no-forceExit",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },
