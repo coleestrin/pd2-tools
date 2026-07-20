@@ -11,7 +11,7 @@ This repository powers pd2.tools, a Project Diablo 2 toolkit with a React/Vite/M
 
 ## Documentation
 
-Long-form damage-calculator documentation, including its QA contract and required validation process, lives only on the `documentation` branch. Before changing the calculator, read [Damage Calculator Contract and QA](https://github.com/ChaseBianchi/pd2-tools/blob/documentation/docs/damage-calculator-qa.md). Update that canonical document on the `documentation` branch instead of adding damage-calculator documentation to code branches; keep executable guarantees in tests and audit tooling.
+Until the upstream repository wiki is configured, long-form damage-calculator documentation, including its QA contract and required validation process, is staged on the `documentation` branch. Before changing the calculator, read [Damage Calculator Contract and QA](https://github.com/ChaseBianchi/pd2-tools/blob/documentation/docs/damage-calculator-qa.md). Update that temporary canonical document instead of adding damage-calculator documentation to code branches; keep executable guarantees in tests and audit tooling. Once the wiki is available, migrate the document there, update this link, and remove the branch copy.
 
 ## 1. Think Before Coding
 
