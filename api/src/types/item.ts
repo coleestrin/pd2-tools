@@ -25,6 +25,7 @@ export interface IItemDamage {
   two_handed: IHandDamage;
   missile: IHandDamage;
   kick?: IHandDamage;
+  smite?: IHandDamage;
 }
 
 export interface IStatBonus {

@@ -110,4 +110,12 @@ describe("item stat expansion", () => {
     expect(ranges.lightning).toEqual({ min: 10, max: 20 });
     expect(ranges.cold).toEqual({ min: 10, max: 20 });
   });
+
+  it("expands per-level Deadly Strike from the func 17 coefficient slot", () => {
+    const ledger = expandItemStats(
+      item([modifier("deadly/lvl", [0, 0, 0.25])])
+    );
+
+    expect(ledger.item_deadlystrike_perlevel).toBe(0.25);
+  });
 });

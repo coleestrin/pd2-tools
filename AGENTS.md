@@ -7,6 +7,8 @@ Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-s
 **Project Summary:**
 This repository powers pd2.tools, a Project Diablo 2 toolkit with a React/Vite/Mantine frontend and a TypeScript Express API backed by Postgres and Redis; it ingests PD2 character data through scheduled jobs, stores season-aware characters, accounts, items, mercenaries, snapshots, economy listings, online-player history, and leaderboards, then exposes UI flows for build discovery, character/account inspection, economy price tracking, statistics, leaderboards, corrupted-zone tracking, character export, and damage/stat calculations using committed PD2 game data tables, with Docker Compose and GitHub Actions covering local/dev/prod deployment, linting, type checks, builds, and backend tests.
 
+**Project Wiki:** https://github.com/coleestrin/pd2-tools/wiki
+
 **One very important principle to follow at all times is always try to solve the problem with the bare minimum number of changes. Always be very thorough in your research and analysis of the codebase, be certain that your answer is correct always. Don't make assumptions, instead put in the effort to verify things and actually read the code and trace logic.**
 
 ## 1. Think Before Coding
