@@ -1316,6 +1316,43 @@ describeWithGameData("damage calculator component model", () => {
     );
   });
 
+  it("does not apply Critical or Deadly Strike to the War Cry physical spell", () => {
+    const createWarCryCharacter = (withStrikeModifiers: boolean) => {
+      const character = createCharacter("War Cry", 20);
+      character.character.class = { id: 4, name: "Barbarian" };
+      character.items[0].modifiers = withStrikeModifiers
+        ? [
+            modifier("item_crit_chance", [100]),
+            modifier("item_deadlystrike", [100]),
+          ]
+        : [];
+      return character;
+    };
+    const controlProfile = calculateDamage(
+      createWarCryCharacter(false)
+    ).profiles.find(
+      (candidate) =>
+        candidate.skillId === "War Cry" && candidate.playerAuraId === "none"
+    )!;
+    const strikeProfile = calculateDamage(
+      createWarCryCharacter(true)
+    ).profiles.find(
+      (candidate) =>
+        candidate.skillId === "War Cry" && candidate.playerAuraId === "none"
+    )!;
+
+    expect(strikeProfile.skillDamageMode).toBe("spell");
+    expect(strikeProfile.strikeBreakdowns).toEqual([]);
+    expect(
+      strikeProfile.damageComponents.some((component) =>
+        ["critical", "deadly"].includes(component.damageType)
+      )
+    ).toBe(false);
+    expect(strikeProfile.damageTotals.combinedDamage).toEqual(
+      controlProfile.damageTotals.combinedDamage
+    );
+  });
+
   it("keeps Rabies weapon source damage and poison payload as independent components", () => {
     const calculation = calculateDamage(createCharacter("Rabies", 20));
     const rabiesProfile = calculation.profiles.find(
@@ -4440,69 +4477,146 @@ describeWithArmorData("armory payload attack enrichment", () => {
     expect(payload.items[0].base.stat_bonus).toEqual({ strength: 100 });
   });
 
-  it("adds Armor.txt shield and Holy Shield damage to Smite before physical multipliers", () => {
-    const smiteLevel = 20;
-    const holyShieldLevel = 20;
-    const defianceBaseLevel = 10;
-    const strength = 100;
-    const weaponDamageBonus = 10;
+  function createSmiteCharacter({
+    smiteLevel = 20,
+    smiteBaseLevel = smiteLevel,
+    holyShieldLevel = 0,
+    holyShieldBaseLevel = holyShieldLevel,
+    defianceLevel = 0,
+    defianceBaseLevel = defianceLevel,
+    strength = 0,
+  } = {}) {
     const character = createCharacter("Smite", smiteLevel);
     character.character.class = { id: 3, name: "Paladin" };
     character.character.attributes.strength = strength;
     character.character.skills = [
       { id: 97, name: "Smite", level: smiteLevel },
-      { id: 117, name: "Holy Shield", level: holyShieldLevel },
-      { id: 104, name: "Defiance", level: defianceBaseLevel },
+      ...(holyShieldLevel > 0
+        ? [{ id: 117, name: "Holy Shield", level: holyShieldLevel }]
+        : []),
+      ...(defianceLevel > 0
+        ? [{ id: 104, name: "Defiance", level: defianceLevel }]
+        : []),
     ];
     character.realSkills = [
-      { skill: "Smite", level: smiteLevel, baseLevel: smiteLevel },
-      {
-        skill: "Holy Shield",
-        level: holyShieldLevel,
-        baseLevel: holyShieldLevel,
-      },
-      {
-        skill: "Defiance",
-        level: defianceBaseLevel,
-        baseLevel: defianceBaseLevel,
-      },
+      { skill: "Smite", level: smiteLevel, baseLevel: smiteBaseLevel },
+      ...(holyShieldLevel > 0
+        ? [
+            {
+              skill: "Holy Shield",
+              level: holyShieldLevel,
+              baseLevel: holyShieldBaseLevel,
+            },
+          ]
+        : []),
+      ...(defianceLevel > 0
+        ? [
+            {
+              skill: "Defiance",
+              level: defianceLevel,
+              baseLevel: defianceBaseLevel,
+            },
+          ]
+        : []),
     ];
     character.realStats = { ...createStats(), strength };
-    character.items = [
-      createWeapon({
-        modifiers: [
-          modifier("item_normaldamage", [weaponDamageBonus]),
-          modifier("item_crit_chance", [100]),
-          modifier("item_deadlystrike", [100]),
-        ],
-      }),
-      createShield({
-        properties: [
-          "+20 to Minimum Damage",
-          "Adds 50-100 Fire Damage",
-        ],
-      }),
-    ];
+    return character;
+  }
 
-    enrichArmoryPayload(character);
-    const calculation = calculateDamage(character);
-    const profile = calculation.profiles.find(
-      (candidate) =>
-        candidate.skillId === "Smite" && candidate.playerAuraId === "none"
-    )!;
-    const holyFireProfile = calculation.profiles.find(
+  function getShieldDamage(code = "pab") {
+    const armor = loadGameFile("Armor.txt", "code");
+    const row = armor.rowsByKey.get(code)!;
+    return {
+      min: getGameFileNumber(armor, row, "mindam"),
+      max: getGameFileNumber(armor, row, "maxdam"),
+    };
+  }
+
+  function getSmiteProfile(calculation, weaponSet = "primary") {
+    return calculation.profiles.find(
       (candidate) =>
         candidate.skillId === "Smite" &&
-        candidate.playerAuraId === "Holy Fire" &&
-        candidate.playerAuraCarrier === "self"
+        candidate.playerAuraId === "none" &&
+        candidate.weaponId.startsWith(`${weaponSet}:left:smite:`)
     )!;
+  }
 
-    const armor = loadGameFile("Armor.txt", "code");
-    const shieldRow = armor.rowsByKey.get("pab")!;
-    const shieldDamage = {
-      min: getGameFileNumber(armor, shieldRow, "mindam"),
-      max: getGameFileNumber(armor, shieldRow, "maxdam"),
+  it("enriches an equipped shield with Armor.txt Smite damage", () => {
+    const payload = { items: [createShield()] };
+    const shieldDamage = getShieldDamage();
+
+    enrichArmoryPayload(payload);
+
+    expect(payload.items[0].base.damage?.smite).toEqual({
+      minimum: shieldDamage.min,
+      maximum: shieldDamage.max,
+    });
+    expect(payload.items[0].damage?.smite).toEqual({
+      minimum: shieldDamage.min,
+      maximum: shieldDamage.max,
+    });
+    expect(payload.items[0].base.stat_bonus).toEqual({ strength: 100 });
+  });
+
+  it("uses shield base damage and weapon Damage +X for Smite", () => {
+    const smiteLevel = 20;
+    const weaponDamageBonus = 10;
+    const character = createSmiteCharacter({ smiteLevel });
+    character.items = [
+      createWeapon({
+        modifiers: [modifier("item_normaldamage", [weaponDamageBonus])],
+      }),
+      createShield(),
+    ];
+    enrichArmoryPayload(character);
+
+    const profile = getSmiteProfile(calculateDamage(character));
+    const shieldDamage = getShieldDamage();
+    const skills = loadGameFile("Skills.txt", "skill");
+    const smiteRow = skills.rowsByKey.get("Smite")!;
+    const smiteDamagePercent =
+      getGameFileNumber(skills, smiteRow, "Param3") +
+      (smiteLevel - 1) * getGameFileNumber(skills, smiteRow, "Param4");
+    const expectedDamage = {
+      min: Math.floor(
+        (shieldDamage.min + weaponDamageBonus) *
+          (1 + smiteDamagePercent / 100)
+      ),
+      max: Math.floor(
+        (shieldDamage.max + weaponDamageBonus) *
+          (1 + smiteDamagePercent / 100)
+      ),
     };
+
+    expect(profile.weaponId).toContain(":left:smite:");
+    expect(profile.damageScope.label).toBe("per shield hit");
+    expect(profile.breakdown.weaponDamage).toEqual(shieldDamage);
+    expect(profile.breakdown.flatPhysicalDamage).toEqual({
+      min: weaponDamageBonus,
+      max: weaponDamageBonus,
+    });
+    expect(profile.totalPhysicalDamage).toEqual(expectedDamage);
+  });
+
+  it("uses Holy Shield effective level and Smite/Defiance base levels for its synergy", () => {
+    const smiteLevel = 30;
+    const smiteBaseLevel = 20;
+    const holyShieldLevel = 30;
+    const defianceLevel = 25;
+    const defianceBaseLevel = 10;
+    const character = createSmiteCharacter({
+      smiteLevel,
+      smiteBaseLevel,
+      holyShieldLevel,
+      holyShieldBaseLevel: 20,
+      defianceLevel,
+      defianceBaseLevel,
+    });
+    character.items = [createWeapon(), createShield()];
+    enrichArmoryPayload(character);
+
+    const calculation = calculateDamage(character);
+    const profile = getSmiteProfile(calculation);
     const skills = loadGameFile("Skills.txt", "skill");
     const holyShieldRow = skills.rowsByKey.get("Holy Shield")!;
     const holyShieldBaseDamage = {
@@ -4521,47 +4635,73 @@ describeWithArmorData("armory payload attack enrichment", () => {
         ["MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5"]
       ),
     };
-    const holyShieldSynergyPercent =
-      (smiteLevel + defianceBaseLevel) *
-      getGameFileNumber(skills, holyShieldRow, "Param7");
-    const holyShieldDamage = {
+    const synergyPerLevel = getGameFileNumber(
+      skills,
+      holyShieldRow,
+      "Param7"
+    );
+    const expectedSynergyPercent =
+      (smiteBaseLevel + defianceBaseLevel) * synergyPerLevel;
+    const incorrectSoftLevelSynergyPercent =
+      (smiteLevel + defianceLevel) * synergyPerLevel;
+    const expectedHolyShieldDamage = {
       min: Math.floor(
-        holyShieldBaseDamage.min * (1 + holyShieldSynergyPercent / 100)
+        holyShieldBaseDamage.min * (1 + expectedSynergyPercent / 100)
       ),
       max: Math.floor(
-        holyShieldBaseDamage.max * (1 + holyShieldSynergyPercent / 100)
+        holyShieldBaseDamage.max * (1 + expectedSynergyPercent / 100)
       ),
     };
-    const smiteRow = skills.rowsByKey.get("Smite")!;
-    const smiteDamagePercent =
-      getGameFileNumber(skills, smiteRow, "Param3") +
-      (smiteLevel - 1) * getGameFileNumber(skills, smiteRow, "Param4");
-    const smiteBaseDamage = {
-      min: shieldDamage.min + holyShieldDamage.min + weaponDamageBonus,
-      max: shieldDamage.max + holyShieldDamage.max + weaponDamageBonus,
-    };
-    const expectedDamage = {
+    const incorrectSoftLevelDamage = {
       min: Math.floor(
-        smiteBaseDamage.min * (1 + (strength + smiteDamagePercent) / 100)
+        holyShieldBaseDamage.min *
+          (1 + incorrectSoftLevelSynergyPercent / 100)
       ),
       max: Math.floor(
-        smiteBaseDamage.max * (1 + (strength + smiteDamagePercent) / 100)
+        holyShieldBaseDamage.max *
+          (1 + incorrectSoftLevelSynergyPercent / 100)
       ),
     };
 
-    expect(character.items[1].base.damage?.smite).toEqual({
-      minimum: shieldDamage.min,
-      maximum: shieldDamage.max,
-    });
-    expect(profile).toBeDefined();
-    expect(profile.weaponId).toContain(":left:smite:");
-    expect(profile.damageScope.label).toBe("per shield hit");
-    expect(profile.breakdown.weaponDamage).toEqual(shieldDamage);
-    expect(profile.breakdown.flatPhysicalDamage).toEqual({
-      min: holyShieldDamage.min + weaponDamageBonus,
-      max: holyShieldDamage.max + weaponDamageBonus,
-    });
-    expect(profile.totalPhysicalDamage).toEqual(expectedDamage);
+    expect(profile.breakdown.flatPhysicalDamage).toEqual(
+      expectedHolyShieldDamage
+    );
+    expect(profile.breakdown.flatPhysicalDamage).not.toEqual(
+      incorrectSoftLevelDamage
+    );
+    expect(
+      calculation.skillOptions.some((option) => option.id === "Holy Shield")
+    ).toBe(false);
+    expect(profile.notes.join(" ")).toContain(
+      `Holy Shield level ${holyShieldLevel} damage is added to the shield base`
+    );
+  });
+
+  it("excludes elemental payloads and Critical/Deadly Strike from Smite", () => {
+    const character = createSmiteCharacter();
+    character.items = [
+      createWeapon({
+        modifiers: [
+          modifier("item_crit_chance", [100]),
+          modifier("item_deadlystrike", [100]),
+        ],
+      }),
+      createShield({
+        properties: ["Adds 50-100 Fire Damage"],
+      }),
+    ];
+    enrichArmoryPayload(character);
+
+    const calculation = calculateDamage(character);
+    const profile = getSmiteProfile(calculation);
+    const holyFireProfile = calculation.profiles.find(
+      (candidate) =>
+        candidate.skillId === "Smite" &&
+        candidate.playerAuraId === "Holy Fire" &&
+        candidate.playerAuraCarrier === "self" &&
+        candidate.weaponId.startsWith("primary:left:smite:")
+    )!;
+
     expect(profile.totalElementalDamage).toEqual({});
     expect(holyFireProfile.totalElementalDamage).toEqual({});
     expect(profile.strikeBreakdowns).toEqual([]);
@@ -4570,11 +4710,54 @@ describeWithArmorData("armory payload attack enrichment", () => {
         ["critical", "deadly", "fire"].includes(component.damageType)
       )
     ).toBe(false);
-    expect(
-      calculation.skillOptions.some((option) => option.id === "Holy Shield")
-    ).toBe(false);
-    expect(profile.notes.join(" ")).toContain(
-      "Holy Shield level 20 damage is added to the shield base"
+  });
+
+  it("uses the shield from the selected primary or secondary weapon set", () => {
+    const primaryShield = createShield({
+      id: "primary-shield",
+      hash: "primary-shield",
+    });
+    const secondaryShield = createShield({
+      id: "secondary-shield",
+      hash: "secondary-shield",
+      name: "Test Buckler",
+      base_code: "buc",
+      base: {
+        id: "buc",
+        category: "armor",
+        codes: {},
+        name: "Buckler",
+        stackable: false,
+        type: "Shields",
+        type_code: "shie",
+        size: { height: 2, width: 2 },
+        requirements: { level: 0, strength: 12, dexterity: 0 },
+      },
+      location: {
+        zone: "Equipped",
+        storage: "Equipped",
+        zone_id: 1,
+        storage_id: 0,
+        equipment: "Left Hand Switch",
+        equipment_id: 12,
+      },
+    });
+    const character = createSmiteCharacter();
+    character.items = [createWeapon(), primaryShield, secondaryShield];
+    enrichArmoryPayload(character);
+
+    const calculation = calculateDamage(character);
+    const primaryProfile = getSmiteProfile(calculation, "primary");
+    const secondaryProfile = getSmiteProfile(calculation, "secondary");
+
+    expect(primaryProfile.breakdown.weaponDamage).toEqual(
+      getShieldDamage("pab")
+    );
+    expect(secondaryProfile.breakdown.weaponDamage).toEqual(
+      getShieldDamage("buc")
+    );
+    expect(primaryProfile.breakdown.weaponDamage).not.toEqual(
+      secondaryProfile.breakdown.weaponDamage
     );
   });
 });
