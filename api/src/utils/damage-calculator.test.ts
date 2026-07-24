@@ -45,6 +45,7 @@ function createStats() {
     fasterHitRecovery: 0,
     fasterRunWalk: 0,
     crushingBlow: 0,
+    criticalStrike: 0,
     deadlyStrike: 0,
     openWounds: 0,
     openWoundsDPS: 0,

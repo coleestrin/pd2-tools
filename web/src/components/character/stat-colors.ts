@@ -22,6 +22,7 @@ export const STAT_COLORS = {
   fasterRunWalk: THEME_COLORS.green,
   increasedAttackSpeed: THEME_COLORS.blue,
   crushingBlow: THEME_COLORS.orange,
+  criticalStrike: THEME_COLORS.violet,
   deadlyStrike: THEME_COLORS.yellow,
   openWounds: THEME_COLORS.red,
   lifeLeech: THEME_COLORS.red,

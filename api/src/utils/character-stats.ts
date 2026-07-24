@@ -1,4 +1,5 @@
 import { CharacterData, CharStats } from "../types";
+import { expandItemStats } from "./item-stat-expansion";
 
 export default class CharacterStatParser {
   private character: CharacterData;
@@ -35,6 +36,7 @@ export default class CharacterStatParser {
       fasterHitRecovery: 0,
 
       crushingBlow: 0,
+      criticalStrike: 0,
       deadlyStrike: 0,
       lifeLeech: 0,
       manaLeech: 0,
@@ -71,6 +73,14 @@ export default class CharacterStatParser {
     else return null;
   }
 
+  private sumMatches(regex: RegExp, properties: (string | null)[]): number {
+    return properties.reduce((total, property) => {
+      if (!property) return total;
+      const match = property.match(regex);
+      return total + (match ? Number(match[1]) : 0);
+    }, 0);
+  }
+
   public parseAndGetCharStats(): CharStats {
     for (const item of this.character.items) {
       if (
@@ -79,6 +89,30 @@ export default class CharacterStatParser {
       ) {
         continue;
       }
+
+      const expandedStats = expandItemStats(item);
+      const criticalStrike =
+        expandedStats.item_crit_chance ||
+        this.sumMatches(
+          /^(?:\+)?([\d.]+)% (?:Chance of )?Critical Strike$/i,
+          item.properties
+        );
+      const deadlyStrike =
+        expandedStats.item_deadlystrike ||
+        this.sumMatches(
+          /^(?:\+)?([\d.]+)% (?:Chance of )?Deadly Strike$/i,
+          item.properties
+        );
+      const deadlyStrikePerLevel =
+        expandedStats.item_deadlystrike_perlevel ||
+        this.sumMatches(
+          /^(?:\+)?([\d.]+)% (?:Chance of )?Deadly Strike \(Based on Character Level\)$/i,
+          item.properties
+        );
+      this.characterStats.criticalStrike += criticalStrike;
+      this.characterStats.deadlyStrike +=
+        deadlyStrike +
+        Math.floor(deadlyStrikePerLevel * this.character.character.level);
 
       for (const property of item.properties) {
         // All Resistances (applies to all)
@@ -292,12 +326,6 @@ export default class CharacterStatParser {
         );
         if (crushingBlow) {
           this.characterStats.crushingBlow += crushingBlow;
-          continue;
-        }
-
-        const deadlyStrike = this.matchInt(/(\d+)% Deadly Strike/, property);
-        if (deadlyStrike) {
-          this.characterStats.deadlyStrike += deadlyStrike;
           continue;
         }
 
