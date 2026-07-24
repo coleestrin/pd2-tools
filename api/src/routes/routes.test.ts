@@ -307,6 +307,63 @@ describe("API Routes", () => {
         );
       });
 
+      it("should expose the equipped weapon's passive Critical Strike chance", async () => {
+        const mockCharacter = {
+          character: {
+            name: "TestAmazon",
+            level: 90,
+            class: { id: 0, name: "Amazon" },
+            attributes: {
+              strength: 100,
+              dexterity: 100,
+              vitality: 100,
+              energy: 100,
+            },
+            skills: [{ id: 9, name: "Critical Strike", level: 3 }],
+          },
+          items: [],
+          realSkills: [
+            { skill: "Critical Strike", level: 15, baseLevel: 3 },
+          ],
+          realStats: { criticalStrike: 0 },
+        };
+
+        (characterDB.getCharacterByName as jest.Mock).mockResolvedValue(
+          mockCharacter
+        );
+        (calculateDamage as jest.Mock).mockReturnValueOnce({
+          weaponOptions: [{ id: "primary:right:missile" }],
+          skillOptions: [],
+          playerAuraOptions: [],
+          transformationOptions: [],
+          alwaysActiveAuras: [],
+          defaultSelection: {
+            weaponId: "primary:right:missile",
+            skillId: "Strafe",
+            playerAuraId: "none",
+            playerAuraCarrier: "self",
+            playerAuraLevel: 0,
+            transformationId: "none",
+          },
+          profiles: [
+            {
+              weaponId: "primary:right:missile",
+              skillId: "Basic Attack",
+              playerAuraId: "none",
+              transformationId: "none",
+              strikeBreakdowns: [{ rawCriticalChance: 59 }],
+            },
+          ],
+          notes: [],
+        });
+
+        const response = await request(app)
+          .get("/api/v1/characters/TestAmazon")
+          .expect(200);
+
+        expect(response.body.realStats.criticalStrike).toBe(59);
+      });
+
       it("should handle different game modes", async () => {
         (characterDB.getCharacterByName as jest.Mock).mockResolvedValue({});
 
