@@ -10,6 +10,7 @@ import { Tooltip } from "@mantine/core";
 import Cookies from "js-cookie";
 import { charactersAPI } from "../../../api";
 import { DEFAULT_VIEW_SEASON, LEVEL_RANGE_COOKIE_KEY } from "../../../types";
+import { normalizeSkillName } from "../../../utils/equipment-map";
 import type { FullCharacterResponse } from "../../../types";
 import type { CharacterFilters } from "../../../hooks";
 
@@ -229,22 +230,25 @@ export default function PlayerTable({
           return (
             <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
               {row.original.highestSkLevel || "N/A"}
-              {topSkills.map((sk) => (
-                <Tooltip
-                  key={sk.skill}
-                  label={`${sk.skill} (Level ${sk.level})`}
-                >
-                  <img
-                    src={`/icons/${sk.skill.replaceAll(" ", "_")}.png`}
-                    alt={sk.skill}
-                    style={{
-                      width: "30px",
-                      height: "30px",
-                      marginLeft: "1.5px",
-                    }}
-                  />
-                </Tooltip>
-              ))}
+              {topSkills.map((sk) => {
+                const displayName = normalizeSkillName(sk.skill);
+                return (
+                  <Tooltip
+                    key={sk.skill}
+                    label={`${displayName} (Level ${sk.level})`}
+                  >
+                    <img
+                      src={`/icons/${displayName.replaceAll(" ", "_")}.png`}
+                      alt={displayName}
+                      style={{
+                        width: "30px",
+                        height: "30px",
+                        marginLeft: "1.5px",
+                      }}
+                    />
+                  </Tooltip>
+                );
+              })}
             </div>
           );
         },

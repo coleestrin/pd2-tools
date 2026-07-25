@@ -4,6 +4,7 @@ import { IconInfoCircle, IconX } from "@tabler/icons-react";
 import { List, RowComponentProps } from "react-window";
 import type { CharacterFilters, SkillRequirement } from "../../../../hooks";
 import type { SkillUsageStats } from "../../../../types";
+import { normalizeSkillName } from "../../../utils/equipment-map";
 import styles from "../VirtualList.module.css";
 
 interface Props {
@@ -41,18 +42,19 @@ export default function SkillCard({ data, filters, updateFilters }: Props) {
     return data.skillUsage
       .reduce(
         (acc, skill) => {
+          const displayName = normalizeSkillName(skill.name);
           // Early return if it doesn't match search
           if (
             searchQuery &&
-            !skill.name.toLowerCase().startsWith(searchQuery)
+            !displayName.toLowerCase().startsWith(searchQuery)
           ) {
             return acc;
           }
 
           acc.push({
-            name: skill.name,
+            name: displayName,
             percentage: skill.pct,
-            isSelected: selectedSkillsSet.has(skill.name),
+            isSelected: selectedSkillsSet.has(skill.name) || selectedSkillsSet.has(displayName),
           });
           return acc;
         },
