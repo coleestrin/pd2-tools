@@ -16,6 +16,7 @@ const skillCategories = new Map([
   ["Power Strike", "Javelin and Spear Skills"],
   ["Poison Javelin", "Javelin and Spear Skills"],
   ["Impale", "Javelin and Spear Skills"],
+  ["Fend", "Javelin and Spear Skills"],
   ["Lightning Strike", "Javelin and Spear Skills"],
   ["Charged Strike", "Javelin and Spear Skills"],
   ["Plague Javelin", "Javelin and Spear Skills"],
