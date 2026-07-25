@@ -3,6 +3,7 @@ import {
   MantineReactTable,
   MRT_ColumnDef,
   MRT_PaginationState,
+  MRT_SortingState,
   useMantineReactTable,
 } from "mantine-react-table";
 import { IconGrave } from "@tabler/icons-react";
@@ -49,12 +50,18 @@ export default function PlayerTable({
     pageIndex: 0,
     pageSize: 40,
   });
-  // Effect to fetch data when pagination or filters change
+  const [sorting, setSorting] = useState<MRT_SortingState>([]);
+
+  // Effect to fetch data when pagination, sorting, or filters change
   useEffect(() => {
     const fetchCharacters = async () => {
-      // If we have initial characters and this is not a pagination request,
+      const activeSort = sorting[0];
+      const sortBy = activeSort?.id;
+      const sortOrder = activeSort?.desc ? "desc" : "asc";
+
+      // If we have initial characters and this is not a pagination/sorting request,
       // use those instead of making an API call
-      if (initialCharacters && pagination.pageIndex === 0) {
+      if (initialCharacters && pagination.pageIndex === 0 && !sorting.length) {
         setCharacterData(initialCharacters);
         setTotalRowCount(initialTotal || 0); // Use the initial total
         setIsLoading(false);
@@ -68,37 +75,9 @@ export default function PlayerTable({
         setIsRefetching(true);
       }
 
-      // Only proceed with API call if we're paginating or don't have initial data
-      if (pagination.pageIndex > 0 || !initialCharacters) {
+      // Only proceed with API call if we're paginating, sorting, or don't have initial data
+      if (pagination.pageIndex > 0 || sorting.length || !initialCharacters) {
         try {
-          const queryParams = new URLSearchParams({
-            gameMode: filters.gameMode,
-            page: (pagination.pageIndex + 1).toString(),
-            pageSize: pagination.pageSize.toString(),
-          });
-          if (filters.classFilter.length) {
-            queryParams.append("className", filters.classFilter.join(","));
-          }
-          if (filters.itemFilter.length) {
-            queryParams.append("requiredItems", filters.itemFilter.join(","));
-          }
-          if (filters.skillFilter.length) {
-            queryParams.append(
-              "requiredSkills",
-              JSON.stringify(filters.skillFilter)
-            );
-          }
-          if (filters.mercTypeFilter.length) {
-            queryParams.append("mercTypes", filters.mercTypeFilter.join(","));
-          }
-          if (filters.mercItemFilter.length) {
-            queryParams.append("mercItems", filters.mercItemFilter.join(","));
-          }
-          if (filters.searchQuery) {
-            // Assuming 'query' is the param name for search
-            queryParams.append("query", filters.searchQuery);
-          }
-
           const levelRangeCookie = Cookies.get(LEVEL_RANGE_COOKIE_KEY);
           const levelRange = levelRangeCookie
             ? JSON.parse(levelRangeCookie)
@@ -117,6 +96,8 @@ export default function PlayerTable({
               requiredMercItems: filters.mercItemFilter,
               levelRange: { min: levelRange.min, max: levelRange.max },
               season: filters.season,
+              sortBy,
+              sortOrder,
             },
             pagination.pageIndex + 1,
             pagination.pageSize
@@ -142,6 +123,7 @@ export default function PlayerTable({
   }, [
     pagination.pageIndex,
     pagination.pageSize,
+    sorting,
     filters,
     initialCharacters,
     initialTotal,
@@ -257,8 +239,13 @@ export default function PlayerTable({
     columns,
     data: tableDisplayData,
     manualPagination: true,
+    manualSorting: true,
     rowCount: totalRowCount,
     onPaginationChange: setPagination,
+    onSortingChange: (updater) => {
+      setSorting(updater);
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    },
     enableColumnActions: false,
     enableColumnFilters: false,
     enableSorting: true,
@@ -267,6 +254,7 @@ export default function PlayerTable({
       isLoading: isLoading,
       showProgressBars: isRefetching,
       pagination,
+      sorting,
       showAlertBanner: isError,
     },
     initialState: {
