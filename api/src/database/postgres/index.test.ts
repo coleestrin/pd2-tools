@@ -94,7 +94,7 @@ describe("CharacterDB_Postgres - Season Tracking", () => {
     await db.clearGameModeData(gameModeHC, season12);
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await db.close();
   });
 

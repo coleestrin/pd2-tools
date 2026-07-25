@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import CharacterStatParser from "./character-stats";
+import { getExpandedItemElementalDamageRanges } from "./item-stat-expansion";
 import { calculateTotalSkills } from "./skill-calculator";
 import {
   ActiveAuraSummary,
@@ -55,7 +56,13 @@ type PlayerAuraDefinition = {
   sourceSkillNames?: string[];
 };
 
-type GameTableName = "Skills" | "Missiles" | "SkillDesc" | "MonStats";
+type GameTableName =
+  | "Skills"
+  | "Missiles"
+  | "SkillDesc"
+  | "MonStats"
+  | "Properties"
+  | "ItemStatCost";
 
 type GameTable = {
   columns: string[];
@@ -94,6 +101,154 @@ const DEFAULT_DAMAGE_SCOPE: DamageProfile["damageScope"] = {
 };
 
 const SKILL_DAMAGE_SCOPE_DEFINITIONS: Record<string, DamageScopeDefinition> = {
+  [normalizeSkillName("Charged Strike").toLowerCase()]: {
+    label: "per weapon hit plus one bolt",
+    countColumn: "calc1",
+    countLabel: "released bolts",
+    note: "Charged Strike totals include the weapon hit plus one modeled lightning-bolt payload. Skills.txt calc1 exposes released bolt count; bolt overlap, target size, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Lightning Strike").toLowerCase()]: {
+    label: "per weapon hit plus one chain hit",
+    countColumn: "calc2",
+    countLabel: "chain hits",
+    note: "Lightning Strike totals include the weapon hit plus one modeled chain-lightning hit. Skills.txt calc2 exposes maximum chain hits; target count, repeated jumps, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Lightning Fury").toLowerCase()]: {
+    label: "per throw plus one released bolt",
+    countColumn: "calc1",
+    countLabel: "target bolts",
+    note: "Lightning Fury totals are for the thrown hit plus one modeled released lightning payload. Skills.txt calc1 exposes target count; released bolt count, overlap, pierce, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Chain Lightning").toLowerCase()]: {
+    label: "per chain hit",
+    countColumn: "calc1",
+    countLabel: "chain hits",
+    note: "Chain Lightning totals are per chain hit. Skills.txt calc1 exposes maximum hits; jump count, target selection, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Holy Bolt").toLowerCase()]: {
+    label: "per bolt",
+    countColumn: "calc1",
+    countLabel: "bolts",
+    note: "Holy Bolt totals are per bolt. Skills.txt calc1 exposes bolts fired; projectile overlap, healing, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Bone Spear").toLowerCase()]: {
+    label: "per spear",
+    countColumn: "calc1",
+    countLabel: "spears",
+    note: "Bone Spear totals are per spear. Skills.txt calc1 exposes spear count; pierce, projectile overlap, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Psychic Hammer").toLowerCase()]: {
+    label: "per hit",
+    countColumn: "calc1",
+    countLabel: "hits",
+    note: "Psychic Hammer totals are for the first modeled hit. Skills.txt calc1 exposes hit count and calc2 exposes damage reduction per later hit; later-hit decay, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Ice Barrage").toLowerCase()]: {
+    label: "per missile",
+    countColumn: "calc1",
+    countLabel: "missiles",
+    note: "Ice Barrage totals are per missile. Skills.txt calc1 exposes missile count; overlap, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Combustion").toLowerCase()]: {
+    label: "per missile",
+    countColumn: "calc2",
+    countLabel: "missiles",
+    note: "Combustion totals are per missile. Skills.txt calc2 exposes missile count; overlap, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Twister").toLowerCase()]: {
+    label: "per missile",
+    countColumn: "calc1",
+    countLabel: "missiles",
+    note: "Twister totals are per missile. Skills.txt calc1 exposes missile count; overlap, repeated contacts, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Shock Wave").toLowerCase()]: {
+    label: "per missile",
+    countColumn: "calc1",
+    countLabel: "missiles",
+    note: "Shock Wave totals are per missile. Skills.txt calc1 exposes missile count; overlap, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Fire Claws").toLowerCase()]: {
+    label: "per weapon hit plus one fire payload",
+    countColumn: "calc2",
+    countLabel: "fire missiles",
+    note: "Fire Claws totals include the melee weapon hit plus one modeled fire payload. Skills.txt calc2 exposes fire missile count; overlap, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Zeal").toLowerCase()]: {
+    label: "per weapon hit",
+    countColumn: "calc1",
+    countLabel: "maximum targets",
+    note: "Zeal totals are per weapon hit. Skills.txt calc1 exposes maximum targets; the full attack sequence, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Fury").toLowerCase()]: {
+    label: "per weapon hit",
+    countColumn: "calc1",
+    countLabel: "maximum targets",
+    note: "Fury totals are per weapon hit. Skills.txt calc1 exposes maximum targets; the full attack sequence, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Fend").toLowerCase()]: {
+    label: "per weapon hit",
+    countColumn: "calc1",
+    countLabel: "maximum targets",
+    note: "Fend totals are per weapon hit. Skills.txt calc1 exposes maximum targets; the full attack sequence, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Dragon Talon").toLowerCase()]: {
+    label: "per kick",
+    countColumn: "calc1",
+    countLabel: "kicks",
+    note: "Dragon Talon totals are per boot-sourced kick. Skills.txt calc1 exposes kick count; the full kick sequence, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Jab").toLowerCase()]: {
+    label: "per weapon hit",
+    note: "Jab totals are per weapon hit. The sequence count is controlled by compiled skill behavior and is not inferred from the tables; hit chance, target count, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Exploding Arrow").toLowerCase()]: {
+    label: "per arrow impact plus one cluster payload",
+    countColumn: "calc2",
+    countLabel: "cluster bombs",
+    note: "Exploding Arrow totals include the weapon/fire impact plus one modeled cluster payload. Skills.txt calc2 exposes cluster-bomb count; cluster overlap, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Blizzard").toLowerCase()]: {
+    label: "per shard impact",
+    note: "Blizzard totals are per modeled shard impact. Skills.txt calc2 exposes frequency, but storm duration, shard count, random placement, overlap, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Eruption").toLowerCase()]: {
+    label: "per eruption impact",
+    note: "Eruption totals are per modeled impact. Skills.txt calc2 exposes frequency, but duration, repeated impacts, overlap, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Blade Shield").toLowerCase()]: {
+    label: "per pulse hit",
+    note: "Blade Shield totals are per modeled pulse hit. Skills.txt periodic/perdelay controls repeat timing; duration, pulse count, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Blade Fury").toLowerCase()]: {
+    label: "per projectile hit",
+    note: "Blade Fury totals are per projectile hit. Channel duration, projectile count, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Frenzy").toLowerCase()]: {
+    label: "per weapon hit",
+    countColumn: "calc4",
+    countLabel: "maximum state charges",
+    note: "Frenzy totals are per weapon hit. Skills.txt calc4 exposes maximum state charges, but the table damage formula is not charge-dependent; sequence timing, state uptime, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Sacrifice").toLowerCase()]: {
+    label: "per weapon hit",
+    note: "Sacrifice totals are outgoing damage per weapon hit. Skills.txt calc2 self-damage and calc3 explosion radius are not added to outgoing damage; secondary targets, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Dark Pact").toLowerCase()]: {
+    label: "per one-curse payload",
+    note: "Dark Pact totals are for the modeled one-curse payload. Additional curse state, area growth, target count, and cast rate are controlled by compiled behavior and are not multiplied into totals.",
+  },
+  [normalizeSkillName("Vengeance").toLowerCase()]: {
+    label: "per weapon hit",
+    note: "Vengeance totals are per weapon hit with modeled elemental conversion. Skills.txt calc4 exposes chain percent rather than a deterministic chain count; chained targets, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Fire Arrow").toLowerCase()]: {
+    label: "per impact plus fire wall",
+    note: "Fire Arrow totals include the weapon/fire impact plus one modeled firearrow firewall payload. Ground-fire duration, repeated ticks, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Immolation Arrow").toLowerCase()]: {
+    label: "per impact plus fire patches",
+    note: "Immolation Arrow totals include the weapon/fire impact plus one modeled instance of each server-reachable fire patch payload. Patch duration, repeated ticks, overlap, target count, hit chance, and attack rate are not multiplied into totals.",
+  },
   [normalizeSkillName("Charged Bolt").toLowerCase()]: {
     label: "per bolt",
     countColumn: "calc1",
@@ -109,6 +264,12 @@ const SKILL_DAMAGE_SCOPE_DEFINITIONS: Record<string, DamageScopeDefinition> = {
   [normalizeSkillName("Strafe").toLowerCase()]: {
     label: "per arrow",
     note: "Strafe totals are per arrow hit. The full attack sequence length, hit chance, and target count are not multiplied into totals.",
+  },
+  [normalizeSkillName("Split Throw").toLowerCase()]: {
+    label: "per projectile hit",
+    countColumn: "calc1",
+    countLabel: "projectiles",
+    note: "Split Throw totals are per projectile hit. Skills.txt calc1 exposes the projectile count, but projectile count, target count, hit chance, and attack rate are not multiplied into totals.",
   },
   [normalizeSkillName("Teeth").toLowerCase()]: {
     label: "per projectile",
@@ -128,6 +289,20 @@ const SKILL_DAMAGE_SCOPE_DEFINITIONS: Record<string, DamageScopeDefinition> = {
     label: "per target",
     note: "Poison Nova totals are per target over the modeled poison duration. Target count is not multiplied into totals.",
   },
+  [normalizeSkillName("Fist of the Heavens").toLowerCase()]: {
+    label: "per primary hit plus one bolt",
+    countColumn: "calc4",
+    countLabel: "holy bolts",
+    note: "Fist of the Heavens totals include the primary lightning hit plus one modeled holy bolt payload. Skills.txt calc4 exposes the holy bolt count, but target selection and released bolt overlap are not multiplied into totals.",
+  },
+  [normalizeSkillName("Meteor").toLowerCase()]: {
+    label: "per impact plus ground fire",
+    note: "Meteor totals include the impact physical/fire payload plus one modeled meteorfire ground-fire payload. Impact radius, target count, burn duration, and repeated ground-fire ticks are not multiplied into totals.",
+  },
+  [normalizeSkillName("Molten Boulder").toLowerCase()]: {
+    label: "per impact plus fire path",
+    note: "Molten Boulder totals include the direct physical/fire impact payload plus one modeled moltenboulderfirepath payload. Boulder travel, repeated contacts, fire path duration, and target count are not multiplied into totals.",
+  },
   [normalizeSkillName("Volcano").toLowerCase()]: {
     label: "per impact",
     note: "Volcano totals are per modeled impact from Skills.txt damage fields. Eruption timing, target overlap, and repeated impacts are not multiplied into totals.",
@@ -139,6 +314,10 @@ const SKILL_DAMAGE_SCOPE_DEFINITIONS: Record<string, DamageScopeDefinition> = {
   [normalizeSkillName("Inferno").toLowerCase()]: {
     label: "per second",
     note: "Inferno totals use Skills.txt stream damage scaled to a per-second value. Channel duration, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Inferno Sentry").toLowerCase()]: {
+    label: "per second",
+    note: "Inferno Sentry totals use Skills.txt stream damage scaled to a per-second value. Trap count, channel duration, target count, and fire stream overlap are not multiplied into totals.",
   },
   [normalizeSkillName("Arctic Blast").toLowerCase()]: {
     label: "per second",
@@ -155,6 +334,48 @@ const SKILL_DAMAGE_SCOPE_DEFINITIONS: Record<string, DamageScopeDefinition> = {
   [normalizeSkillName("Firestorm").toLowerCase()]: {
     label: "per second",
     note: "Firestorm totals use Skills.txt stream damage scaled to a per-second value. Stream overlap, target count, and cast rate are not multiplied into totals.",
+  },
+  [normalizeSkillName("Thunder Storm").toLowerCase()]: {
+    label: "per strike plus nova",
+    note: "Thunder Storm totals include the direct lightning strike plus one modeled thunderstormnova payload. Storm duration, strike frequency, nova target count, and repeated strikes are not multiplied into totals.",
+  },
+  [normalizeSkillName("Hurricane").toLowerCase()]: {
+    label: "per projectile hit",
+    note: "Hurricane totals are per modeled projectile hit from Skills.txt damage fields. Aura duration, pulse frequency, target count, and repeated hits are not multiplied into totals.",
+  },
+  [normalizeSkillName("Armageddon").toLowerCase()]: {
+    label: "per impact plus ground fire",
+    note: "Armageddon totals include the physical/fire impact plus one modeled armageddonfire ground-fire payload. Storm duration, rock count, ground-fire duration, target count, and repeated impacts are not multiplied into totals.",
+  },
+  [normalizeSkillName("Blade Sentinel").toLowerCase()]: {
+    label: "per projectile hit",
+    note: "Blade Sentinel totals are per weapon-carried projectile hit. Sentinel duration, travel path, repeated contacts, hit chance, and target count are not multiplied into totals.",
+  },
+  [normalizeSkillName("Charged Bolt Sentry").toLowerCase()]: {
+    label: "per projectile hit",
+    countColumn: "calc3",
+    countLabel: "bolts",
+    note: "Charged Bolt Sentry totals are per bolt hit. Skills.txt calc3 exposes bolt count, but trap count, shots fired, projectile overlap, and target count are not multiplied into totals.",
+  },
+  [normalizeSkillName("Wake of Fire Sentry").toLowerCase()]: {
+    label: "per projectile hit",
+    note: "Wake of Fire Sentry totals are per fire-wave projectile hit. Trap count, shots fired, projectile overlap, and target count are not multiplied into totals.",
+  },
+  [normalizeSkillName("Lightning Sentry").toLowerCase()]: {
+    label: "per projectile hit",
+    note: "Lightning Sentry totals are per lightning projectile hit. Trap count, shots fired, pierce or target count, and repeated hits are not multiplied into totals.",
+  },
+  [normalizeSkillName("Chain Lightning Sentry").toLowerCase()]: {
+    label: "per projectile hit",
+    note: "Chain Lightning Sentry totals are per chain-lightning projectile hit. Trap count, shots fired, chain jumps, and target count are not multiplied into totals.",
+  },
+  [normalizeSkillName("Death Sentry").toLowerCase()]: {
+    label: "per projectile hit",
+    note: "Death Sentry totals are per fire projectile hit from Skills.txt damage fields. Corpse explosion damage is corpse/target-dependent and intentionally excluded from damage totals.",
+  },
+  [normalizeSkillName("Corpse Explosion").toLowerCase()]: {
+    label: "target input required",
+    note: "Corpse Explosion corpse-life damage is corpse/target-dependent and intentionally excluded from damage totals. Displayed game-file payloads do not represent a full corpse explosion estimate.",
   },
   [normalizeSkillName("Fists of Fire").toLowerCase()]: {
     label: "per full charge release",
@@ -175,6 +396,70 @@ const SKILL_DAMAGE_SCOPE_DEFINITIONS: Record<string, DamageScopeDefinition> = {
   [normalizeSkillName("Royal Strike").toLowerCase()]: {
     label: "per full charge release",
     note: "Royal Strike totals include the modeled charge-release payloads exposed by Skills.txt and referenced Missiles.txt rows. Charge-building attacks, hit chance, attack speed, target count, and missile overlap are not multiplied into totals.",
+  },
+};
+
+const MARTIAL_ARTS_CHARGE_SKILL_DEFINITIONS: Record<
+  string,
+  MartialArtsChargeDefinition
+> = {
+  [normalizeSkillName("Tiger Strike").toLowerCase()]: {
+    chargeCount: 3,
+    selectedSkillDamagePercentByCharge: {
+      1: "ln12",
+      2: "2*ln12",
+      3: "3*ln12",
+    },
+    missileRowsByCharge: {},
+  },
+  [normalizeSkillName("Fists of Fire").toLowerCase()]: {
+    chargeCount: 3,
+    skillComponentCharge: 1,
+    missileRowsByCharge: {
+      1: ["fistsoffirefirewall"],
+      2: ["fistsoffirenova"],
+      3: ["fofmeteor", "fofmeteorfire"],
+    },
+  },
+  [normalizeSkillName("Cobra Strike").toLowerCase()]: {
+    chargeCount: 3,
+    selectedSkillDamagePercentByCharge: {
+      2: "clc2",
+    },
+    missileRowsByCharge: {
+      1: ["cobrastrikepoisonbolt"],
+      3: ["cobrastrikepoisoncloud"],
+    },
+  },
+  [normalizeSkillName("Claws of Thunder").toLowerCase()]: {
+    chargeCount: 3,
+    skillComponentCharge: 1,
+    missileRowsByCharge: {
+      2: ["clawsofthundernova"],
+      3: ["clawsofthunderbolt", "cotthunderstorm"],
+    },
+  },
+  [normalizeSkillName("Blades of Ice").toLowerCase()]: {
+    chargeCount: 3,
+    skillComponentCharge: 1,
+    missileRowsByCharge: {
+      2: ["boiwavemaker", "boiwavetrail"],
+      3: ["boichaosice"],
+    },
+  },
+  [normalizeSkillName("Royal Strike").toLowerCase()]: {
+    chargeCount: 3,
+    missileRowsByCharge: {
+      1: ["royalstrikemeteor", "royalstrikemeteorfire"],
+      2: ["royalstrikechainlightning"],
+      3: ["royalstrikechaosice"],
+    },
+  },
+  [normalizeSkillName("Maul").toLowerCase()]: {
+    chargeCountExpression: "calc2",
+    chargeLabel: "Stack",
+    selectedSkillDamagePercentPerChargeExpression: "par3",
+    missileRowsByCharge: {},
   },
 };
 
@@ -212,6 +497,16 @@ type DirectSkillDamage = {
   >;
   poisonRange?: DamageRange;
   poisonDamage?: PoisonDamage;
+};
+
+type MartialArtsChargeDefinition = {
+  chargeCount?: number;
+  chargeCountExpression?: string;
+  chargeLabel?: string;
+  skillComponentCharge?: number;
+  selectedSkillDamagePercentByCharge?: Record<number, string>;
+  selectedSkillDamagePercentPerChargeExpression?: string;
+  missileRowsByCharge: Record<number, string[]>;
 };
 
 type WeaponSet = "primary" | "secondary";
@@ -296,6 +591,16 @@ const GAME_TABLE_DEFINITIONS: Record<GameTableName, GameTableDefinition> = {
     required: true,
   },
   MonStats: { fileName: "MonStats.txt", keyColumn: "Id" },
+  Properties: {
+    fileName: "Properties.txt",
+    keyColumn: "code",
+    required: true,
+  },
+  ItemStatCost: {
+    fileName: "ItemStatCost.txt",
+    keyColumn: "Stat",
+    required: true,
+  },
 };
 
 function getRequiredGameTableFiles(): string[] {
@@ -401,16 +706,11 @@ const WEAPON_ELEMENTAL_DAMAGE_CALC_DESCRIPTIONS: Record<
   "lightning damage%": "lightning",
 };
 
-const SKILL_MISSILE_COLUMNS = [
+const SERVER_SKILL_MISSILE_COLUMNS = [
   "srvmissile",
   "srvmissilea",
   "srvmissileb",
   "srvmissilec",
-  "cltmissile",
-  "cltmissilea",
-  "cltmissileb",
-  "cltmissilec",
-  "cltmissiled",
 ] as const;
 
 const SKILL_DESC_MISSILE_COLUMNS = [
@@ -418,6 +718,58 @@ const SKILL_DESC_MISSILE_COLUMNS = [
   "descmissile2",
   "descmissile3",
 ] as const;
+
+const SKILL_WEAPON_TYPE_COLUMN_PREFIXES = ["itypea", "itypeb"] as const;
+
+const ITEM_WEAPON_TYPE_PARENTS: Record<string, string[]> = {
+  abow: ["bow", "amaz"],
+  ajav: ["jave", "amaz"],
+  assn: ["clas", "asm"],
+  aspe: ["spea", "amaz"],
+  axe: ["mgen"],
+  blun: ["mgen"],
+  bow: ["miss", "rng"],
+  club: ["blun"],
+  comb: ["mele", "thro"],
+  h2h: ["mele", "assn"],
+  h2h2: ["h2h"],
+  hamm: ["blun"],
+  jave: ["comb", "spea"],
+  knif: ["mgen", "asm"],
+  mace: ["blun"],
+  mele: ["weap"],
+  mgen: ["mele"],
+  miss: ["weap", "rng"],
+  orb: ["weap", "sorc"],
+  pole: ["mele", "pas"],
+  rod: ["blun"],
+  sc9: ["pole"],
+  scep: ["rod", "gen"],
+  spea: ["mele", "pas"],
+  staf: ["rod"],
+  swor: ["mgen"],
+  taxe: ["comb", "axe"],
+  thro: ["weap", "rng"],
+  tkni: ["comb", "knif"],
+  wand: ["rod"],
+  xbow: ["miss", "rng"],
+};
+
+const KNOWN_SKILL_WEAPON_TYPE_CODES = new Set([
+  "asm",
+  "comb",
+  "h2h",
+  "h2h2",
+  "jave",
+  "knif",
+  "mele",
+  "miss",
+  "sc9",
+  "shld",
+  "spea",
+  "thro",
+  "weap",
+]);
 
 const REQUIRED_WEAPON_SEQUENCE_SKILLS: Record<
   string,
@@ -472,13 +824,6 @@ const MISSILE_CHILD_COLUMNS = [
   "HitSubMissile2",
   "HitSubMissile3",
   "HitSubMissile4",
-  "CltSubMissile1",
-  "CltSubMissile2",
-  "CltSubMissile3",
-  "CltHitSubMissile1",
-  "CltHitSubMissile2",
-  "CltHitSubMissile3",
-  "CltHitSubMissile4",
 ] as const;
 
 const SKILL_NAME_ALIASES: Record<string, string> = {
@@ -657,6 +1002,65 @@ function getGameRowNumber(
 ): number {
   const value = Number(getGameRowString(tableName, row, columnName));
   return Number.isFinite(value) ? value : 0;
+}
+
+function getGameSkillRowName(skillName: string): string {
+  const skillRow = getGameRow("Skills", skillName);
+  return skillRow
+    ? getGameRowString("Skills", skillRow, "skill") || skillName
+    : skillName;
+}
+
+function getMartialArtsChargeDefinition(
+  skillName: string
+):
+  | (MartialArtsChargeDefinition & {
+      sourceSkillName: string;
+    })
+  | undefined {
+  const sourceSkillName = getGameSkillRowName(skillName);
+  const definition =
+    MARTIAL_ARTS_CHARGE_SKILL_DEFINITIONS[
+      normalizeSkillName(sourceSkillName).toLowerCase()
+    ] ||
+    MARTIAL_ARTS_CHARGE_SKILL_DEFINITIONS[
+      normalizeSkillName(skillName).toLowerCase()
+    ];
+
+  return definition ? { ...definition, sourceSkillName } : undefined;
+}
+
+function getChargeCountForDefinition(
+  definition: MartialArtsChargeDefinition,
+  sourceSkillName: string,
+  level: number,
+  skillMap: Map<string, SkillEntry>
+): number {
+  if (definition.chargeCountExpression) {
+    const skillRow = getGameRow("Skills", sourceSkillName);
+    if (skillRow) {
+      const expression =
+        getGameRowString("Skills", skillRow, definition.chargeCountExpression) ||
+        definition.chargeCountExpression;
+      const count = evaluateGameCalcExpression(
+        expression,
+        skillRow,
+        skillMap,
+        level
+      );
+      if (count > 0) {
+        return Math.max(1, Math.floor(count));
+      }
+    }
+  }
+
+  return definition.chargeCount || 0;
+}
+
+function getSkillProfileKeySuffix(skillOption: DamageSkillOption): string {
+  return skillOption.chargeVariant === "charge" && skillOption.chargeNumber
+    ? `::charge:${skillOption.chargeNumber}`
+    : "";
 }
 
 function getGameSkillDescRow(skillRow: string[]): string[] | undefined {
@@ -1198,6 +1602,50 @@ function getDamageScope(
   return DEFAULT_DAMAGE_SCOPE;
 }
 
+function getChargeDamageScope(
+  skillOption: DamageSkillOption,
+  displaySkillName: string,
+  sourceSkillName: string
+): DamageProfile["damageScope"] | undefined {
+  const definition = getMartialArtsChargeDefinition(sourceSkillName);
+  if (
+    !definition ||
+    skillOption.chargeVariant !== "charge" ||
+    !skillOption.chargeNumber
+  ) {
+    return undefined;
+  }
+
+  const chargeNumber = skillOption.chargeNumber;
+  const chargeLabel = definition.chargeLabel || "Charge";
+  const chargeLabelLower = chargeLabel.toLowerCase();
+  const isStack = chargeLabelLower === "stack";
+  const label = `${chargeLabelLower} ${chargeNumber} hit`;
+  const note = isStack
+    ? `${displaySkillName} stack ${chargeNumber} totals include one weapon hit with the stack ${chargeNumber} damage percent exposed by Skills.txt. Stack buildup, duration, hit chance, attack speed, and target count are not multiplied into totals.`
+    : `${displaySkillName} charge ${chargeNumber} totals include normal hit damage plus only the modeled charge ${chargeNumber} payload. Earlier charges, charges from other skills, kick-finisher releases, charge-building attacks, hit chance, attack speed, target count, and repeated missile overlap are not multiplied into totals.`;
+
+  return {
+    label,
+    count: skillOption.chargeCount || definition.chargeCount,
+    countLabel: isStack ? "stacks" : "charges",
+    note,
+    sourceRefs: [
+      {
+        table: "Skills.txt",
+        row: sourceSkillName,
+        columns: [
+          "srvdofunc",
+          "srvprgfunc*",
+          "prgcalc*",
+          "srvmissile*",
+          "cltmissile*",
+        ],
+      },
+    ],
+  };
+}
+
 function getPlayerAuraDefinitionsFromGameData(): PlayerAuraDefinition[] {
   const definitions = new Map<string, PlayerAuraDefinition>();
   const addDefinition = (definition: PlayerAuraDefinition) => {
@@ -1316,6 +1764,32 @@ function getManualAuraLevelOptions(definition: PlayerAuraDefinition): number[] {
 
 function getGameSkillParam(row: string[], paramNumber: number): number {
   return getGameRowNumber("Skills", row, `Param${paramNumber}`);
+}
+
+function getGameLinearParamValue(
+  row: string[],
+  level: number,
+  firstParam: string,
+  secondParam: string
+): number {
+  return (
+    getGameSkillParam(row, Number(firstParam)) +
+    Math.max(0, level - 1) * getGameSkillParam(row, Number(secondParam))
+  );
+}
+
+function getGameDiminishingParamValue(
+  row: string[],
+  level: number,
+  firstParam: string,
+  secondParam: string
+): number {
+  const min = getGameSkillParam(row, Number(firstParam));
+  const max = getGameSkillParam(row, Number(secondParam));
+  const effectiveLevel = Math.max(0, level);
+  const scale = Math.floor((110 * effectiveLevel) / (effectiveLevel + 6));
+
+  return Math.min(max, min + Math.floor(((max - min) * scale) / 100));
 }
 
 function getGameLevelScaledValue(
@@ -1488,9 +1962,14 @@ function evaluateGameCalcExpression(
   }
 
   const linear = (_: string, firstParam: string, secondParam: string) => {
-    const base = getGameSkillParam(skillRow, Number(firstParam));
-    const perLevel = getGameSkillParam(skillRow, Number(secondParam));
-    return String(base + Math.max(0, level - 1) * perLevel);
+    return String(
+      getGameLinearParamValue(skillRow, level, firstParam, secondParam)
+    );
+  };
+  const diminishing = (_: string, firstParam: string, secondParam: string) => {
+    return String(
+      getGameDiminishingParamValue(skillRow, level, firstParam, secondParam)
+    );
   };
   const elementalMin = getGameLevelScaledValue(
     "Skills",
@@ -1550,7 +2029,42 @@ function evaluateGameCalcExpression(
         );
       }
     )
+    .replace(
+      /skill\('([^']+)'\.ln([1-8])([1-8])\)/g,
+      (_, skillName: string, firstParam: string, secondParam: string) => {
+        const sourceRow = getGameRow("Skills", skillName);
+        const sourceLevel = getGameSkillEntry(skillMap, skillName).level;
+        return String(
+          sourceRow && sourceLevel > 0
+            ? getGameLinearParamValue(
+                sourceRow,
+                sourceLevel,
+                firstParam,
+                secondParam
+              )
+            : 0
+        );
+      }
+    )
+    .replace(
+      /skill\('([^']+)'\.dm([1-8])([1-8])\)/g,
+      (_, skillName: string, firstParam: string, secondParam: string) => {
+        const sourceRow = getGameRow("Skills", skillName);
+        const sourceLevel = getGameSkillEntry(skillMap, skillName).level;
+        return String(
+          sourceRow && sourceLevel > 0
+            ? getGameDiminishingParamValue(
+                sourceRow,
+                sourceLevel,
+                firstParam,
+                secondParam
+              )
+            : 0
+        );
+      }
+    )
     .replace(/\bln([1-8])([1-8])\b/g, linear)
+    .replace(/\bdm([1-8])([1-8])\b/g, diminishing)
     .replace(/\btoht\b/g, () =>
       String(
         getGameRowNumber("Skills", skillRow, "ToHit") +
@@ -1666,6 +2180,16 @@ function applyGameDotMultiplier(
   };
 }
 
+function getGameComponentTiming(
+  elementType: string,
+  dotMultiplier: number,
+  isDirectAttackPayload = false
+): "instant" | "over_time" {
+  return elementType === "pois" || (!isDirectAttackPayload && dotMultiplier !== 1)
+    ? "over_time"
+    : "instant";
+}
+
 function hasGameMissileDamage(missileRow: string[]): boolean {
   return Boolean(
     getGameRowString("Missiles", missileRow, "MinDamage") ||
@@ -1690,7 +2214,7 @@ function getGameSkillMissileNames(skillRow: string[]): string[] {
     pending.push(missileName);
   };
 
-  SKILL_MISSILE_COLUMNS.forEach((columnName) => {
+  SERVER_SKILL_MISSILE_COLUMNS.forEach((columnName) => {
     queueMissile(getGameRowString("Skills", skillRow, columnName));
   });
 
@@ -1900,7 +2424,11 @@ function getGameSkillComponents(
             ],
           },
         ],
-        element === "poison" ? "over_time" : "instant"
+        getGameComponentTiming(
+          eType,
+          multiplier,
+          isGameWeaponAttackSkill(skillName)
+        )
       )
     );
   }
@@ -2105,7 +2633,7 @@ function getGameMissileComponents(
             ],
           },
         ],
-        element === "poison" ? "over_time" : "instant"
+        getGameComponentTiming(eType, multiplier)
       )
     );
   }
@@ -2369,6 +2897,7 @@ function buildWeaponSetContext(
     ...characterData,
     realSkills,
   } as CharacterData;
+  const skillMap = getSkillMap(setAwareCharacterData);
   const playerItems = getPlayerItemsForWeaponSet(
     characterData.items,
     weaponSet
@@ -2377,10 +2906,17 @@ function buildWeaponSetContext(
   return {
     weaponSet,
     realStats,
-    skillMap: getSkillMap(setAwareCharacterData),
+    skillMap,
     playerItems,
     alwaysActiveAuras: dedupeAuras(
-      collectAlwaysActiveAuras(playerItems, characterData.mercenary)
+      [
+        ...collectAlwaysActiveAuras(playerItems, characterData.mercenary),
+        ...collectCallToArmsBattleCommand(
+          playerItems,
+          skillMap,
+          characterData.character.class.name
+        ),
+      ]
     ),
   };
 }
@@ -2769,9 +3305,8 @@ function getWeaponOptions(characterData: CharacterData): WeaponSelection[] {
       }
 
       if (
-        !isBowWeapon &&
-        slot === "right" &&
-        !leftHandOccupied &&
+        (isBowWeapon || slot === "right") &&
+        (isBowWeapon || !leftHandOccupied) &&
         hasDamageRange(item.damage?.two_handed)
       ) {
         selections.push({
@@ -2948,6 +3483,61 @@ function isDamageAura(auraName: string): boolean {
   );
 }
 
+function collectCallToArmsBattleCommand(
+  playerItems: IItem[],
+  skillMap: Map<string, SkillEntry>,
+  characterClass: string
+): AuraSource[] {
+  const activeItems = playerItems.filter(
+    (item) => isEquippedItem(item) || isActiveInventoryCharm(item)
+  );
+  const callToArmsItems = activeItems.filter(
+    (item) =>
+      item.name.trim().toLowerCase() === "call to arms" &&
+      ALL_HAND_EQUIPMENT_SLOTS.has(item.location?.equipment || "")
+  );
+  const directLevel = callToArmsItems.reduce(
+    (total, item) =>
+      total +
+      item.properties.reduce((itemTotal, property) => {
+        const match = property?.match(/^\+(\d+) to Battle Command$/i);
+        return itemTotal + (match ? Number(match[1]) : 0);
+      }, 0),
+    0
+  );
+
+  if (directLevel <= 0) {
+    return [];
+  }
+
+  const allSkillsLevel = activeItems.reduce(
+    (total, item) =>
+      total +
+      item.properties.reduce((itemTotal, property) => {
+        const match = property?.match(/^\+(\d+) to All Skills$/i);
+        return itemTotal + (match ? Number(match[1]) : 0);
+      }, 0),
+    0
+  );
+  const existingBattleCommand = getSkillEntry(skillMap, "Battle Command");
+  const itemGrantedLevel =
+    (characterClass.toLowerCase() === "barbarian"
+      ? Math.min(directLevel, 3)
+      : directLevel) + allSkillsLevel;
+
+  return [
+    {
+      name: "Battle Command",
+      level:
+        existingBattleCommand.baseLevel > 0
+          ? existingBattleCommand.level
+          : itemGrantedLevel,
+      source: "player_item",
+      carrier: "self",
+    },
+  ];
+}
+
 function collectAlwaysActiveAuras(
   playerItems: IItem[],
   mercenary?: CharacterData["mercenary"]
@@ -3047,6 +3637,19 @@ function dedupeAuras(auraSources: AuraSource[]): AuraSource[] {
   );
 }
 
+function isDefaultActivePlayerBuff(definition: PlayerAuraDefinition): boolean {
+  if (definition.sourceSkillNames?.length) {
+    return false;
+  }
+
+  const skillRow = getGameRow("Skills", definition.skillName);
+  return Boolean(
+    skillRow &&
+      (isGameSelfOrPartyBuffSkill(definition.skillName) ||
+        isGameSelfOnlyPoisonBuffSkill(skillRow))
+  );
+}
+
 function collectPlayerAuraOptions(
   contexts: Record<WeaponSet, WeaponSetContext>
 ): DamageAuraOption[] {
@@ -3055,6 +3658,7 @@ function collectPlayerAuraOptions(
       id: "none",
       name: "No active aura",
       level: 0,
+      defaultActive: false,
       levelOptions: [0],
       levelBonuses: [],
       selfLevelBonuses: [],
@@ -3064,6 +3668,7 @@ function collectPlayerAuraOptions(
   ];
 
   const auraLevels = new Map<string, number>();
+  const allocatedBuffIds = new Set<string>();
 
   Object.values(contexts).forEach((context) => {
     Array.from(context.skillMap.entries())
@@ -3077,6 +3682,13 @@ function collectPlayerAuraOptions(
           auraId,
           Math.max(auraLevels.get(auraId) || 0, entry.level)
         );
+        if (
+          definition &&
+          entry.baseLevel > 0 &&
+          isDefaultActivePlayerBuff(definition)
+        ) {
+          allocatedBuffIds.add(auraId);
+        }
       });
   });
 
@@ -3093,6 +3705,7 @@ function collectPlayerAuraOptions(
       id: definition.id,
       name: definition.name,
       level: ownedLevel || 1,
+      defaultActive: ownedLevel > 0 && allocatedBuffIds.has(definition.id),
       levelOptions,
       levelBonuses: selfLevelBonuses,
       selfLevelBonuses,
@@ -3163,6 +3776,11 @@ function collectDamageSkillOptions(
       damageMode: DamageSkillOption["damageMode"];
       sourceSkillName?: string;
       summonVariant?: string;
+      chargeVariant?: DamageSkillOption["chargeVariant"];
+      chargeNumber?: number;
+      chargeCount?: number;
+      defaultChargeNumber?: number;
+      chargeLabel?: string;
       canUseTransformation: boolean;
       allowedTransformationIds: string[];
     }
@@ -3183,23 +3801,64 @@ function collectDamageSkillOptions(
           : isSelectableSummonSkill(skillName)
             ? "summon"
             : "spell";
+        const chargeDefinition =
+          damageMode === "weapon"
+            ? getMartialArtsChargeDefinition(skillName)
+            : undefined;
+        const chargeSourceSkillName = chargeDefinition?.sourceSkillName;
+        const chargeCount =
+          chargeDefinition && chargeSourceSkillName
+            ? getChargeCountForDefinition(
+                chargeDefinition,
+                chargeSourceSkillName,
+                entry.level,
+                context.skillMap
+              )
+            : undefined;
         const optionSources =
-          damageMode === "summon" &&
-          getSummonVariantDefinitions(skillName).length > 0
-            ? getSummonVariantDefinitions(skillName).map((variant) => ({
-                id: `${skillName}::${variant.id}`,
-                name: `${skillName} (${variant.label})`,
-                sourceSkillName: skillName,
-                summonVariant: variant.id,
-              }))
-            : [
+          chargeDefinition && chargeCount
+            ? [
                 {
                   id: skillName,
                   name: skillName,
-                  sourceSkillName: undefined,
+                  sourceSkillName:
+                    chargeDefinition.sourceSkillName === skillName
+                      ? undefined
+                      : chargeDefinition.sourceSkillName,
                   summonVariant: undefined,
+                  chargeVariant: undefined,
+                  chargeNumber: undefined,
+                  chargeCount,
+                  defaultChargeNumber: chargeCount,
+                  chargeLabel: chargeDefinition.chargeLabel || "Charge",
                 },
-              ];
+              ]
+            : damageMode === "summon" &&
+                getSummonVariantDefinitions(skillName).length > 0
+              ? getSummonVariantDefinitions(skillName).map((variant) => ({
+                  id: `${skillName}::${variant.id}`,
+                  name: `${skillName} (${variant.label})`,
+                  sourceSkillName: skillName,
+                  summonVariant: variant.id,
+                  chargeVariant: undefined,
+                  chargeNumber: undefined,
+                  chargeCount: undefined,
+                  defaultChargeNumber: undefined,
+                  chargeLabel: undefined,
+                }))
+              : [
+                  {
+                    id: skillName,
+                    name: skillName,
+                    sourceSkillName: undefined,
+                    summonVariant: undefined,
+                    chargeVariant: undefined,
+                    chargeNumber: undefined,
+                    chargeCount: undefined,
+                    defaultChargeNumber: undefined,
+                    chargeLabel: undefined,
+                  },
+                ];
 
         optionSources.forEach((source) => {
           const current = damageSkillLevels.get(source.id);
@@ -3215,6 +3874,17 @@ function collectDamageSkillOptions(
             name: source.name,
             sourceSkillName: source.sourceSkillName,
             summonVariant: source.summonVariant,
+            chargeVariant: source.chargeVariant,
+            chargeNumber: source.chargeNumber,
+            chargeCount: Math.max(
+              current?.chargeCount || 0,
+              source.chargeCount || 0
+            ),
+            defaultChargeNumber: Math.max(
+              current?.defaultChargeNumber || 0,
+              source.defaultChargeNumber || 0
+            ),
+            chargeLabel: source.chargeLabel || current?.chargeLabel,
             damageMode,
             canUseTransformation:
               Boolean(current?.canUseTransformation) ||
@@ -3240,6 +3910,11 @@ function collectDamageSkillOptions(
         damageMode: metadata.damageMode,
         sourceSkillName: metadata.sourceSkillName,
         summonVariant: metadata.summonVariant,
+        chargeVariant: metadata.chargeVariant,
+        chargeNumber: metadata.chargeNumber,
+        chargeCount: metadata.chargeCount || undefined,
+        defaultChargeNumber: metadata.defaultChargeNumber || undefined,
+        chargeLabel: metadata.chargeLabel,
         canUseTransformation: metadata.canUseTransformation,
         allowedTransformationIds: metadata.allowedTransformationIds,
       });
@@ -3468,6 +4143,7 @@ function createDamageComponent(component: {
   damage: DamageRange;
   baseDamage?: DamageRange;
   poisonDamage?: PoisonDamage;
+  includedInTotal?: boolean;
   sourceRefs?: DamageSourceReference[];
   notes?: string[];
 }): DamageComponent {
@@ -3482,6 +4158,7 @@ function createDamageComponent(component: {
       ? normalizeDamageRange(component.baseDamage)
       : undefined,
     poisonDamage: component.poisonDamage,
+    includedInTotal: component.includedInTotal,
     sourceRefs: component.sourceRefs || [],
     notes: component.notes || [],
   };
@@ -3516,10 +4193,13 @@ function sumDamageComponents(
 function buildDamageTotals(
   components: readonly DamageComponent[]
 ): DamageTotals {
+  const includedComponents = components.filter(
+    (component) => component.includedInTotal !== false
+  );
   const byElement: Partial<Record<DamageElement, DamageRange>> = {};
   let poisonDamage: PoisonDamage | undefined;
 
-  components.forEach((component) => {
+  includedComponents.forEach((component) => {
     if (!isNonZeroDamageRange(component.damage)) {
       return;
     }
@@ -3541,11 +4221,11 @@ function buildDamageTotals(
   });
 
   const instantDamage = sumDamageComponents(
-    components,
+    includedComponents,
     (component) => component.timing === "instant"
   );
   const overTimeDamage = sumDamageComponents(
-    components,
+    includedComponents,
     (component) => component.timing === "over_time"
   );
   const combinedDamage = addDamageRange(instantDamage, overTimeDamage);
@@ -3606,6 +4286,66 @@ function directSkillDamageToComponents(
       return damageComponent;
     })
     .filter((component) => isNonZeroDamageRange(component.damage));
+}
+
+function getDamageComponentSourceRows(component: DamageComponent): string[] {
+  return component.sourceRefs
+    .map((sourceRef) => sourceRef.row)
+    .filter((row): row is string => Boolean(row));
+}
+
+function getChargeNumberForDamageComponent(
+  component: DamageComponent,
+  definition: MartialArtsChargeDefinition,
+  sourceSkillName: string
+): number | undefined {
+  const sourceRows = getDamageComponentSourceRows(component);
+  if (
+    component.source === "skill" &&
+    definition.skillComponentCharge &&
+    sourceRows.some(
+      (row) =>
+        normalizeSkillName(row).toLowerCase() ===
+        normalizeSkillName(sourceSkillName).toLowerCase()
+    )
+  ) {
+    return definition.skillComponentCharge;
+  }
+
+  const matchingCharge = Object.entries(definition.missileRowsByCharge).find(
+    ([, missileRows]) =>
+      sourceRows.some((row) =>
+        missileRows.some(
+          (missileRow) => row.toLowerCase() === missileRow.toLowerCase()
+        )
+      )
+  );
+
+  return matchingCharge ? Number(matchingCharge[0]) : undefined;
+}
+
+function getChargeVariantDamageComponents(
+  skillOption: DamageSkillOption,
+  sourceSkillName: string,
+  components: DamageComponent[]
+): DamageComponent[] {
+  const definition = getMartialArtsChargeDefinition(sourceSkillName);
+  if (
+    !definition ||
+    skillOption.chargeVariant !== "charge" ||
+    !skillOption.chargeNumber
+  ) {
+    return components;
+  }
+
+  return components.filter((component) => {
+    const componentCharge = getChargeNumberForDamageComponent(
+      component,
+      definition,
+      sourceSkillName
+    );
+    return componentCharge === skillOption.chargeNumber;
+  });
 }
 
 function directSummonDamageToComponents(
@@ -3813,16 +4553,10 @@ function getSummonedSkillComponents(
     if (!summonedSkillName) {
       continue;
     }
-    const summonedSkillRow = getGameRow("Skills", summonedSkillName);
     const isMonsterListedSkill = allowedSummonedSkillNames.has(
       summonedSkillName.toLowerCase()
     );
-    const isSummonOwnedAuraSkill = Boolean(
-      summonedSkillRow &&
-      getGameRowString("Skills", summonedSkillRow, "aura") === "1" &&
-      !getGameRowString("Skills", summonedSkillRow, "charclass")
-    );
-    if (!isMonsterListedSkill && !isSummonOwnedAuraSkill) {
+    if (!isMonsterListedSkill) {
       continue;
     }
 
@@ -4336,6 +5070,71 @@ function getWeaponElementalDamagePercentComponents(
   return components;
 }
 
+function getSummonedAuraPulseDamageComponents(
+  ownerSkillName: string,
+  skillRow: string[],
+  ownerLevel: number,
+  skillMap: Map<string, SkillEntry>,
+  realStats: CharacterData["realStats"] | undefined
+): DamageComponent[] {
+  const components: DamageComponent[] = [];
+  for (let index = 1; index <= 5; index += 1) {
+    const summonedSkillName = getGameRowString(
+      "Skills",
+      skillRow,
+      `sumskill${index}`
+    );
+    if (!summonedSkillName) {
+      continue;
+    }
+
+    const summonedSkillRow = getGameRow("Skills", summonedSkillName);
+    const isSummonOwnedAuraSkill = Boolean(
+      summonedSkillRow &&
+        getGameRowString("Skills", summonedSkillRow, "aura") === "1" &&
+        !getGameRowString("Skills", summonedSkillRow, "charclass")
+    );
+    if (!isSummonOwnedAuraSkill) {
+      continue;
+    }
+
+    const summonedLevel = getSummonedSkillLevel(
+      skillRow,
+      skillMap,
+      ownerLevel,
+      index
+    );
+    components.push(
+      ...getAuraPulseDamageComponents(
+        {
+          name: summonedSkillName,
+          level: summonedLevel,
+          source: "player_skill",
+          carrier: "party",
+        },
+        skillMap,
+        realStats,
+        `summon-aura-pulse:${ownerSkillName}`,
+        `${ownerSkillName} owns ${summonedSkillName} through Skills.txt sumskill${index}; pulse damage is displayed separately and is not added to the summon hit total.`
+      ).map((component) => ({
+        ...component,
+        label: `${ownerSkillName} ${component.label}`,
+        sourceRefs: [
+          {
+            table: "Skills.txt",
+            row:
+              getGameRowString("Skills", skillRow, "skill") || ownerSkillName,
+            columns: [`sumskill${index}`, `sumsk${index}calc`],
+          },
+          ...component.sourceRefs,
+        ],
+      }))
+    );
+  }
+
+  return components;
+}
+
 function createWeaponElementalDamageComponents(
   skillName: string,
   level: number,
@@ -4376,6 +5175,111 @@ function createWeaponElementalDamageComponents(
             row: getGameRowString("Skills", skillRow, "skill") || skillName,
             columns: [calcColumn, descColumn, "SrcDam", "HitShift"],
             note: "Elemental percent is applied to the modeled weapon-source damage for this attack.",
+          },
+        ],
+      });
+    })
+    .filter((component) => isNonZeroDamageRange(component.damage));
+}
+
+function isVengeanceSkill(skillName: string): boolean {
+  return normalizeSkillName(skillName) === normalizeSkillName("Vengeance");
+}
+
+function getVengeanceFlatElementalDamage(level: number): DamageRange {
+  const skillRow = getGameRow("Skills", "Vengeance");
+  if (!skillRow) {
+    return createEmptyDamageRange();
+  }
+
+  return (
+    getGameLevelScaledRange(
+      "Skills",
+      skillRow,
+      level,
+      "EMin",
+      "EMax",
+      ["EMinLev1", "EMinLev2", "EMinLev3", "EMinLev4", "EMinLev5"],
+      ["EMaxLev1", "EMaxLev2", "EMaxLev3", "EMaxLev4", "EMaxLev5"]
+    ) || createEmptyDamageRange()
+  );
+}
+
+function createVengeanceElementalDamageComponents(
+  skillName: string,
+  level: number,
+  skillMap: Map<string, SkillEntry>,
+  weaponDamage: DamageRange,
+  itemElementalDamage: Partial<
+    Record<"fire" | "cold" | "lightning" | "magic", DamageRange>
+  >,
+  realStats?: CharacterData["realStats"]
+): DamageComponent[] {
+  const skillRow = getGameRow("Skills", skillName);
+  if (!skillRow) {
+    return [];
+  }
+
+  const flatSkillDamage = getVengeanceFlatElementalDamage(level);
+
+  return getWeaponElementalDamagePercentComponents(
+    skillName,
+    level,
+    skillMap
+  )
+    .map(({ element, percent, calcColumn, descColumn }) => {
+      const baseDamage = addDamageRange(
+        addDamageRange(createEmptyDamageRange(), weaponDamage),
+        itemElementalDamage[element]
+      );
+      const convertedBaseDamage = addDamageRange(baseDamage, flatSkillDamage);
+      const afterSkillPercent = floorScaleDamageRange(
+        convertedBaseDamage,
+        1 + percent / 100
+      );
+      const elementalBonusPercent = getGameElementalBonusPercent(
+        element,
+        skillMap,
+        realStats,
+        skillName
+      );
+      const damage = scaleDamageRange(
+        afterSkillPercent,
+        elementalBonusPercent
+      );
+
+      return createDamageComponent({
+        id: `skill-vengeance:${element}`,
+        label: `${skillName} ${element} damage`,
+        source: "skill",
+        damageType: element,
+        damage,
+        baseDamage: convertedBaseDamage,
+        sourceRefs: [
+          {
+            table: "Skills.txt",
+            row: getGameRowString("Skills", skillRow, "skill") || skillName,
+            columns: [
+              calcColumn,
+              descColumn,
+              "EMin",
+              "EMax",
+              "EMinLev1..5",
+              "EMaxLev1..5",
+              "SrcDam",
+              "HitShift",
+            ],
+            note: "Vengeance converts physical weapon damage plus matching item elemental damage, adds its flat skill damage, then applies its elemental damage percent and elemental mastery.",
+          },
+          {
+            table: "Armory item text",
+            columns: [
+              "weapon damage",
+              "adds fire damage",
+              "adds cold damage",
+              "adds lightning damage",
+            ],
+            note: "Matching item fire/cold/lightning damage from equipment and active charms is included in that element's Vengeance converted base.",
           },
         ],
       });
@@ -4432,6 +5336,50 @@ function getSelectedSkillDamagePercent(
   }
 
   return 0;
+}
+
+function getChargeVariantSelectedSkillDamagePercent(
+  skillOption: DamageSkillOption,
+  sourceSkillName: string,
+  level: number,
+  skillMap: Map<string, SkillEntry>
+): number | undefined {
+  const definition = getMartialArtsChargeDefinition(sourceSkillName);
+  if (!definition || skillOption.chargeVariant !== "charge") {
+    return undefined;
+  }
+
+  const skillRow = getGameRow("Skills", sourceSkillName);
+  if (!skillRow) {
+    return undefined;
+  }
+
+  const expressions = definition.selectedSkillDamagePercentByCharge || {};
+  const evaluateCharge = (chargeNumber: number) =>
+    evaluateGameCalcExpression(
+      expressions[chargeNumber] || "",
+      skillRow,
+      skillMap,
+      level
+    );
+
+  if (skillOption.chargeVariant === "charge") {
+    const chargeNumber = skillOption.chargeNumber || 0;
+    if (definition.selectedSkillDamagePercentPerChargeExpression) {
+      return (
+        evaluateGameCalcExpression(
+          definition.selectedSkillDamagePercentPerChargeExpression,
+          skillRow,
+          skillMap,
+          level
+        ) * chargeNumber
+      );
+    }
+
+    return evaluateCharge(chargeNumber);
+  }
+
+  return undefined;
 }
 
 function getTransformationDamagePercent(
@@ -4594,6 +5542,14 @@ function parseItemDamageStats(
       magic: createEmptyDamageRange(),
     };
 
+    const expandedElementalDamage = getExpandedItemElementalDamageRanges(item);
+    (["fire", "cold", "lightning", "magic"] as const).forEach((element) => {
+      const damage = expandedElementalDamage[element];
+      if (damage) {
+        addElementalRange(element, damage.min, damage.max);
+      }
+    });
+
     item.properties.forEach((property) => {
       if (!property) {
         return;
@@ -4631,6 +5587,10 @@ function parseItemDamageStats(
       if (!isWeapon || isSelectedWeapon) {
         const fireDamage = property.match(/^Adds (\d+)-(\d+) Fire Damage$/i);
         if (fireDamage) {
+          if (expandedElementalDamage.fire) {
+            return;
+          }
+
           addElementalRange(
             "fire",
             Number(fireDamage[1]),
@@ -4641,6 +5601,10 @@ function parseItemDamageStats(
 
         const coldDamage = property.match(/^Adds (\d+)-(\d+) Cold Damage$/i);
         if (coldDamage) {
+          if (expandedElementalDamage.cold) {
+            return;
+          }
+
           addElementalRange(
             "cold",
             Number(coldDamage[1]),
@@ -4651,6 +5615,10 @@ function parseItemDamageStats(
 
         const magicDamage = property.match(/^Adds (\d+)-(\d+) Magic Damage$/i);
         if (magicDamage) {
+          if (expandedElementalDamage.magic) {
+            return;
+          }
+
           addElementalRange(
             "magic",
             Number(magicDamage[1]),
@@ -4663,6 +5631,10 @@ function parseItemDamageStats(
           /^Adds (\d+)-(\d+) Lightning Damage$/i
         );
         if (lightningDamage) {
+          if (expandedElementalDamage.lightning) {
+            return;
+          }
+
           addElementalRange(
             "lightning",
             Number(lightningDamage[1]),
@@ -4680,6 +5652,10 @@ function parseItemDamageStats(
             | "cold"
             | "lightning"
             | "magic";
+          if (expandedElementalDamage[element]) {
+            return;
+          }
+
           standaloneElementalDamage[element].min += Number(
             minElementalDamage[2]
           );
@@ -4695,6 +5671,10 @@ function parseItemDamageStats(
             | "cold"
             | "lightning"
             | "magic";
+          if (expandedElementalDamage[element]) {
+            return;
+          }
+
           standaloneElementalDamage[element].max += Number(
             maxElementalDamage[2]
           );
@@ -5171,6 +6151,93 @@ function createAuraPoisonDamageComponent(
   });
 }
 
+function getAuraPulseDamageComponents(
+  aura: AuraSource,
+  skillMap: Map<string, SkillEntry>,
+  realStats: CharacterData["realStats"] | undefined,
+  idPrefix: string,
+  sourceNote?: string
+): DamageComponent[] {
+  const auraSkillName = getAuraFormulaSkillName(aura.name);
+  const skillRow = getGameRow("Skills", auraSkillName);
+  if (!skillRow || getGameRowString("Skills", skillRow, "aura") !== "1") {
+    return [];
+  }
+
+  const auraFormulaSkillMap =
+    aura.source === "player_skill" ? skillMap : EMPTY_SKILL_MAP;
+  const auraRealStats = aura.source === "player_skill" ? realStats : undefined;
+  const directDamage = getGameDirectSkillDamage(
+    auraSkillName,
+    aura.level,
+    auraFormulaSkillMap,
+    auraRealStats
+  );
+  if (!directDamage) {
+    return [];
+  }
+
+  const poisonDuration = getGamePoisonDurationSeconds(auraSkillName) || 0;
+  return directDamage.components
+    .filter((component) => component.source === "skill")
+    .map((component, index) =>
+      createDamageComponent({
+        id: `${idPrefix}:${aura.name}:${aura.level}:${aura.carrier}:${index}:${component.element}`,
+        label: `${aura.name} pulse ${component.element}`,
+        source: "aura",
+        damageType: component.element,
+        timing: component.timing,
+        damage: component.damage,
+        poisonDamage:
+          component.element === "poison"
+            ? {
+                total: Math.floor(averageDamageRange(component.damage)),
+                durationSeconds: poisonDuration,
+              }
+            : undefined,
+        sourceRefs: component.sourceRefs.map((sourceRef) => ({
+          ...sourceRef,
+          note: sourceRef.note || sourceNote,
+        })),
+        notes: component.notes,
+      })
+    )
+    .filter((component) => isNonZeroDamageRange(component.damage));
+}
+
+function getActiveAuraPulseDamageComponents(
+  activeAuras: AuraSource[],
+  skillMap: Map<string, SkillEntry>,
+  realStats: CharacterData["realStats"] | undefined,
+  idPrefix: string
+): DamageComponent[] {
+  return activeAuras.flatMap((aura) =>
+    getAuraPulseDamageComponents(
+      aura,
+      skillMap,
+      realStats,
+      idPrefix,
+      "Aura pulse damage is displayed separately and is not added to the selected attack or spell hit totals."
+    )
+  );
+}
+
+function getAuraPulseProfileFields(
+  auraPulseDamageComponents: DamageComponent[]
+): Pick<
+  DamageProfile,
+  "auraPulseDamageComponents" | "auraPulseDamageTotals"
+> {
+  if (auraPulseDamageComponents.length === 0) {
+    return {};
+  }
+
+  return {
+    auraPulseDamageComponents,
+    auraPulseDamageTotals: buildDamageTotals(auraPulseDamageComponents),
+  };
+}
+
 function getManualAuraLevelBonus(
   auraName: string,
   level: number,
@@ -5193,7 +6260,7 @@ function getManualAuraLevelBonus(
 }
 
 function skillHasServerMissiles(skillRow: string[]): boolean {
-  return SKILL_MISSILE_COLUMNS.some((columnName) =>
+  return SERVER_SKILL_MISSILE_COLUMNS.some((columnName) =>
     Boolean(getGameRowString("Skills", skillRow, columnName))
   );
 }
@@ -5308,6 +6375,187 @@ function supportsWeaponSequence(
   return getSkillWeaponSequenceEvidence(skillName, handMode).supported;
 }
 
+function getSkillWeaponTypeCodes(
+  skillRow: string[],
+  columnPrefix: (typeof SKILL_WEAPON_TYPE_COLUMN_PREFIXES)[number]
+): string[] {
+  return [1, 2, 3]
+    .map((index) =>
+      getGameRowString("Skills", skillRow, `${columnPrefix}${index}`)
+        .trim()
+        .toLowerCase()
+    )
+    .filter(Boolean);
+}
+
+function getItemWeaponTypeCodes(item: IItem): Set<string> {
+  const codes = new Set<string>();
+  const queue = [
+    item.base?.type_code?.trim().toLowerCase(),
+    item.base_code?.trim().toLowerCase(),
+  ].filter((code): code is string => Boolean(code));
+
+  while (queue.length > 0) {
+    const code = queue.shift()!;
+    if (codes.has(code)) {
+      continue;
+    }
+
+    codes.add(code);
+    (ITEM_WEAPON_TYPE_PARENTS[code] || []).forEach((parentCode) => {
+      if (!codes.has(parentCode)) {
+        queue.push(parentCode);
+      }
+    });
+  }
+
+  if (item.category === "weapon") {
+    codes.add("weap");
+  }
+
+  return codes;
+}
+
+function isSingleWeaponMeleeSelection(
+  weaponSelection: WeaponSelection
+): boolean {
+  return (
+    weaponSelection.option.handMode === "one_handed" ||
+    weaponSelection.option.handMode === "two_handed"
+  );
+}
+
+function isSkillWeaponTypeHandModeCompatible(
+  skillWeaponType: string,
+  weaponSelection: WeaponSelection
+): boolean | undefined {
+  switch (skillWeaponType) {
+    case "miss":
+      return weaponSelection.option.handMode === "missile";
+    case "comb":
+    case "jave":
+    case "thro":
+      return (
+        weaponSelection.option.handMode === "missile" &&
+        !isBowOrCrossbow(weaponSelection.item)
+      );
+    case "asm":
+    case "h2h":
+    case "h2h2":
+    case "knif":
+    case "mele":
+    case "sc9":
+    case "spea":
+      return isSingleWeaponMeleeSelection(weaponSelection);
+    case "weap":
+      return (
+        weaponSelection.option.handMode !== "kick" &&
+        weaponSelection.option.handMode !== "summon" &&
+        weaponSelection.option.handMode !== "unarmed"
+      );
+    case "shld":
+      return false;
+    default:
+      return undefined;
+  }
+}
+
+function weaponSelectionMatchesSkillWeaponType(
+  weaponSelection: WeaponSelection,
+  skillWeaponType: string
+): boolean {
+  const handModeCompatible = isSkillWeaponTypeHandModeCompatible(
+    skillWeaponType,
+    weaponSelection
+  );
+  if (handModeCompatible === false) {
+    return false;
+  }
+
+  if (!KNOWN_SKILL_WEAPON_TYPE_CODES.has(skillWeaponType)) {
+    return true;
+  }
+
+  if (skillWeaponType === "mele") {
+    return isSingleWeaponMeleeSelection(weaponSelection);
+  }
+
+  if (skillWeaponType === "weap") {
+    return (
+      weaponSelection.item.category === "weapon" &&
+      handModeCompatible === true
+    );
+  }
+
+  return getItemWeaponTypeCodes(weaponSelection.item).has(skillWeaponType);
+}
+
+function weaponSelectionMatchesAnySkillWeaponType(
+  weaponSelection: WeaponSelection,
+  skillWeaponTypes: string[]
+): boolean {
+  return (
+    skillWeaponTypes.length === 0 ||
+    skillWeaponTypes.some((skillWeaponType) =>
+      weaponSelectionMatchesSkillWeaponType(weaponSelection, skillWeaponType)
+    )
+  );
+}
+
+function isWeaponSelectionCompatibleWithSkillTypes(
+  weaponSelection: WeaponSelection,
+  skillName: string
+): boolean {
+  const skillRow = getGameRow("Skills", skillName);
+  if (!skillRow) {
+    return true;
+  }
+
+  const [primaryTypePrefix, secondaryTypePrefix] =
+    SKILL_WEAPON_TYPE_COLUMN_PREFIXES;
+  const primaryWeaponTypes = getSkillWeaponTypeCodes(
+    skillRow,
+    primaryTypePrefix
+  );
+  const secondaryWeaponTypes = getSkillWeaponTypeCodes(
+    skillRow,
+    secondaryTypePrefix
+  );
+  if (primaryWeaponTypes.length === 0 && secondaryWeaponTypes.length === 0) {
+    return true;
+  }
+
+  if (weaponSelection.sequenceHits?.length) {
+    if (secondaryWeaponTypes.length === 0) {
+      return weaponSelection.sequenceHits.every((hit) =>
+        weaponSelectionMatchesAnySkillWeaponType(
+          hit.selection,
+          primaryWeaponTypes
+        )
+      );
+    }
+
+    const [primaryHit, secondaryHit] = weaponSelection.sequenceHits;
+    return Boolean(
+      primaryHit &&
+        secondaryHit &&
+        weaponSelectionMatchesAnySkillWeaponType(
+          primaryHit.selection,
+          primaryWeaponTypes
+        ) &&
+        weaponSelectionMatchesAnySkillWeaponType(
+          secondaryHit.selection,
+          secondaryWeaponTypes
+        )
+    );
+  }
+
+  return weaponSelectionMatchesAnySkillWeaponType(weaponSelection, [
+    ...primaryWeaponTypes,
+    ...secondaryWeaponTypes,
+  ]);
+}
+
 function isWeaponSelectionCompatibleWithSkill(
   weaponSelection: WeaponSelection,
   skillOption: DamageSkillOption
@@ -5336,20 +6584,56 @@ function isWeaponSelectionCompatibleWithSkill(
     return false;
   }
 
+  const sourceSkillRow = getGameRow("Skills", sourceSkillName);
+  const skillRange = sourceSkillRow
+    ? getGameRowString("Skills", sourceSkillRow, "range")
+    : "";
+  const isBowMeleeSelection =
+    isBowOrCrossbow(weaponSelection.item) &&
+    weaponSelection.option.handMode === "two_handed";
+  if (
+    isBowMeleeSelection &&
+    (skillOption.damageMode !== "weapon" || skillRange !== "h2h")
+  ) {
+    return false;
+  }
+
+  if (
+    skillOption.damageMode === "weapon" &&
+    skillRange === "h2h" &&
+    weaponSelection.option.handMode === "missile"
+  ) {
+    return false;
+  }
+
   const requiredHandMode = getRequiredWeaponSequenceHandMode(sourceSkillName);
 
   if (requiredHandMode) {
     return (
       weaponSelection.option.handMode === requiredHandMode &&
       Boolean(weaponSelection.sequenceHits?.length) &&
-      supportsWeaponSequence(sourceSkillName, requiredHandMode)
+      supportsWeaponSequence(sourceSkillName, requiredHandMode) &&
+      isWeaponSelectionCompatibleWithSkillTypes(
+        weaponSelection,
+        sourceSkillName
+      )
     );
   }
 
   if (weaponSelection.sequenceHits?.length) {
-    return supportsWeaponSequence(
-      sourceSkillName,
-      weaponSelection.option.handMode
+    return (
+      supportsWeaponSequence(sourceSkillName, weaponSelection.option.handMode) &&
+      isWeaponSelectionCompatibleWithSkillTypes(
+        weaponSelection,
+        sourceSkillName
+      )
+    );
+  }
+
+  if (skillOption.damageMode === "weapon") {
+    return isWeaponSelectionCompatibleWithSkillTypes(
+      weaponSelection,
+      sourceSkillName
     );
   }
 
@@ -5410,7 +6694,7 @@ function buildSummonProfile(
   playerAuraSelection: AuraSelection
 ): DamageProfile {
   const { option: playerAuraOption } = playerAuraSelection;
-  const { alwaysActiveAuras, realStats, skillMap } = context;
+  const { realStats, skillMap } = context;
   const sourceSkillName = skillOption.sourceSkillName || skillOption.name;
   const variantDefinition = getSummonVariantDefinition(
     sourceSkillName,
@@ -5431,7 +6715,6 @@ function buildSummonProfile(
           carrier: "party",
         });
   const activeAuras = dedupeAuras([
-    ...alwaysActiveAuras.map(getSummonAuraSource),
     ...(selectedPlayerAura ? [selectedPlayerAura] : []),
   ]);
   const effectiveSkillMap = applyAuraSkillLevelBonuses(skillMap, activeAuras);
@@ -5533,6 +6816,23 @@ function buildSummonProfile(
     ...auraElementalComponents,
   ].filter((component) => isNonZeroDamageRange(component.damage));
   const damageTotals = buildDamageTotals(damageComponents);
+  const auraPulseDamageComponents = [
+    ...getActiveAuraPulseDamageComponents(
+      activeAuras,
+      effectiveSkillMap,
+      realStats,
+      "summon-active-aura-pulse"
+    ),
+    ...(selectedSkillRow
+      ? getSummonedAuraPulseDamageComponents(
+          sourceSkillName,
+          selectedSkillRow,
+          selectedSkillLevel,
+          effectiveSkillMap,
+          realStats
+        )
+      : []),
+  ];
   const totalPhysicalDamage =
     damageTotals.byElement.physical || createEmptyDamageRange();
   const totalElementalDamage = elementalDamageFromTotals(damageTotals);
@@ -5574,6 +6874,7 @@ function buildSummonProfile(
     damageScope,
     damageComponents,
     damageTotals,
+    ...getAuraPulseProfileFields(auraPulseDamageComponents),
     totalPhysicalDamage,
     totalElementalDamage,
     totalPoisonDamage: damageTotals.poisonDamage,
@@ -5607,7 +6908,7 @@ function buildSpellProfile(
 ): DamageProfile {
   const { option: playerAuraOption, carrier: playerAuraCarrier } =
     playerAuraSelection;
-  const { alwaysActiveAuras, realStats, skillMap } = context;
+  const { realStats, skillMap } = context;
   const selectedPlayerAura =
     playerAuraOption.id === "none"
       ? undefined
@@ -5624,7 +6925,6 @@ function buildSpellProfile(
           carrier: playerAuraCarrier,
         };
   const activeAuras = dedupeAuras([
-    ...alwaysActiveAuras,
     ...(selectedPlayerAura ? [selectedPlayerAura] : []),
   ]);
   const effectiveSkillMap = applyAuraSkillLevelBonuses(skillMap, activeAuras);
@@ -5646,6 +6946,12 @@ function buildSpellProfile(
     effectiveSkillMap
   );
   const damageTotals = buildDamageTotals(damageComponents);
+  const auraPulseDamageComponents = getActiveAuraPulseDamageComponents(
+    activeAuras,
+    effectiveSkillMap,
+    realStats,
+    "spell-active-aura-pulse"
+  );
   const totalPhysicalDamage =
     damageTotals.byElement.physical || createEmptyDamageRange();
   const totalElementalDamage = elementalDamageFromTotals(damageTotals);
@@ -5693,6 +6999,7 @@ function buildSpellProfile(
     damageScope,
     damageComponents,
     damageTotals,
+    ...getAuraPulseProfileFields(auraPulseDamageComponents),
     totalPhysicalDamage,
     totalElementalDamage,
     totalPoisonDamage: damageTotals.poisonDamage,
@@ -5743,6 +7050,14 @@ function buildSequenceProfile(
       label: `${hit.label}: ${component.label}`,
     }))
   );
+  const auraPulseDamageComponents = hitProfiles.flatMap(
+    ({ hit, profile }, index) =>
+      (profile.auraPulseDamageComponents || []).map((component) => ({
+        ...component,
+        id: `sequence:${index + 1}:${component.id}`,
+        label: `${hit.label}: ${component.label}`,
+      }))
+  );
   const damageTotals = buildDamageTotals(damageComponents);
   const totalPhysicalDamage =
     damageTotals.byElement.physical || createEmptyDamageRange();
@@ -5750,15 +7065,22 @@ function buildSequenceProfile(
   const totalDamage = damageTotals.combinedDamage;
   const firstProfile = hitProfiles[0]?.profile;
   const selectedSkillLevel = firstProfile?.skillLevel ?? skillOption.level;
-  const damageScope = getDamageScope(
-    skillOption.name,
-    selectedSkillLevel,
-    context.skillMap,
-    "weapon",
-    weaponSelection
-  );
+  const sourceSkillName = skillOption.sourceSkillName || skillOption.name;
+  const damageScope =
+    getChargeDamageScope(
+      skillOption,
+      skillOption.name,
+      sourceSkillName
+    ) ||
+    getDamageScope(
+      sourceSkillName,
+      selectedSkillLevel,
+      context.skillMap,
+      "weapon",
+      weaponSelection
+    );
   const sequenceEvidence = getSkillWeaponSequenceEvidence(
-    skillOption.name,
+    sourceSkillName,
     weaponSelection.option.handMode
   );
   const notes = uniqueStrings([
@@ -5768,7 +7090,7 @@ function buildSequenceProfile(
   ]);
 
   return {
-    key: `${weaponSelection.option.id}::${skillOption.id}::${playerAuraSelection.option.id}:${playerAuraSelection.option.level}::${playerAuraSelection.carrier}`,
+    key: `${weaponSelection.option.id}::${skillOption.id}${getSkillProfileKeySuffix(skillOption)}::${playerAuraSelection.option.id}:${playerAuraSelection.option.level}::${playerAuraSelection.carrier}`,
     weaponId: weaponSelection.option.id,
     skillId: skillOption.id,
     playerAuraId: firstProfile?.playerAuraId ?? playerAuraSelection.option.id,
@@ -5779,6 +7101,11 @@ function buildSequenceProfile(
     transformationId: "none",
     skillDamageMode: "weapon",
     skillName: skillOption.name,
+    sourceSkillName: skillOption.sourceSkillName,
+    chargeVariant: skillOption.chargeVariant,
+    chargeNumber: skillOption.chargeNumber,
+    chargeCount: skillOption.chargeCount,
+    chargeLabel: skillOption.chargeLabel,
     skillLevel: selectedSkillLevel,
     sequenceHits: weaponSelection.option.sequenceHits,
     selectedPlayerAura: firstProfile?.selectedPlayerAura,
@@ -5786,6 +7113,7 @@ function buildSequenceProfile(
     damageScope,
     damageComponents,
     damageTotals,
+    ...getAuraPulseProfileFields(auraPulseDamageComponents),
     totalPhysicalDamage,
     totalElementalDamage,
     totalPoisonDamage: damageTotals.poisonDamage,
@@ -5856,9 +7184,10 @@ function buildProfile(
 
   const { option: playerAuraOption, carrier: playerAuraCarrier } =
     playerAuraSelection;
-  const { alwaysActiveAuras, playerItems, realStats, skillMap } = context;
+  const { playerItems, realStats, skillMap } = context;
   const characterClass = characterData.character.class.name;
-  const selectedSkillName = skillOption.name;
+  const displaySkillName = skillOption.name;
+  const selectedSkillName = skillOption.sourceSkillName || skillOption.name;
 
   const selectedPlayerAura =
     playerAuraOption.id === "none"
@@ -5877,14 +7206,14 @@ function buildProfile(
         };
 
   const activeAuras = dedupeAuras([
-    ...alwaysActiveAuras,
     ...(selectedPlayerAura ? [selectedPlayerAura] : []),
   ]);
   const effectiveSkillMap = applyAuraSkillLevelBonuses(skillMap, activeAuras);
   const selectedSkillLevel =
-    skillOption.name === "Basic Attack"
+    displaySkillName === "Basic Attack"
       ? 1
-      : getSkillEntry(effectiveSkillMap, skillOption.name).level ||
+      : getSkillEntry(effectiveSkillMap, displaySkillName).level ||
+        getSkillEntry(effectiveSkillMap, selectedSkillName).level ||
         skillOption.level;
 
   const parsedItemDamage = parseItemDamageStats(playerItems, weaponSelection);
@@ -5902,7 +7231,13 @@ function buildProfile(
   const selectedSkillPercent =
     selectedSkillName === "Basic Attack"
       ? 0
-      : getSelectedSkillDamagePercent(
+      : getChargeVariantSelectedSkillDamagePercent(
+          skillOption,
+          selectedSkillName,
+          selectedSkillLevel,
+          effectiveSkillMap
+        ) ??
+        getSelectedSkillDamagePercent(
           selectedSkillName,
           selectedSkillLevel,
           effectiveSkillMap
@@ -5932,7 +7267,7 @@ function buildProfile(
     auraPercent;
 
   const directDamage =
-    selectedSkillName === "Basic Attack"
+    selectedSkillName === "Basic Attack" || isVengeanceSkill(selectedSkillName)
       ? createEmptyDirectSkillDamage()
       : getDirectSkillDamage(
           selectedSkillName,
@@ -5943,7 +7278,11 @@ function buildProfile(
   const directDamageComponents =
     selectedSkillName === "Basic Attack"
       ? []
-      : directSkillDamageToComponents(selectedSkillName, directDamage);
+      : getChargeVariantDamageComponents(
+          skillOption,
+          selectedSkillName,
+          directSkillDamageToComponents(selectedSkillName, directDamage)
+        );
   const selectedSkillRow =
     selectedSkillName === "Basic Attack"
       ? undefined
@@ -5960,10 +7299,10 @@ function buildProfile(
   const weaponSourceLabel = usesKickSource
     ? selectedSkillName === "Basic Attack"
       ? "Boot source"
-      : `Boot source (${selectedSkillName})`
+      : `Boot source (${displaySkillName})`
     : selectedSkillName === "Basic Attack"
       ? "Weapon source"
-      : `Weapon source (${selectedSkillName})`;
+      : `Weapon source (${displaySkillName})`;
   const equipmentDamageSourceRefs =
     weaponSelection.damageSourceRefs &&
     weaponSelection.damageSourceRefs.length > 0
@@ -5982,7 +7321,12 @@ function buildProfile(
       : "Source-damage and attack-signal fields are preserved from game files; opaque engine function behavior is not inferred.";
   const flatAndSkillPhysicalDamage = addDamageRange(
     parsedItemDamage.flatPhysicalDamage,
-    directDamage.physical
+    directDamageComponents
+      .filter((component) => component.damageType === "physical")
+      .reduce(
+        (total, component) => addDamageRange(total, component.damage),
+        createEmptyDamageRange()
+      )
   );
 
   const itemCS = realStats?.criticalStrike || 0;
@@ -6071,10 +7415,21 @@ function buildProfile(
 
   const itemElementalComponents: DamageComponent[] = [];
   (["fire", "cold", "lightning", "magic"] as const).forEach((element) => {
+    if (
+      isVengeanceSkill(selectedSkillName) &&
+      (element === "fire" || element === "cold" || element === "lightning")
+    ) {
+      return;
+    }
+
     const damage = parsedItemDamage.elementalDamage[element];
     if (!isNonZeroDamageRange(damage)) {
       return;
     }
+
+    const elementalSkillDamageBonus =
+      getElementalSkillDamageBonusPercent(element, realStats);
+    const scaledDamage = scaleDamageRange(damage, elementalSkillDamageBonus);
 
     itemElementalComponents.push(
       createDamageComponent({
@@ -6082,15 +7437,21 @@ function buildProfile(
         label: `Item ${element}`,
         source: "item",
         damageType: element,
-        damage,
+        damage: scaledDamage,
+        baseDamage: damage,
         sourceRefs: [
           {
-            table: "Armory item text",
+            table: "Properties.txt / ItemStatCost.txt / Armory item modifiers",
             columns: [
+              "elemental min/max stats",
               `adds ${element} damage`,
               `minimum ${element} damage`,
               `maximum ${element} damage`,
             ],
+            note:
+              elementalSkillDamageBonus !== 0
+                ? `Item ${element} damage is scaled by +${elementalSkillDamageBonus}% ${element} skill damage.`
+                : undefined,
           },
         ],
       })
@@ -6103,13 +7464,22 @@ function buildProfile(
   const weaponElementalDamageComponents =
     selectedSkillName === "Basic Attack"
       ? []
-      : createWeaponElementalDamageComponents(
-          selectedSkillName,
-          selectedSkillLevel,
-          effectiveSkillMap,
-          carriedWeaponDamage,
-          realStats
-        );
+      : isVengeanceSkill(selectedSkillName)
+        ? createVengeanceElementalDamageComponents(
+            selectedSkillName,
+            selectedSkillLevel,
+            effectiveSkillMap,
+            carriedWeaponDamage,
+            parsedItemDamage.elementalDamage,
+            realStats
+          )
+        : createWeaponElementalDamageComponents(
+            selectedSkillName,
+            selectedSkillLevel,
+            effectiveSkillMap,
+            carriedWeaponDamage,
+            realStats
+          );
 
   const auraElementalComponents: DamageComponent[] = [];
   activeAuras.forEach((aura) => {
@@ -6171,11 +7541,15 @@ function buildProfile(
             max: parsedItemDamage.poisonDamage.total,
           },
           poisonDamage: parsedItemDamage.poisonDamage,
+          includedInTotal: false,
           sourceRefs: [
             {
               table: "Armory item text",
               columns: ["poison damage"],
             },
+          ],
+          notes: [
+            "Gear poison is shown separately and excluded from totals because poison rate/length stacking with other sources is not derivable from the armory text payload.",
           ],
         }),
       ]
@@ -6190,6 +7564,12 @@ function buildProfile(
     ...itemPoisonComponents,
   ].filter((component) => isNonZeroDamageRange(component.damage));
   const damageTotals = buildDamageTotals(damageComponents);
+  const auraPulseDamageComponents = getActiveAuraPulseDamageComponents(
+    activeAuras,
+    effectiveSkillMap,
+    realStats,
+    "weapon-active-aura-pulse"
+  );
   const totalPhysicalDamage =
     damageTotals.byElement.physical || createEmptyDamageRange();
   const totalElementalDamage = elementalDamageFromTotals(damageTotals);
@@ -6201,6 +7581,12 @@ function buildProfile(
     "weapon",
     weaponSelection
   );
+  const effectiveDamageScope =
+    getChargeDamageScope(
+      skillOption,
+      displaySkillName,
+      selectedSkillName
+    ) || damageScope;
 
   const notes: string[] = [];
   if (
@@ -6210,7 +7596,7 @@ function buildProfile(
     )
   ) {
     notes.push(
-      `${selectedSkillName} includes independent skill or missile payload components from game-file damage fields in addition to weapon-source damage.`
+      `${displaySkillName} includes independent skill or missile payload components from game-file damage fields in addition to weapon-source damage.`
     );
   }
 
@@ -6227,7 +7613,7 @@ function buildProfile(
   }
 
   return {
-    key: `${weaponSelection.option.id}::${skillOption.id}::${playerAuraOption.id}:${playerAuraOption.level}::${playerAuraCarrier}`,
+    key: `${weaponSelection.option.id}::${skillOption.id}${getSkillProfileKeySuffix(skillOption)}::${playerAuraOption.id}:${playerAuraOption.level}::${playerAuraCarrier}`,
     weaponId: weaponSelection.option.id,
     skillId: skillOption.id,
     playerAuraId: playerAuraOption.id,
@@ -6235,7 +7621,12 @@ function buildProfile(
     playerAuraLevel: playerAuraOption.level,
     transformationId: "none",
     skillDamageMode: "weapon",
-    skillName: selectedSkillName,
+    skillName: displaySkillName,
+    sourceSkillName: skillOption.sourceSkillName,
+    chargeVariant: skillOption.chargeVariant,
+    chargeNumber: skillOption.chargeNumber,
+    chargeCount: skillOption.chargeCount,
+    chargeLabel: skillOption.chargeLabel,
     skillLevel: selectedSkillLevel,
     selectedPlayerAura:
       playerAuraOption.id === "none"
@@ -6246,9 +7637,10 @@ function buildProfile(
             carrier: playerAuraCarrier,
           },
     activeAuras: activeAuras.map(summarizeAuraSource),
-    damageScope,
+    damageScope: effectiveDamageScope,
     damageComponents,
     damageTotals,
+    ...getAuraPulseProfileFields(auraPulseDamageComponents),
     totalPhysicalDamage,
     totalElementalDamage,
     totalPoisonDamage: damageTotals.poisonDamage,
@@ -6290,6 +7682,69 @@ function getPlayerAuraSelectionsForSkill(
   );
 }
 
+function getProfileSkillOptions(
+  skillOption: DamageSkillOption
+): DamageSkillOption[] {
+  if (!skillOption.chargeCount || skillOption.chargeCount <= 0) {
+    return [skillOption];
+  }
+
+  return Array.from({ length: skillOption.chargeCount }, (_, index) => ({
+    ...skillOption,
+    chargeVariant: "charge" as const,
+    chargeNumber: index + 1,
+  }));
+}
+
+export function getModeledDamageMechanicCoverage() {
+  const skills = getGameTable("Skills");
+  return Object.keys(skills.rowsByKey)
+    .filter(
+      (skillName) => {
+        const row = skills.rowsByKey[skillName];
+        return (
+          isInGamePlayerSkill(row) &&
+          (isSelectableAttackSkill(skillName) ||
+            isSelectableSpellSkill(skillName) ||
+            isSelectableSummonSkill(skillName))
+        );
+      }
+    )
+    .map((skillName) => {
+      const row = skills.rowsByKey[skillName];
+      const damageMode: DamageSkillOption["damageMode"] =
+        isSelectableSummonSkill(skillName)
+          ? "summon"
+          : isSelectableAttackSkill(skillName)
+            ? "weapon"
+            : "spell";
+      return {
+        skillName,
+        damageScope: getDamageScope(
+          skillName,
+          20,
+          new Map([[skillName, { level: 20, baseLevel: 20 }]]),
+          damageMode,
+          createUnarmedSelection("primary")
+        ),
+        periodic: getGameRowString("Skills", row, "periodic") === "1",
+        targetCorpse:
+          damageMode !== "summon" &&
+          getGameRowString("Skills", row, "TargetCorpse") === "1",
+        countCalcs: [1, 2, 3, 4]
+          .map((index) => ({
+            column: `calc${index}`,
+            description: getGameRowString(
+              "Skills",
+              row,
+              `*calc${index} desc`
+            ),
+          }))
+          .filter((calc) => calc.description),
+      };
+    });
+}
+
 export function calculateDamage(
   characterData: CharacterData
 ): DamageCalculation {
@@ -6314,16 +7769,18 @@ export function calculateDamage(
         return [];
       }
 
-      return getPlayerAuraSelectionsForSkill(
-        skillOption,
-        playerAuraSelections
-      ).map((playerAuraSelection) =>
-        buildProfile(
-          characterData,
-          contexts[weaponSelection.weaponSet],
-          weaponSelection,
-          skillOption,
-          playerAuraSelection
+      return getProfileSkillOptions(skillOption).flatMap((profileSkillOption) =>
+        getPlayerAuraSelectionsForSkill(
+          profileSkillOption,
+          playerAuraSelections
+        ).map((playerAuraSelection) =>
+          buildProfile(
+            characterData,
+            contexts[weaponSelection.weaponSet],
+            weaponSelection,
+            profileSkillOption,
+            playerAuraSelection
+          )
         )
       );
     })
