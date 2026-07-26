@@ -11,7 +11,7 @@ type ArmorTable = {
   rowsByCode: Map<string, string[]>;
 };
 
-type ArmorBootData = {
+type ArmorAttackData = {
   damage: { minimum: number; maximum: number };
   statBonus?: { strength?: number; dexterity?: number };
 };
@@ -127,7 +127,24 @@ function isEquippedBootItem(item: IItem): boolean {
   return typeCode === "boot" || typeName.includes("boot");
 }
 
-function getArmorBootData(item: IItem): ArmorBootData | undefined {
+function isEquippedShieldItem(item: IItem): boolean {
+  if (
+    item.location?.zone !== "Equipped" ||
+    !item.location?.equipment?.includes("Left Hand")
+  ) {
+    return false;
+  }
+
+  const typeCode = item.base?.type_code?.toLowerCase();
+  const typeName = item.base?.type?.toLowerCase() || "";
+  return (
+    typeCode === "shie" ||
+    typeCode === "ashd" ||
+    typeName.includes("shield")
+  );
+}
+
+function getArmorAttackData(item: IItem): ArmorAttackData | undefined {
   const tableRow = getArmorRowForItem(item);
   if (!tableRow) {
     return undefined;
@@ -160,7 +177,7 @@ function enrichBootItem(item: IItem): void {
     return;
   }
 
-  const bootData = getArmorBootData(item);
+  const bootData = getArmorAttackData(item);
   if (!bootData) {
     return;
   }
@@ -186,11 +203,45 @@ function enrichBootItem(item: IItem): void {
   }
 }
 
+function enrichShieldItem(item: IItem): void {
+  if (!isEquippedShieldItem(item)) {
+    return;
+  }
+
+  const shieldData = getArmorAttackData(item);
+  if (!shieldData) {
+    return;
+  }
+
+  item.base.damage = {
+    one_handed: item.base.damage?.one_handed || {},
+    two_handed: item.base.damage?.two_handed || {},
+    missile: item.base.damage?.missile || {},
+    smite: shieldData.damage,
+  };
+  item.damage = {
+    one_handed: item.damage?.one_handed || {},
+    two_handed: item.damage?.two_handed || {},
+    missile: item.damage?.missile || {},
+    smite: shieldData.damage,
+  };
+
+  if (shieldData.statBonus) {
+    item.base.stat_bonus = {
+      ...item.base.stat_bonus,
+      ...shieldData.statBonus,
+    };
+  }
+}
+
 export function enrichArmoryPayload<T extends ArmoryPayload>(payload: T): T {
   if (!Array.isArray(payload.items)) {
     return payload;
   }
 
-  payload.items.forEach(enrichBootItem);
+  payload.items.forEach((item) => {
+    enrichBootItem(item);
+    enrichShieldItem(item);
+  });
   return payload;
 }

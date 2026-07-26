@@ -152,6 +152,7 @@ export interface RealStats {
   fasterHitRecovery: number;
   fasterRunWalk: number;
   crushingBlow: number;
+  criticalStrike: number;
   deadlyStrike: number;
   openWounds: number;
   openWoundsDPS: number;

@@ -20,6 +20,8 @@ export type DamageElement =
   | "magic"
   | "poison";
 
+export type DamageType = DamageElement | "critical" | "deadly";
+
 export type DamageComponentSource =
   | "weapon"
   | "item"
@@ -42,11 +44,34 @@ export interface DamageSourceReference {
   note?: string;
 }
 
+export interface DamageStrikeModifiers {
+  criticalChance: number;
+  deadlyStrikeChance: number;
+  maxDeadlyStrikeChance: number;
+  criticalMultiplierBonus: number;
+  deadlyStrikeMultiplierBonus: number;
+}
+
+export interface DamageStrikeBreakdown {
+  id: string;
+  label: string;
+  physicalComponentIds: string[];
+  rawCriticalChance: number;
+  criticalChance: number;
+  criticalMultiplier: number;
+  rawDeadlyStrikeChance: number;
+  rawMaxDeadlyStrikeChance: number;
+  deadlyStrikeChance: number;
+  maxDeadlyStrikeChance: number;
+  effectiveDeadlyStrikeChance: number;
+  deadlyStrikeMultiplier: number;
+}
+
 export interface DamageComponent {
   id: string;
   label: string;
   source: DamageComponentSource;
-  damageType: DamageElement;
+  damageType: DamageType;
   timing: DamageComponentTiming;
   damage: DamageRange;
   baseDamage?: DamageRange;
@@ -62,7 +87,7 @@ export interface DamageTotals {
   combinedDamage: DamageRange;
   averageInstantDamage: number;
   averageCombinedDamage: number;
-  byElement: Partial<Record<DamageElement, DamageRange>>;
+  byElement: Partial<Record<DamageType, DamageRange>>;
   poisonDamage?: PoisonDamage;
 }
 
@@ -76,6 +101,7 @@ export interface DamageWeaponOption {
     | "two_handed"
     | "missile"
     | "kick"
+    | "smite"
     | "summon"
     | "unarmed"
     | "dual_wield"
@@ -122,6 +148,7 @@ export interface DamageAuraLevelBonus {
     Record<Exclude<DamageElement, "physical" | "poison">, DamageRange>
   >;
   poisonDamage?: PoisonDamagePayload;
+  strikeModifiers: DamageStrikeModifiers;
 }
 
 export interface DamageTransformationOption {
@@ -213,6 +240,7 @@ export interface DamageProfile {
   activeAuras: ActiveAuraSummary[];
   damageScope: DamageProfileScope;
   damageComponents: DamageComponent[];
+  strikeBreakdowns: DamageStrikeBreakdown[];
   damageTotals: DamageTotals;
   auraPulseDamageComponents?: DamageComponent[];
   auraPulseDamageTotals?: DamageTotals;

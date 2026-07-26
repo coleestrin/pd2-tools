@@ -24,10 +24,24 @@ import type {
   DamageTransformationOption,
   DamageWeaponOption,
 } from "../../types";
+import {
+  applyStrikeModifierDelta,
+  rebuildStrikeDamageComponents,
+  rescalePhysicalComponents,
+} from "../../utils/damage-profile-adjustments";
 import { STAT_COLORS } from "./stat-colors";
 
 const SPELL_AURA_DAMAGE_NOTE =
   "Selected attack aura damage payloads are not applied to spell damage.";
+
+const EMPTY_STRIKE_MODIFIERS: DamageAuraOption["levelBonuses"][number]["strikeModifiers"] =
+  {
+    criticalChance: 0,
+    deadlyStrikeChance: 0,
+    maxDeadlyStrikeChance: 0,
+    criticalMultiplierBonus: 0,
+    deadlyStrikeMultiplierBonus: 0,
+  };
 
 function formatNumber(value: number, round = false) {
   const numericValue = Number(value);
@@ -46,16 +60,20 @@ function formatRange(range?: DamageRange, round = false) {
   return `${formatNumber(range.min, round)} - ${formatNumber(range.max, round)}`;
 }
 
+function formatDamageNumber(value: number) {
+  return formatNumber(value, true);
+}
+
+function formatDamageRange(range?: DamageRange) {
+  return formatRange(range, true);
+}
+
 function shouldRoundProfileOutput(profile: DamageProfile) {
   return profile.chargeVariant === "average";
 }
 
 function formatProfileNumber(profile: DamageProfile, value: number) {
   return formatNumber(value, shouldRoundProfileOutput(profile));
-}
-
-function formatProfileRange(profile: DamageProfile, range?: DamageRange) {
-  return formatRange(range, shouldRoundProfileOutput(profile));
 }
 
 function formatProfilePercent(profile: DamageProfile, value: number) {
@@ -244,6 +262,8 @@ function getTransformationBonus(
 const DAMAGE_ELEMENTS = ["fire", "cold", "lightning", "magic"] as const;
 const DAMAGE_TYPE_COLORS: Record<string, string> = {
   physical: STAT_COLORS.physicalDamageReduction,
+  critical: "#c084fc",
+  deadly: "#f472b6",
   fire: STAT_COLORS.fire,
   cold: STAT_COLORS.cold,
   lightning: STAT_COLORS.lightning,
@@ -422,6 +442,7 @@ function getAuraLevelBonus(
     skillLevelBonus: 0,
     physicalBonusPercent: 0,
     elementalDamage: {},
+    strikeModifiers: { ...EMPTY_STRIKE_MODIFIERS },
   };
 
   if (!auraOption || auraOption.id === "none") {
@@ -454,10 +475,14 @@ function getAuraBonusScore(
     return total + (range ? (range.min + range.max) / 2 : 0);
   }, 0);
   const poisonScore = bonus.poisonDamage?.total ?? 0;
+  const strikeScore = Object.values(
+    bonus.strikeModifiers ?? EMPTY_STRIKE_MODIFIERS
+  ).reduce((total, value) => total + Math.abs(value), 0);
 
   return (
     bonus.skillLevelBonus * 1000000 +
     bonus.physicalBonusPercent * 1000 +
+    strikeScore * 1000 +
     elementalScore +
     poisonScore
   );
@@ -616,6 +641,19 @@ function getDamageScopeCountLabel(profile: DamageProfile) {
   return `${scope.count.toLocaleString()} ${scope.countLabel}`;
 }
 
+function getStrikeSummary(profile: DamageProfile, type: "critical" | "deadly") {
+  if (profile.strikeBreakdowns.length !== 1) {
+    return profile.strikeBreakdowns.length > 1
+      ? "Per-weapon chances shown below"
+      : "No eligible strike roll";
+  }
+
+  const strike = profile.strikeBreakdowns[0];
+  return type === "critical"
+    ? `${formatProfilePercent(profile, strike.criticalChance)} at ${formatProfileNumber(profile, strike.criticalMultiplier)}x`
+    : `${formatProfilePercent(profile, strike.effectiveDeadlyStrikeChance)} effective at ${formatProfileNumber(profile, strike.deadlyStrikeMultiplier)}x`;
+}
+
 function getDamageModelDisplayNotes(
   profile: DamageProfile,
   weapon?: DamageWeaponOption | null
@@ -650,6 +688,16 @@ function getDamageModelDisplayNotes(
     notes.push(
       "Paired-weapon skills show the modeled weapon sequence, not a full movement or animation hit count."
     );
+  }
+
+  if (profile.strikeBreakdowns.length > 0) {
+    notes.push(
+      "CS & DS values are expected values. CS is rolled before DS."
+    );
+  }
+
+  if (profile.skillName === "Smite") {
+    notes.push("Critical Strike and Deadly Strike do not apply to Smite.");
   }
 
   if (profile.skillDamageMode === "summon") {
@@ -831,6 +879,7 @@ type RuntimeDamageProfile = Omit<
   | "activeAuras"
   | "breakdown"
   | "damageComponents"
+  | "strikeBreakdowns"
   | "damageTotals"
   | "auraPulseDamageComponents"
   | "auraPulseDamageTotals"
@@ -847,6 +896,7 @@ type RuntimeDamageProfile = Omit<
       | "activeAuras"
       | "breakdown"
       | "damageComponents"
+      | "strikeBreakdowns"
       | "damageTotals"
       | "auraPulseDamageComponents"
       | "auraPulseDamageTotals"
@@ -1061,6 +1111,7 @@ function normalizeDamageProfile(profile: DamageProfile): DamageProfile {
     ...profile,
     activeAuras: runtimeProfile.activeAuras ?? [],
     damageComponents,
+    strikeBreakdowns: runtimeProfile.strikeBreakdowns ?? [],
     damageTotals,
     auraPulseDamageComponents,
     auraPulseDamageTotals,
@@ -1081,41 +1132,6 @@ function normalizeDamageProfile(profile: DamageProfile): DamageProfile {
     ),
     notes: runtimeProfile.notes ?? [],
   };
-}
-
-function rescalePhysicalComponents(
-  components: DamageProfile["damageComponents"],
-  previousMultiplier: number,
-  nextMultiplier: number
-): DamageProfile["damageComponents"] {
-  return components.map((component) => {
-    if (component.damageType !== "physical" || component.timing !== "instant") {
-      return component;
-    }
-
-    const baseDamage = component.baseDamage || {
-      min:
-        previousMultiplier === 0
-          ? component.damage.min
-          : component.damage.min / previousMultiplier,
-      max:
-        previousMultiplier === 0
-          ? component.damage.max
-          : component.damage.max / previousMultiplier,
-    };
-
-    return {
-      ...component,
-      baseDamage,
-      damage: {
-        min: Math.floor(baseDamage.min * nextMultiplier),
-        max: Math.max(
-          Math.floor(baseDamage.min * nextMultiplier),
-          Math.floor(baseDamage.max * nextMultiplier)
-        ),
-      },
-    };
-  });
 }
 
 function buildAuraSummary(
@@ -1202,6 +1218,13 @@ function applyAuraToProfile(
     Boolean(existingAura) && existingAura!.level >= numericLevel;
   const effectiveAura = existingAuraIsStronger ? existingAura! : selectedAura;
   const nextBonus = existingAuraIsStronger ? existingBonus : selectedBonus;
+  const strikeBreakdowns = profile.strikeBreakdowns.map((strike) =>
+    applyStrikeModifierDelta(
+      strike,
+      nextBonus.strikeModifiers ?? EMPTY_STRIKE_MODIFIERS,
+      existingBonus.strikeModifiers ?? EMPTY_STRIKE_MODIFIERS
+    )
+  );
 
   if (profile.skillDamageMode === "spell") {
     return {
@@ -1235,7 +1258,8 @@ function applyAuraToProfile(
   const previousMultiplier = 1 + previousTotalBonus / 100;
   const nextMultiplier = 1 + nextTotalBonus / 100;
   const sequenceHitCount = getProfileSequenceHitCount(profile);
-  const auraDeltaComponents = DAMAGE_ELEMENTS.flatMap((element) => {
+  const isSmiteProfile = profile.skillName === "Smite";
+  const auraDeltaComponents = (isSmiteProfile ? [] : DAMAGE_ELEMENTS).flatMap((element) => {
     const damage = elementalDelta[element];
     if (!hasRange(damage)) {
       return [];
@@ -1271,7 +1295,7 @@ function applyAuraToProfile(
       },
     ];
   });
-  const poisonDeltaComponents = poisonDelta
+  const poisonDeltaComponents = !isSmiteProfile && poisonDelta
     ? [
         {
           id: `selected-aura:${auraOption.id}:${numericLevel}:${selectedAura.carrier}:poison`,
@@ -1313,15 +1337,18 @@ function applyAuraToProfile(
         },
       ]
     : [];
-  const damageComponents = [
-    ...rescalePhysicalComponents(
-      profile.damageComponents,
-      previousMultiplier,
-      nextMultiplier
-    ),
-    ...auraDeltaComponents,
-    ...poisonDeltaComponents,
-  ].filter((component) => hasRange(component.damage));
+  const damageComponents = rebuildStrikeDamageComponents(
+    [
+      ...rescalePhysicalComponents(
+        profile.damageComponents,
+        previousMultiplier,
+        nextMultiplier
+      ),
+      ...auraDeltaComponents,
+      ...poisonDeltaComponents,
+    ].filter((component) => hasRange(component.damage)),
+    strikeBreakdowns
+  );
   const summary = summaryFieldsFromComponents(damageComponents);
 
   return {
@@ -1337,6 +1364,7 @@ function applyAuraToProfile(
     },
     activeAuras: replaceAuraSummary(profile.activeAuras, effectiveAura),
     damageComponents,
+    strikeBreakdowns,
     ...summary,
     breakdown: {
       ...profile.breakdown,
@@ -1394,10 +1422,13 @@ function applyTransformationToProfile(
   const nextTotalBonus = previousTotalBonus + transformationBonus;
   const previousMultiplier = 1 + previousTotalBonus / 100;
   const nextMultiplier = 1 + nextTotalBonus / 100;
-  const damageComponents = rescalePhysicalComponents(
-    profile.damageComponents,
-    previousMultiplier,
-    nextMultiplier
+  const damageComponents = rebuildStrikeDamageComponents(
+    rescalePhysicalComponents(
+      profile.damageComponents,
+      previousMultiplier,
+      nextMultiplier
+    ),
+    profile.strikeBreakdowns
   );
   const summary = summaryFieldsFromComponents(damageComponents);
 
@@ -2333,15 +2364,13 @@ export function DamageCalculatorSection({
                       ),
                     }}
                   >
-                    {formatProfileRange(
-                      selectedProfile,
+                    {formatDamageRange(
                       selectedProfile.damageTotals.combinedDamage
                     )}
                   </Text>
                   <Text size="xs" c="dimmed">
                     Avg{" "}
-                    {formatProfileNumber(
-                      selectedProfile,
+                    {formatDamageNumber(
                       selectedProfile.damageTotals.averageCombinedDamage
                     )}
                   </Text>
@@ -2353,8 +2382,7 @@ export function DamageCalculatorSection({
                   {selectedProfile.auraPulseDamageTotals ? (
                     <Text size="xs" c="dimmed">
                       Pulse{" "}
-                      {formatProfileRange(
-                        selectedProfile,
+                      {formatDamageRange(
                         selectedProfile.auraPulseDamageTotals.combinedDamage
                       )}
                     </Text>
@@ -2516,7 +2544,7 @@ export function DamageCalculatorSection({
 
           {selectedProfile ? (
             <>
-              <SimpleGrid cols={{ base: 1, sm: 2, lg: 5 }}>
+              <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }}>
                 <Card
                   withBorder
                   padding="sm"
@@ -2537,15 +2565,13 @@ export function DamageCalculatorSection({
                       ),
                     }}
                   >
-                    {formatProfileRange(
-                      selectedProfile,
+                    {formatDamageRange(
                       selectedProfile.damageTotals.combinedDamage
                     )}
                   </Text>
                   <Text size="xs" c="dimmed">
                     Avg{" "}
-                    {formatProfileNumber(
-                      selectedProfile,
+                    {formatDamageNumber(
                       selectedProfile.damageTotals.averageCombinedDamage
                     )}
                   </Text>
@@ -2576,17 +2602,73 @@ export function DamageCalculatorSection({
                       ),
                     }}
                   >
-                    {formatProfileRange(
-                      selectedProfile,
+                    {formatDamageRange(
                       selectedProfile.damageTotals.instantDamage
                     )}
                   </Text>
                   <Text size="xs" c="dimmed">
                     Avg{" "}
-                    {formatProfileNumber(
-                      selectedProfile,
+                    {formatDamageNumber(
                       selectedProfile.damageTotals.averageInstantDamage
                     )}
+                  </Text>
+                </Card>
+
+                <Card
+                  withBorder
+                  padding="sm"
+                  style={{
+                    borderTop: `0.1875rem solid ${DAMAGE_TYPE_COLORS.critical}`,
+                  }}
+                >
+                  <Text size="xs" c="dimmed" tt="uppercase">
+                    Critical Strike Bonus
+                  </Text>
+                  <Text
+                    size="lg"
+                    fw={700}
+                    style={{
+                      color: getRangeColor(
+                        selectedProfile.damageTotals.byElement.critical,
+                        DAMAGE_TYPE_COLORS.critical
+                      ),
+                    }}
+                  >
+                    {formatDamageRange(
+                      selectedProfile.damageTotals.byElement.critical
+                    )}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {getStrikeSummary(selectedProfile, "critical")}
+                  </Text>
+                </Card>
+
+                <Card
+                  withBorder
+                  padding="sm"
+                  style={{
+                    borderTop: `0.1875rem solid ${DAMAGE_TYPE_COLORS.deadly}`,
+                  }}
+                >
+                  <Text size="xs" c="dimmed" tt="uppercase">
+                    Deadly Strike Bonus
+                  </Text>
+                  <Text
+                    size="lg"
+                    fw={700}
+                    style={{
+                      color: getRangeColor(
+                        selectedProfile.damageTotals.byElement.deadly,
+                        DAMAGE_TYPE_COLORS.deadly
+                      ),
+                    }}
+                  >
+                    {formatDamageRange(
+                      selectedProfile.damageTotals.byElement.deadly
+                    )}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {getStrikeSummary(selectedProfile, "deadly")}
                   </Text>
                 </Card>
 
@@ -2610,10 +2692,7 @@ export function DamageCalculatorSection({
                       ),
                     }}
                   >
-                    {formatProfileRange(
-                      selectedProfile,
-                      selectedProfile.totalPhysicalDamage
-                    )}
+                    {formatDamageRange(selectedProfile.totalPhysicalDamage)}
                   </Text>
                   <Text size="xs" c="dimmed">
                     {`+${formatProfilePercent(
@@ -2678,16 +2757,14 @@ export function DamageCalculatorSection({
                           ),
                         }}
                       >
-                        {formatProfileRange(
-                          selectedProfile,
+                        {formatDamageRange(
                           selectedProfile.damageTotals.overTimeDamage
                         )}
                       </Text>
                       {selectedProfile.totalPoisonDamage ? (
                         <Text size="xs" c="dimmed">
                           poison total{" "}
-                          {formatProfileNumber(
-                            selectedProfile,
+                          {formatDamageNumber(
                             selectedProfile.totalPoisonDamage.total
                           )}{" "}
                           over{" "}
@@ -2727,8 +2804,7 @@ export function DamageCalculatorSection({
                           ),
                         }}
                       >
-                        {formatProfileRange(
-                          selectedProfile,
+                        {formatDamageRange(
                           selectedProfile.auraPulseDamageTotals.combinedDamage
                         )}
                       </Text>
@@ -2747,15 +2823,43 @@ export function DamageCalculatorSection({
                             style={{ wordBreak: "break-word" }}
                           >
                             {component.label}:{" "}
-                            {formatProfileRange(
-                              selectedProfile,
-                              component.damage
-                            )}
+                            {formatDamageRange(component.damage)}
                           </Text>
                         )
                       )}
                     </Stack>
                   </Group>
+                </Card>
+              ) : null}
+
+              {selectedProfile.strikeBreakdowns.length > 0 ? (
+                <Card withBorder padding="sm">
+                  <Text fw={600} mb="xs">
+                    Critical / Deadly Strike
+                  </Text>
+                  <Stack gap="sm">
+                    {selectedProfile.strikeBreakdowns.map((strike) => (
+                      <div key={strike.id}>
+                        <Text size="sm" fw={500} mb={4}>
+                          {strike.label}
+                        </Text>
+                        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
+                          <Text size="xs" c="dimmed">
+                            Critical: {strike.rawCriticalChance}% raw,{" "}
+                            {strike.criticalChance}% capped,{" "}
+                            {strike.criticalMultiplier}x
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            Deadly: {strike.rawDeadlyStrikeChance}% raw,{" "}
+                            {strike.deadlyStrikeChance}% capped at{" "}
+                            {strike.maxDeadlyStrikeChance}%,{" "}
+                            {strike.effectiveDeadlyStrikeChance}% effective,{" "}
+                            {strike.deadlyStrikeMultiplier}x
+                          </Text>
+                        </SimpleGrid>
+                      </div>
+                    ))}
+                  </Stack>
                 </Card>
               ) : null}
 
@@ -2826,10 +2930,7 @@ export function DamageCalculatorSection({
                               ),
                             }}
                           >
-                            {formatProfileRange(
-                              selectedProfile,
-                              component.damage
-                            )}
+                            {formatDamageRange(component.damage)}
                           </Text>
                         </Group>
                       );
@@ -2858,7 +2959,7 @@ export function DamageCalculatorSection({
                           <StatLine
                             key={element}
                             label={element[0].toUpperCase() + element.slice(1)}
-                            value={formatProfileRange(selectedProfile, range)}
+                            value={formatDamageRange(range)}
                             color={getRangeColor(range, color)}
                             isLast={index === elements.length - 1}
                           />
@@ -2879,8 +2980,7 @@ export function DamageCalculatorSection({
                           ? "Summon base"
                           : "Weapon damage"
                       }
-                      value={formatProfileRange(
-                        selectedProfile,
+                      value={formatDamageRange(
                         selectedProfile.breakdown.weaponDamage
                       )}
                       color={getRangeColor(
@@ -2890,13 +2990,32 @@ export function DamageCalculatorSection({
                     />
                     <StatLine
                       label="Flat damage"
-                      value={formatProfileRange(
-                        selectedProfile,
+                      value={formatDamageRange(
                         selectedProfile.breakdown.flatPhysicalDamage
                       )}
                       color={getRangeColor(
                         selectedProfile.breakdown.flatPhysicalDamage,
                         STAT_COLORS.physicalDamageReduction
+                      )}
+                    />
+                    <StatLine
+                      label="Critical Strike bonus"
+                      value={formatDamageRange(
+                        selectedProfile.damageTotals.byElement.critical
+                      )}
+                      color={getRangeColor(
+                        selectedProfile.damageTotals.byElement.critical,
+                        DAMAGE_TYPE_COLORS.critical
+                      )}
+                    />
+                    <StatLine
+                      label="Deadly Strike bonus"
+                      value={formatDamageRange(
+                        selectedProfile.damageTotals.byElement.deadly
+                      )}
+                      color={getRangeColor(
+                        selectedProfile.damageTotals.byElement.deadly,
+                        DAMAGE_TYPE_COLORS.deadly
                       )}
                     />
                     <StatLine

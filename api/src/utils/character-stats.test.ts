@@ -28,7 +28,8 @@ function createMockCharacter(items: IItem[]): CharacterResp {
 function createMockItem(
   name: string,
   properties: string[],
-  equipment: string = "Body Armor"
+  equipment: string = "Body Armor",
+  modifiers: IItem["modifiers"] = []
 ): IItem {
   return {
     name,
@@ -36,6 +37,7 @@ function createMockItem(
     base_item: { name: "Test Base", id: 1 },
     location: { equipment, x: 0, y: 0, width: 2, height: 3 },
     properties,
+    modifiers,
   } as unknown as IItem;
 }
 
@@ -522,12 +524,41 @@ describe("StatParser", () => {
     });
 
     it("should parse deadly strike", () => {
-      const items = [createMockItem("Item1", ["+33% Deadly Strike"])];
+      const items = [
+        createMockItem("Item1", ["33% Chance of Deadly Strike"]),
+      ];
       const char = createMockCharacter(items);
       const parser = new CharacterStatParser(char);
       const stats = parser.parseAndGetCharStats();
 
       expect(stats.deadlyStrike).toBe(33);
+    });
+
+    it("should parse critical strike", () => {
+      const items = [
+        createMockItem("Item1", ["16% Chance of Critical Strike"]),
+      ];
+      const char = createMockCharacter(items);
+      const parser = new CharacterStatParser(char);
+      const stats = parser.parseAndGetCharStats();
+
+      expect(stats.criticalStrike).toBe(16);
+    });
+
+    it("should scale per-level deadly strike from item modifiers", () => {
+      const items = [
+        createMockItem("Item1", [], "Amulet", [
+          {
+            name: "deadly/lvl",
+            values: [0, 0, 0.25],
+          },
+        ] as IItem["modifiers"]),
+      ];
+      const char = createMockCharacter(items);
+      const parser = new CharacterStatParser(char);
+      const stats = parser.parseAndGetCharStats();
+
+      expect(stats.deadlyStrike).toBe(22);
     });
 
     it("should parse open wounds", () => {

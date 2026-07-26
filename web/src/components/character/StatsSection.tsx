@@ -99,6 +99,7 @@ export function StatsSection({
     fasterRunWalk: 0,
     increasedAttackSpeed: 0,
     crushingBlow: 0,
+    criticalStrike: 0,
     deadlyStrike: 0,
     lifeLeech: 0,
     manaLeech: 0,
@@ -290,6 +291,11 @@ export function StatsSection({
             label="Crushing Blow"
             value={`${realStats.crushingBlow}%`}
             color={COLORS.crushingBlow}
+          />
+          <StatRow
+            label="Critical Strike"
+            value={`${realStats.criticalStrike ?? 0}%`}
+            color={COLORS.criticalStrike}
           />
           <StatRow
             label="Deadly Strike"

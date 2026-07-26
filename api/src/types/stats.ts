@@ -23,6 +23,7 @@ export interface CharStats {
 
   //Damage Procs
   crushingBlow: number;
+  criticalStrike: number;
   deadlyStrike: number;
   openWounds: number;
   openWoundsDPS: number;

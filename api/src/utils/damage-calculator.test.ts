@@ -45,6 +45,7 @@ function createStats() {
     fasterHitRecovery: 0,
     fasterRunWalk: 0,
     crushingBlow: 0,
+    criticalStrike: 0,
     deadlyStrike: 0,
     openWounds: 0,
     openWoundsDPS: 0,
@@ -70,6 +71,15 @@ function createStats() {
     coldPierce: 0,
     lightningPierce: 0,
     poisonPierce: 0,
+  };
+}
+
+function modifier(name: string, values: Array<number | string> = []) {
+  return {
+    name,
+    values,
+    label: "",
+    priority: 0,
   };
 }
 
@@ -175,6 +185,56 @@ function createBoot(overrides: Partial<IItem> = {}): IItem {
       storage_id: 0,
       equipment: "Boots",
       equipment_id: 9,
+    },
+    position: { row: 0, column: 0 },
+    properties: [],
+    is_identified: true,
+    is_socketed: false,
+    is_new: false,
+    is_ear: false,
+    is_starter: false,
+    is_simple: true,
+    is_ethereal: false,
+    is_personalized: false,
+    is_runeword: false,
+    socketed_count: 0,
+    item_level: 1,
+    graphic_id: 0,
+    class_specifics: false,
+    socket_count: 0,
+    modifiers: [],
+    corrupted: false,
+    desecrated: false,
+    ...overrides,
+  } as unknown as IItem;
+}
+
+function createShield(overrides: Partial<IItem> = {}): IItem {
+  return {
+    id: overrides.id ?? "test-shield",
+    hash: overrides.hash ?? "test-shield",
+    name: overrides.name ?? "Test Sacred Targe",
+    category: "armor",
+    base_code: "pab",
+    base: {
+      id: "pab",
+      category: "armor",
+      codes: {},
+      name: "Sacred Targe",
+      stackable: false,
+      type: "Auric Shields",
+      type_code: "ashd",
+      size: { height: 2, width: 2 },
+      requirements: { level: 47, strength: 86, dexterity: 0 },
+    },
+    quality: { id: 2, name: "Normal" },
+    location: overrides.location ?? {
+      zone: "Equipped",
+      storage: "Equipped",
+      zone_id: 1,
+      storage_id: 0,
+      equipment: "Left Hand",
+      equipment_id: 5,
     },
     position: { row: 0, column: 0 },
     properties: [],
@@ -909,6 +969,389 @@ function getExpectedSkeletonArcherDirectPhysicalFromGameFiles({
 describeWithGameData("damage calculator component model", () => {
   beforeAll(async () => {
     ({ calculateDamage } = await import("./damage-calculator"));
+  });
+
+  it("models capped Critical and Deadly Strike as separate expected damage", () => {
+    const character = createCharacter("Basic Attack", 1);
+    character.items[0].modifiers = [
+      modifier("item_crit_chance", [100]),
+      modifier("item_deadlystrike", [100]),
+      modifier("item_maxdeadlystrike", [50]),
+      modifier("item_crit_multiplier", [25]),
+      modifier("item_ds_multiplier", [50]),
+    ];
+
+    const calculation = calculateDamage(character);
+    const profile = calculation.profiles.find(
+      (candidate) =>
+        candidate.skillId === "Basic Attack" &&
+        candidate.playerAuraId === "none"
+    )!;
+    const strike = profile.strikeBreakdowns[0];
+    const critical = profile.damageComponents.find(
+      (component) => component.damageType === "critical"
+    );
+    const deadly = profile.damageComponents.find(
+      (component) => component.damageType === "deadly"
+    );
+
+    expect(strike).toMatchObject({
+      rawCriticalChance: 100,
+      criticalChance: 75,
+      criticalMultiplier: 2.25,
+      rawDeadlyStrikeChance: 100,
+      rawMaxDeadlyStrikeChance: 125,
+      deadlyStrikeChance: 100,
+      maxDeadlyStrikeChance: 100,
+      effectiveDeadlyStrikeChance: 25,
+      deadlyStrikeMultiplier: 2,
+    });
+    expect(critical?.damage).toEqual({ min: 9.375, max: 18.75 });
+    expect(deadly?.damage).toEqual({ min: 2.5, max: 5 });
+    expect(critical?.label).toBe("Critical Strike bonus");
+    expect(deadly?.label).toBe("Deadly Strike bonus");
+    expect(profile.damageTotals.byElement.critical).toEqual(critical?.damage);
+    expect(profile.damageTotals.byElement.deadly).toEqual(deadly?.damage);
+    expect(profile.damageTotals.combinedDamage).toEqual({
+      min: 21.875,
+      max: 43.75,
+    });
+  });
+
+  it("uses decoded per-level Deadly Strike values and text fallback", () => {
+    const perLevelCharacter = createCharacter("Basic Attack", 1);
+    perLevelCharacter.items[0].modifiers = [
+      modifier("item_deadlystrike", [20]),
+      modifier("item_deadlystrike_perlevel", [0.375]),
+    ];
+
+    const perLevelProfile = calculateDamage(perLevelCharacter).profiles.find(
+      (candidate) =>
+        candidate.skillId === "Basic Attack" &&
+        candidate.playerAuraId === "none"
+    )!;
+
+    expect(perLevelProfile.strikeBreakdowns[0]).toMatchObject({
+      rawDeadlyStrikeChance: 53,
+      deadlyStrikeChance: 53,
+      effectiveDeadlyStrikeChance: 53,
+    });
+    const perLevelDeadlyDamage = perLevelProfile.damageComponents.find(
+      (component) => component.damageType === "deadly"
+    )!.damage;
+    expect(perLevelDeadlyDamage.min).toBeCloseTo(2.65);
+    expect(perLevelDeadlyDamage.max).toBeCloseTo(5.3);
+
+    const textCharacter = createCharacter("Basic Attack", 1);
+    textCharacter.items[0].properties = [
+      "+35% Chance of Deadly Strike",
+      "+25% Deadly Strike Multiplier",
+    ];
+    const textProfile = calculateDamage(textCharacter).profiles.find(
+      (candidate) =>
+        candidate.skillId === "Basic Attack" &&
+        candidate.playerAuraId === "none"
+    )!;
+
+    expect(textProfile.strikeBreakdowns[0]).toMatchObject({
+      rawDeadlyStrikeChance: 35,
+      deadlyStrikeMultiplier: 1.75,
+    });
+
+    textCharacter.items[0].properties = [
+      "0.375% Chance of Deadly Strike (Based on Character Level)",
+    ];
+    const perLevelTextProfile = calculateDamage(textCharacter).profiles.find(
+      (candidate) =>
+        candidate.skillId === "Basic Attack" &&
+        candidate.playerAuraId === "none"
+    )!;
+    expect(perLevelTextProfile.strikeBreakdowns[0].rawDeadlyStrikeChance).toBe(
+      33
+    );
+  });
+
+  it("applies file-backed passive strike stats only to compatible weapons", () => {
+    const criticalLevel = 20;
+    const skills = loadGameFile("Skills.txt", "skill");
+    const criticalRow = skills.rowsByKey.get("Critical Strike")!;
+    const criticalMin = getGameFileNumber(skills, criticalRow, "Param1");
+    const criticalMax = getGameFileNumber(skills, criticalRow, "Param2");
+    const scale = Math.floor((110 * criticalLevel) / (criticalLevel + 6));
+    const expectedCriticalChance = Math.min(
+      criticalMax,
+      criticalMin + Math.floor(((criticalMax - criticalMin) * scale) / 100)
+    );
+    const character = createCharacter("Critical Strike", criticalLevel);
+    character.character.class = { id: 0, name: "Amazon" };
+    character.character.skills = [
+      { id: 9, name: "Critical Strike", level: criticalLevel },
+    ];
+    character.realSkills = [
+      {
+        skill: "Critical Strike",
+        level: criticalLevel,
+        baseLevel: criticalLevel,
+      },
+    ];
+
+    const clubProfile = calculateDamage(character).profiles.find(
+      (candidate) =>
+        candidate.skillId === "Basic Attack" &&
+        candidate.playerAuraId === "none"
+    )!;
+    expect(clubProfile.strikeBreakdowns[0].criticalChance).toBe(0);
+
+    character.items = [
+      createWeapon({
+        id: "test-spear",
+        hash: "test-spear",
+        name: "Test Spear",
+        base_code: "spr",
+        base: {
+          ...createWeapon().base,
+          id: "spr",
+          name: "Spear",
+          type: "Spear",
+          type_code: "spea",
+        },
+      } as Partial<IItem>),
+    ];
+    const spearProfile = calculateDamage(character).profiles.find(
+      (candidate) =>
+        candidate.skillId === "Basic Attack" &&
+        candidate.playerAuraId === "none"
+    )!;
+
+    expect(spearProfile.strikeBreakdowns[0].criticalChance).toBe(
+      expectedCriticalChance
+    );
+  });
+
+  it("uses S13 mastery and Joust strike formulas from Skills.txt", () => {
+    const masteryLevel = 20;
+    const javelinMasteryCharacter = createCharacter(
+      "Javelin and Spear Mastery",
+      masteryLevel
+    );
+    javelinMasteryCharacter.character.class = { id: 0, name: "Amazon" };
+    javelinMasteryCharacter.character.skills = [
+      {
+        id: 19,
+        name: "Javelin and Spear Mastery",
+        level: masteryLevel,
+      },
+    ];
+    javelinMasteryCharacter.realSkills = [
+      {
+        skill: "Javelin and Spear Mastery",
+        level: masteryLevel,
+        baseLevel: masteryLevel,
+      },
+    ];
+    const offWeaponMasteryProfile = calculateDamage(
+      javelinMasteryCharacter
+    ).profiles.find(
+      (candidate) =>
+        candidate.skillId === "Basic Attack" &&
+        candidate.playerAuraId === "none"
+    )!;
+    expect(offWeaponMasteryProfile.strikeBreakdowns[0]).toMatchObject({
+      criticalChance: 0,
+      criticalMultiplier: 2.29,
+    });
+
+    const oneHandCharacter = createCharacter("One Hand Mastery", masteryLevel);
+    oneHandCharacter.character.class = { id: 4, name: "Barbarian" };
+    oneHandCharacter.character.skills = [
+      { id: 128, name: "One Hand Mastery", level: masteryLevel },
+    ];
+    oneHandCharacter.realSkills = [
+      {
+        skill: "One Hand Mastery",
+        level: masteryLevel,
+        baseLevel: masteryLevel,
+      },
+    ];
+    const oneHandProfile = calculateDamage(oneHandCharacter).profiles.find(
+      (candidate) =>
+        candidate.skillId === "Basic Attack" &&
+        candidate.playerAuraId === "none"
+    )!;
+    expect(oneHandProfile.strikeBreakdowns[0].criticalChance).toBeGreaterThan(
+      0
+    );
+    oneHandCharacter.character.skills.push({
+      id: 128,
+      name: "One Handed Mastery",
+      level: masteryLevel,
+    });
+    const aliasedMasteryProfile = calculateDamage(
+      oneHandCharacter
+    ).profiles.find(
+      (candidate) =>
+        candidate.skillId === "Basic Attack" &&
+        candidate.playerAuraId === "none"
+    )!;
+    expect(aliasedMasteryProfile.strikeBreakdowns[0].criticalChance).toBe(
+      oneHandProfile.strikeBreakdowns[0].criticalChance
+    );
+
+    const twoHandCharacter = createCharacter("Two Hand Mastery", masteryLevel);
+    twoHandCharacter.character.class = { id: 4, name: "Barbarian" };
+    twoHandCharacter.character.skills = [
+      { id: 134, name: "Two Hand Mastery", level: masteryLevel },
+    ];
+    twoHandCharacter.realSkills = [
+      {
+        skill: "Two Hand Mastery",
+        level: masteryLevel,
+        baseLevel: masteryLevel,
+      },
+    ];
+    twoHandCharacter.items = [
+      createWeapon({
+        damage: {
+          one_handed: {},
+          two_handed: { minimum: 10, maximum: 20 },
+          missile: {},
+        },
+      } as Partial<IItem>),
+    ];
+    const twoHandProfile = calculateDamage(twoHandCharacter).profiles.find(
+      (candidate) =>
+        candidate.skillId === "Basic Attack" &&
+        candidate.playerAuraId === "none"
+    )!;
+    expect(twoHandProfile.strikeBreakdowns[0].criticalChance).toBe(0);
+
+    const joustLevel = 20;
+    const joustCharacter = createCharacter("Joust", joustLevel);
+    joustCharacter.character.class = { id: 3, name: "Paladin" };
+    joustCharacter.character.skills = [
+      { id: 378, name: "Joust", level: joustLevel },
+    ];
+    joustCharacter.realSkills = [
+      { skill: "Joust", level: joustLevel, baseLevel: joustLevel },
+    ];
+    const joustProfile = calculateDamage(joustCharacter).profiles.find(
+      (candidate) =>
+        candidate.skillId === "Joust" && candidate.playerAuraId === "none"
+    )!;
+    expect(joustProfile.strikeBreakdowns[0].criticalChance).toBe(48);
+  });
+
+  it("exposes Blessed Aim and Spirit of Barbs strike bonuses by aura level", () => {
+    const level = 20;
+    const character = createCharacter("Basic Attack", 1);
+    character.character.skills = [
+      { id: 108, name: "Blessed Aim", level },
+      { id: 246, name: "Spirit of Barbs", level },
+    ];
+    character.realSkills = character.character.skills.map((skill) => ({
+      skill: skill.name,
+      level: skill.level,
+      baseLevel: skill.level,
+    }));
+
+    const calculation = calculateDamage(character);
+    const blessedAim = calculation.playerAuraOptions.find(
+      (option) => option.id === "Blessed Aim"
+    )!;
+    const spiritOfBarbs = calculation.playerAuraOptions.find(
+      (option) => option.id === "Spirit of Barbs"
+    )!;
+
+    expect(
+      blessedAim.selfLevelBonuses.find((bonus) => bonus.level === level)
+        ?.strikeModifiers
+    ).toMatchObject({ deadlyStrikeChance: 15 });
+    expect(
+      spiritOfBarbs.selfLevelBonuses.find((bonus) => bonus.level === level)
+        ?.strikeModifiers
+    ).toMatchObject({
+      deadlyStrikeChance: 27,
+      maxDeadlyStrikeChance: 5,
+    });
+
+    const blessedAimProfile = calculation.profiles.find(
+      (profile) =>
+        profile.skillId === "Basic Attack" &&
+        profile.playerAuraId === "Blessed Aim" &&
+        profile.playerAuraCarrier === "self"
+    )!;
+    const spiritProfile = calculation.profiles.find(
+      (profile) =>
+        profile.skillId === "Basic Attack" &&
+        profile.playerAuraId === "Spirit of Barbs" &&
+        profile.playerAuraCarrier === "self"
+    )!;
+    expect(blessedAimProfile.strikeBreakdowns[0].deadlyStrikeChance).toBe(15);
+    expect(spiritProfile.strikeBreakdowns[0]).toMatchObject({
+      deadlyStrikeChance: 27,
+      maxDeadlyStrikeChance: 80,
+    });
+  });
+
+  it("excludes Critical and Deadly Strike from Sacrifice", () => {
+    const character = createCharacter("Sacrifice", 20);
+    character.character.class = { id: 3, name: "Paladin" };
+    character.items[0].modifiers = [
+      modifier("item_crit_chance", [50]),
+      modifier("item_deadlystrike", [50]),
+    ];
+
+    const profile = calculateDamage(character).profiles.find(
+      (candidate) =>
+        candidate.skillId === "Sacrifice" && candidate.playerAuraId === "none"
+    )!;
+
+    expect(profile.strikeBreakdowns).toEqual([]);
+    expect(
+      profile.damageComponents.some((component) =>
+        ["critical", "deadly"].includes(component.damageType)
+      )
+    ).toBe(false);
+    expect(profile.notes.join(" ")).toContain(
+      "does not benefit from Critical Strike or Deadly Strike"
+    );
+  });
+
+  it("does not apply Critical or Deadly Strike to the War Cry physical spell", () => {
+    const createWarCryCharacter = (withStrikeModifiers: boolean) => {
+      const character = createCharacter("War Cry", 20);
+      character.character.class = { id: 4, name: "Barbarian" };
+      character.items[0].modifiers = withStrikeModifiers
+        ? [
+            modifier("item_crit_chance", [100]),
+            modifier("item_deadlystrike", [100]),
+          ]
+        : [];
+      return character;
+    };
+    const controlProfile = calculateDamage(
+      createWarCryCharacter(false)
+    ).profiles.find(
+      (candidate) =>
+        candidate.skillId === "War Cry" && candidate.playerAuraId === "none"
+    )!;
+    const strikeProfile = calculateDamage(
+      createWarCryCharacter(true)
+    ).profiles.find(
+      (candidate) =>
+        candidate.skillId === "War Cry" && candidate.playerAuraId === "none"
+    )!;
+
+    expect(strikeProfile.skillDamageMode).toBe("spell");
+    expect(strikeProfile.strikeBreakdowns).toEqual([]);
+    expect(
+      strikeProfile.damageComponents.some((component) =>
+        ["critical", "deadly"].includes(component.damageType)
+      )
+    ).toBe(false);
+    expect(strikeProfile.damageTotals.combinedDamage).toEqual(
+      controlProfile.damageTotals.combinedDamage
+    );
   });
 
   it("keeps Rabies weapon source damage and poison payload as independent components", () => {
@@ -2745,6 +3188,7 @@ describeWithGameData("damage calculator component model", () => {
         id: "right-weapon",
         hash: "right-weapon",
         name: "Right Club",
+        modifiers: [modifier("item_deadlystrike", [50])],
         damage: {
           one_handed: { minimum: 10, maximum: 20 },
           two_handed: {},
@@ -2805,6 +3249,18 @@ describeWithGameData("damage calculator component model", () => {
         leftProfile!.damageTotals.combinedDamage.max,
     });
     expect(sequenceProfile?.notes.join(" ")).toContain("weapsel=2");
+    expect(rightProfile?.strikeBreakdowns[0].deadlyStrikeChance).toBe(50);
+    expect(leftProfile?.strikeBreakdowns[0].deadlyStrikeChance).toBe(0);
+    expect(
+      sequenceProfile?.strikeBreakdowns.map(
+        (breakdown) => breakdown.deadlyStrikeChance
+      )
+    ).toEqual([50, 0]);
+    expect(
+      sequenceProfile?.damageComponents.filter(
+        (component) => component.damageType === "deadly"
+      )
+    ).toHaveLength(1);
   });
 
   it("restricts required dual-wield skills to paired weapon profiles", () => {
@@ -3983,8 +4439,9 @@ describeWithMonStatsData("summon damage modeling", () => {
   });
 });
 
-describeWithArmorData("armory payload kick enrichment", () => {
+describeWithArmorData("armory payload attack enrichment", () => {
   beforeAll(async () => {
+    ({ calculateDamage } = await import("./damage-calculator"));
     ({ enrichArmoryPayload } = await import("./armory-payload"));
   });
 
@@ -4019,5 +4476,289 @@ describeWithArmorData("armory payload kick enrichment", () => {
       maximum: 147,
     });
     expect(payload.items[0].base.stat_bonus).toEqual({ strength: 100 });
+  });
+
+  function createSmiteCharacter({
+    smiteLevel = 20,
+    smiteBaseLevel = smiteLevel,
+    holyShieldLevel = 0,
+    holyShieldBaseLevel = holyShieldLevel,
+    defianceLevel = 0,
+    defianceBaseLevel = defianceLevel,
+    strength = 0,
+  } = {}) {
+    const character = createCharacter("Smite", smiteLevel);
+    character.character.class = { id: 3, name: "Paladin" };
+    character.character.attributes.strength = strength;
+    character.character.skills = [
+      { id: 97, name: "Smite", level: smiteLevel },
+      ...(holyShieldLevel > 0
+        ? [{ id: 117, name: "Holy Shield", level: holyShieldLevel }]
+        : []),
+      ...(defianceLevel > 0
+        ? [{ id: 104, name: "Defiance", level: defianceLevel }]
+        : []),
+    ];
+    character.realSkills = [
+      { skill: "Smite", level: smiteLevel, baseLevel: smiteBaseLevel },
+      ...(holyShieldLevel > 0
+        ? [
+            {
+              skill: "Holy Shield",
+              level: holyShieldLevel,
+              baseLevel: holyShieldBaseLevel,
+            },
+          ]
+        : []),
+      ...(defianceLevel > 0
+        ? [
+            {
+              skill: "Defiance",
+              level: defianceLevel,
+              baseLevel: defianceBaseLevel,
+            },
+          ]
+        : []),
+    ];
+    character.realStats = { ...createStats(), strength };
+    return character;
+  }
+
+  function getShieldDamage(code = "pab") {
+    const armor = loadGameFile("Armor.txt", "code");
+    const row = armor.rowsByKey.get(code)!;
+    return {
+      min: getGameFileNumber(armor, row, "mindam"),
+      max: getGameFileNumber(armor, row, "maxdam"),
+    };
+  }
+
+  function getSmiteProfile(calculation, weaponSet = "primary") {
+    return calculation.profiles.find(
+      (candidate) =>
+        candidate.skillId === "Smite" &&
+        candidate.playerAuraId === "none" &&
+        candidate.weaponId.startsWith(`${weaponSet}:left:smite:`)
+    )!;
+  }
+
+  it("enriches an equipped shield with Armor.txt Smite damage", () => {
+    const payload = { items: [createShield()] };
+    const shieldDamage = getShieldDamage();
+
+    enrichArmoryPayload(payload);
+
+    expect(payload.items[0].base.damage?.smite).toEqual({
+      minimum: shieldDamage.min,
+      maximum: shieldDamage.max,
+    });
+    expect(payload.items[0].damage?.smite).toEqual({
+      minimum: shieldDamage.min,
+      maximum: shieldDamage.max,
+    });
+    expect(payload.items[0].base.stat_bonus).toEqual({ strength: 100 });
+  });
+
+  it("uses shield base damage and weapon Damage +X for Smite", () => {
+    const smiteLevel = 20;
+    const weaponDamageBonus = 10;
+    const character = createSmiteCharacter({ smiteLevel });
+    character.items = [
+      createWeapon({
+        modifiers: [modifier("item_normaldamage", [weaponDamageBonus])],
+      }),
+      createShield(),
+    ];
+    enrichArmoryPayload(character);
+
+    const profile = getSmiteProfile(calculateDamage(character));
+    const shieldDamage = getShieldDamage();
+    const skills = loadGameFile("Skills.txt", "skill");
+    const smiteRow = skills.rowsByKey.get("Smite")!;
+    const smiteDamagePercent =
+      getGameFileNumber(skills, smiteRow, "Param3") +
+      (smiteLevel - 1) * getGameFileNumber(skills, smiteRow, "Param4");
+    const expectedDamage = {
+      min: Math.floor(
+        (shieldDamage.min + weaponDamageBonus) *
+          (1 + smiteDamagePercent / 100)
+      ),
+      max: Math.floor(
+        (shieldDamage.max + weaponDamageBonus) *
+          (1 + smiteDamagePercent / 100)
+      ),
+    };
+
+    expect(profile.weaponId).toContain(":left:smite:");
+    expect(profile.damageScope.label).toBe("per shield hit");
+    expect(profile.breakdown.weaponDamage).toEqual(shieldDamage);
+    expect(profile.breakdown.flatPhysicalDamage).toEqual({
+      min: weaponDamageBonus,
+      max: weaponDamageBonus,
+    });
+    expect(profile.totalPhysicalDamage).toEqual(expectedDamage);
+  });
+
+  it("uses Holy Shield effective level and Smite/Defiance base levels for its synergy", () => {
+    const smiteLevel = 30;
+    const smiteBaseLevel = 20;
+    const holyShieldLevel = 30;
+    const defianceLevel = 25;
+    const defianceBaseLevel = 10;
+    const character = createSmiteCharacter({
+      smiteLevel,
+      smiteBaseLevel,
+      holyShieldLevel,
+      holyShieldBaseLevel: 20,
+      defianceLevel,
+      defianceBaseLevel,
+    });
+    character.items = [createWeapon(), createShield()];
+    enrichArmoryPayload(character);
+
+    const calculation = calculateDamage(character);
+    const profile = getSmiteProfile(calculation);
+    const skills = loadGameFile("Skills.txt", "skill");
+    const holyShieldRow = skills.rowsByKey.get("Holy Shield")!;
+    const holyShieldBaseDamage = {
+      min: getSourceLevelScaledValue(
+        skills,
+        holyShieldRow,
+        holyShieldLevel,
+        "MinDam",
+        ["MinLevDam1", "MinLevDam2", "MinLevDam3", "MinLevDam4", "MinLevDam5"]
+      ),
+      max: getSourceLevelScaledValue(
+        skills,
+        holyShieldRow,
+        holyShieldLevel,
+        "MaxDam",
+        ["MaxLevDam1", "MaxLevDam2", "MaxLevDam3", "MaxLevDam4", "MaxLevDam5"]
+      ),
+    };
+    const synergyPerLevel = getGameFileNumber(
+      skills,
+      holyShieldRow,
+      "Param7"
+    );
+    const expectedSynergyPercent =
+      (smiteBaseLevel + defianceBaseLevel) * synergyPerLevel;
+    const incorrectSoftLevelSynergyPercent =
+      (smiteLevel + defianceLevel) * synergyPerLevel;
+    const expectedHolyShieldDamage = {
+      min: Math.floor(
+        holyShieldBaseDamage.min * (1 + expectedSynergyPercent / 100)
+      ),
+      max: Math.floor(
+        holyShieldBaseDamage.max * (1 + expectedSynergyPercent / 100)
+      ),
+    };
+    const incorrectSoftLevelDamage = {
+      min: Math.floor(
+        holyShieldBaseDamage.min *
+          (1 + incorrectSoftLevelSynergyPercent / 100)
+      ),
+      max: Math.floor(
+        holyShieldBaseDamage.max *
+          (1 + incorrectSoftLevelSynergyPercent / 100)
+      ),
+    };
+
+    expect(profile.breakdown.flatPhysicalDamage).toEqual(
+      expectedHolyShieldDamage
+    );
+    expect(profile.breakdown.flatPhysicalDamage).not.toEqual(
+      incorrectSoftLevelDamage
+    );
+    expect(
+      calculation.skillOptions.some((option) => option.id === "Holy Shield")
+    ).toBe(false);
+    expect(profile.notes.join(" ")).toContain(
+      `Holy Shield level ${holyShieldLevel} damage is added to the shield base`
+    );
+  });
+
+  it("excludes elemental payloads and Critical/Deadly Strike from Smite", () => {
+    const character = createSmiteCharacter();
+    character.items = [
+      createWeapon({
+        modifiers: [
+          modifier("item_crit_chance", [100]),
+          modifier("item_deadlystrike", [100]),
+        ],
+      }),
+      createShield({
+        properties: ["Adds 50-100 Fire Damage"],
+      }),
+    ];
+    enrichArmoryPayload(character);
+
+    const calculation = calculateDamage(character);
+    const profile = getSmiteProfile(calculation);
+    const holyFireProfile = calculation.profiles.find(
+      (candidate) =>
+        candidate.skillId === "Smite" &&
+        candidate.playerAuraId === "Holy Fire" &&
+        candidate.playerAuraCarrier === "self" &&
+        candidate.weaponId.startsWith("primary:left:smite:")
+    )!;
+
+    expect(profile.totalElementalDamage).toEqual({});
+    expect(holyFireProfile.totalElementalDamage).toEqual({});
+    expect(profile.strikeBreakdowns).toEqual([]);
+    expect(
+      profile.damageComponents.some((component) =>
+        ["critical", "deadly", "fire"].includes(component.damageType)
+      )
+    ).toBe(false);
+  });
+
+  it("uses the shield from the selected primary or secondary weapon set", () => {
+    const primaryShield = createShield({
+      id: "primary-shield",
+      hash: "primary-shield",
+    });
+    const secondaryShield = createShield({
+      id: "secondary-shield",
+      hash: "secondary-shield",
+      name: "Test Buckler",
+      base_code: "buc",
+      base: {
+        id: "buc",
+        category: "armor",
+        codes: {},
+        name: "Buckler",
+        stackable: false,
+        type: "Shields",
+        type_code: "shie",
+        size: { height: 2, width: 2 },
+        requirements: { level: 0, strength: 12, dexterity: 0 },
+      },
+      location: {
+        zone: "Equipped",
+        storage: "Equipped",
+        zone_id: 1,
+        storage_id: 0,
+        equipment: "Left Hand Switch",
+        equipment_id: 12,
+      },
+    });
+    const character = createSmiteCharacter();
+    character.items = [createWeapon(), primaryShield, secondaryShield];
+    enrichArmoryPayload(character);
+
+    const calculation = calculateDamage(character);
+    const primaryProfile = getSmiteProfile(calculation, "primary");
+    const secondaryProfile = getSmiteProfile(calculation, "secondary");
+
+    expect(primaryProfile.breakdown.weaponDamage).toEqual(
+      getShieldDamage("pab")
+    );
+    expect(secondaryProfile.breakdown.weaponDamage).toEqual(
+      getShieldDamage("buc")
+    );
+    expect(primaryProfile.breakdown.weaponDamage).not.toEqual(
+      secondaryProfile.breakdown.weaponDamage
+    );
   });
 });

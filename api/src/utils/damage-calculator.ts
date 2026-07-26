@@ -1,7 +1,10 @@
 import fs from "fs";
 import path from "path";
 import CharacterStatParser from "./character-stats";
-import { getExpandedItemElementalDamageRanges } from "./item-stat-expansion";
+import {
+  expandItemStats,
+  getExpandedItemElementalDamageRanges,
+} from "./item-stat-expansion";
 import { calculateTotalSkills } from "./skill-calculator";
 import {
   ActiveAuraSummary,
@@ -14,6 +17,8 @@ import {
   DamageProfile,
   DamageRange,
   DamageSourceReference,
+  DamageStrikeBreakdown,
+  DamageStrikeModifiers,
   DamageTotals,
   DamageSkillOption,
   DamageTransformationOption,
@@ -101,6 +106,10 @@ const DEFAULT_DAMAGE_SCOPE: DamageProfile["damageScope"] = {
 };
 
 const SKILL_DAMAGE_SCOPE_DEFINITIONS: Record<string, DamageScopeDefinition> = {
+  [normalizeSkillName("Smite").toLowerCase()]: {
+    label: "per shield hit",
+    note: "Smite totals use the equipped shield's Armor.txt mindam/maxdam plus the active Holy Shield bonus, then apply strength, Smite enhanced damage, off-weapon enhanced damage, and the selected physical aura. Hit chance, crushing blow, target count, and attack rate are not multiplied into totals.",
+  },
   [normalizeSkillName("Charged Strike").toLowerCase()]: {
     label: "per weapon hit plus one bolt",
     countColumn: "calc1",
@@ -581,6 +590,26 @@ const GAME_STATE_TO_TRANSFORMATION_ID: Record<string, string> = {
 };
 
 const EMPTY_SKILL_MAP = new Map<string, SkillEntry>();
+
+const BASE_CRITICAL_STRIKE_CHANCE_CAP = 75;
+const BASE_DEADLY_STRIKE_CHANCE_CAP = 75;
+const BASE_CRITICAL_STRIKE_MULTIPLIER = 2;
+const BASE_DEADLY_STRIKE_MULTIPLIER = 1.5;
+
+const EMPTY_STRIKE_MODIFIERS: DamageStrikeModifiers = {
+  criticalChance: 0,
+  deadlyStrikeChance: 0,
+  maxDeadlyStrikeChance: 0,
+  criticalMultiplierBonus: 0,
+  deadlyStrikeMultiplierBonus: 0,
+};
+
+const STRIKE_DAMAGE_SOURCE_REFS: DamageSourceReference[] = [
+  {
+    table: "Skills.txt / item stats",
+    columns: ["Critical / Deadly Strike"],
+  },
+];
 
 const GAME_TABLE_DEFINITIONS: Record<GameTableName, GameTableDefinition> = {
   Skills: { fileName: "Skills.txt", keyColumn: "skill", required: true },
@@ -2942,21 +2971,24 @@ function hasDamageRange(damage?: {
 }
 
 function getDamageFromArmoryItemData(
-  item: IItem
+  item: IItem,
+  damageKind: "kick" | "smite"
 ): DamageRangeWithSource | undefined {
-  const itemWithPossibleKickDamage = item as IItem & {
+  const itemWithArmorAttackDamage = item as IItem & {
     damage?: IItem["damage"] & {
       kick?: { minimum?: number; maximum?: number };
+      smite?: { minimum?: number; maximum?: number };
     };
     base?: IItem["base"] & {
       damage?: IItem["damage"] & {
         kick?: { minimum?: number; maximum?: number };
+        smite?: { minimum?: number; maximum?: number };
       };
     };
   };
   const damageCandidates = [
-    itemWithPossibleKickDamage.base?.damage?.kick,
-    itemWithPossibleKickDamage.damage?.kick,
+    itemWithArmorAttackDamage.base?.damage?.[damageKind],
+    itemWithArmorAttackDamage.damage?.[damageKind],
   ];
   const damage = damageCandidates.find(hasDamageRange);
   if (!damage) {
@@ -2969,15 +3001,25 @@ function getDamageFromArmoryItemData(
       {
         table: "Armory item data",
         row: item.base?.name || item.name,
-        columns: ["base.damage.kick", "damage.kick"],
-        note: "Equipped boot kick damage enriched from Armor.txt mindam/maxdam.",
+        columns: [
+          `base.damage.${damageKind}`,
+          `damage.${damageKind}`,
+        ],
+        note:
+          damageKind === "kick"
+            ? "Equipped boot kick damage enriched from Armor.txt mindam/maxdam."
+            : "Equipped shield Smite damage enriched from Armor.txt mindam/maxdam.",
       },
     ],
   };
 }
 
 function getBootKickDamage(item: IItem): DamageRangeWithSource | undefined {
-  return getDamageFromArmoryItemData(item);
+  return getDamageFromArmoryItemData(item, "kick");
+}
+
+function getShieldSmiteDamage(item: IItem): DamageRangeWithSource | undefined {
+  return getDamageFromArmoryItemData(item, "smite");
 }
 
 function isEquippedBootItem(item: IItem): boolean {
@@ -2991,6 +3033,23 @@ function isEquippedBootItem(item: IItem): boolean {
   const typeCode = item.base?.type_code?.toLowerCase();
   const typeName = item.base?.type?.toLowerCase() || "";
   return typeCode === "boot" || typeName.includes("boot");
+}
+
+function isEquippedShieldItem(item: IItem): boolean {
+  if (
+    item.location?.zone !== "Equipped" ||
+    !item.location?.equipment?.includes("Left Hand")
+  ) {
+    return false;
+  }
+
+  const typeCode = item.base?.type_code?.toLowerCase();
+  const typeName = item.base?.type?.toLowerCase() || "";
+  return (
+    typeCode === "shie" ||
+    typeCode === "ashd" ||
+    typeName.includes("shield")
+  );
 }
 
 function createUnarmedItem(weaponSet: WeaponSet): IItem {
@@ -3095,6 +3154,35 @@ function createKickSelection(
     slot: "feet",
     damageSourceRefs: kickDamage?.sourceRefs,
     baseDamageUnavailable: !kickDamage,
+  };
+}
+
+function createSmiteSelection(
+  weaponSet: WeaponSet,
+  item: IItem
+): WeaponSelection {
+  const setLabel = weaponSet === "primary" ? "Primary" : "Secondary";
+  const key = item.hash || String(item.id);
+  const baseName = item.base?.name || item.name;
+  const smiteDamage = getShieldSmiteDamage(item);
+
+  return {
+    option: {
+      id: `${weaponSet}:left:smite:${key}`,
+      label: `${setLabel} shield (Smite)`,
+      weaponSet,
+      slot: "left",
+      handMode: "smite",
+      itemName: item.name,
+      baseName,
+      weaponType: item.base?.type || "Shield",
+    },
+    item,
+    damage: smiteDamage?.damage || createEmptyDamageRange(),
+    weaponSet,
+    slot: "left",
+    damageSourceRefs: smiteDamage?.sourceRefs,
+    baseDamageUnavailable: !smiteDamage,
   };
 }
 
@@ -3357,6 +3445,11 @@ function getWeaponOptions(characterData: CharacterData): WeaponSelection[] {
     if (equippedBoots) {
       selections.push(createKickSelection(weaponSet, equippedBoots));
     }
+
+    const equippedShield = items.find(isEquippedShieldItem);
+    if (equippedShield) {
+      selections.push(createSmiteSelection(weaponSet, equippedShield));
+    }
   });
 
   const summonSkillNames = Array.from(getSkillMap(characterData).entries())
@@ -3420,7 +3513,10 @@ function getStatBonusPercent(
   strength: number,
   dexterity: number
 ): number {
-  if (weaponSelection.option.handMode === "kick") {
+  if (
+    weaponSelection.option.handMode === "kick" ||
+    weaponSelection.option.handMode === "smite"
+  ) {
     return (
       getPayloadStatBonusPercent(weaponSelection.item, strength, dexterity) ??
       strength
@@ -3740,6 +3836,7 @@ function isSelectableSpellSkill(skillName: string): boolean {
       Boolean(getGameRow("Skills", candidate))
     ) || skillName;
   if (
+    resolvedSkillName === "Holy Shield" ||
     isPlayerAuraSkill(resolvedSkillName) ||
     isGameSummonSkill(resolvedSkillName) ||
     isGameSelfOrPartyBuffSkill(resolvedSkillName)
@@ -4138,7 +4235,7 @@ function createDamageComponent(component: {
   id: string;
   label: string;
   source: DamageComponent["source"];
-  damageType: DamageElement;
+  damageType: DamageComponent["damageType"];
   timing?: DamageComponent["timing"];
   damage: DamageRange;
   baseDamage?: DamageRange;
@@ -4196,7 +4293,7 @@ function buildDamageTotals(
   const includedComponents = components.filter(
     (component) => component.includedInTotal !== false
   );
-  const byElement: Partial<Record<DamageElement, DamageRange>> = {};
+  const byElement: DamageTotals["byElement"] = {};
   let poisonDamage: PoisonDamage | undefined;
 
   includedComponents.forEach((component) => {
@@ -4239,6 +4336,153 @@ function buildDamageTotals(
     byElement,
     poisonDamage,
   };
+}
+
+function roundStrikeValue(value: number): number {
+  return Number(value.toFixed(3));
+}
+
+function addStrikeModifiers(
+  current: DamageStrikeModifiers,
+  addition: Partial<DamageStrikeModifiers>
+): DamageStrikeModifiers {
+  return {
+    criticalChance: current.criticalChance + (addition.criticalChance || 0),
+    deadlyStrikeChance:
+      current.deadlyStrikeChance + (addition.deadlyStrikeChance || 0),
+    maxDeadlyStrikeChance:
+      current.maxDeadlyStrikeChance + (addition.maxDeadlyStrikeChance || 0),
+    criticalMultiplierBonus:
+      current.criticalMultiplierBonus + (addition.criticalMultiplierBonus || 0),
+    deadlyStrikeMultiplierBonus:
+      current.deadlyStrikeMultiplierBonus +
+      (addition.deadlyStrikeMultiplierBonus || 0),
+  };
+}
+
+function buildStrikeBreakdown(
+  id: string,
+  label: string,
+  physicalComponentIds: string[],
+  modifiers: DamageStrikeModifiers
+): DamageStrikeBreakdown {
+  const rawCriticalChance = Math.max(0, modifiers.criticalChance);
+  const criticalChance = Math.min(
+    BASE_CRITICAL_STRIKE_CHANCE_CAP,
+    rawCriticalChance
+  );
+  const rawMaxDeadlyStrikeChance = Math.max(
+    0,
+    BASE_DEADLY_STRIKE_CHANCE_CAP + modifiers.maxDeadlyStrikeChance
+  );
+  const maxDeadlyStrikeChance = Math.min(100, rawMaxDeadlyStrikeChance);
+  const rawDeadlyStrikeChance = Math.max(0, modifiers.deadlyStrikeChance);
+  const deadlyStrikeChance = Math.min(
+    maxDeadlyStrikeChance,
+    rawDeadlyStrikeChance
+  );
+  const effectiveDeadlyStrikeChance =
+    deadlyStrikeChance * (1 - criticalChance / 100);
+
+  return {
+    id,
+    label,
+    physicalComponentIds,
+    rawCriticalChance: roundStrikeValue(rawCriticalChance),
+    criticalChance: roundStrikeValue(criticalChance),
+    criticalMultiplier: roundStrikeValue(
+      Math.max(
+        1,
+        BASE_CRITICAL_STRIKE_MULTIPLIER +
+          modifiers.criticalMultiplierBonus / 100
+      )
+    ),
+    rawDeadlyStrikeChance: roundStrikeValue(rawDeadlyStrikeChance),
+    rawMaxDeadlyStrikeChance: roundStrikeValue(rawMaxDeadlyStrikeChance),
+    deadlyStrikeChance: roundStrikeValue(deadlyStrikeChance),
+    maxDeadlyStrikeChance: roundStrikeValue(maxDeadlyStrikeChance),
+    effectiveDeadlyStrikeChance: roundStrikeValue(effectiveDeadlyStrikeChance),
+    deadlyStrikeMultiplier: roundStrikeValue(
+      Math.max(
+        1,
+        BASE_DEADLY_STRIKE_MULTIPLIER +
+          modifiers.deadlyStrikeMultiplierBonus / 100
+      )
+    ),
+  };
+}
+
+function createStrikeDamageComponents(
+  components: readonly DamageComponent[],
+  strikeBreakdowns: readonly DamageStrikeBreakdown[]
+): DamageComponent[] {
+  const componentsById = new Map(
+    components.map((component) => [component.id, component])
+  );
+
+  return strikeBreakdowns.flatMap((strike) => {
+    const physicalDamage = strike.physicalComponentIds.reduce(
+      (total, componentId) => {
+        const component = componentsById.get(componentId);
+        return component &&
+          component.damageType === "physical" &&
+          component.timing === "instant"
+          ? addDamageRange(total, component.damage)
+          : total;
+      },
+      createEmptyDamageRange()
+    );
+    if (!isNonZeroDamageRange(physicalDamage)) {
+      return [];
+    }
+
+    const outcomes: Array<{
+      type: "critical" | "deadly";
+      label: string;
+      chance: number;
+      multiplier: number;
+    }> = [
+      {
+        type: "critical",
+        label: "Critical Strike bonus",
+        chance: strike.criticalChance,
+        multiplier: strike.criticalMultiplier,
+      },
+      {
+        type: "deadly",
+        label: "Deadly Strike bonus",
+        chance: strike.effectiveDeadlyStrikeChance,
+        multiplier: strike.deadlyStrikeMultiplier,
+      },
+    ];
+
+    return outcomes.flatMap((outcome) => {
+      const expectedMultiplier =
+        (outcome.chance / 100) * (outcome.multiplier - 1);
+      const damage = {
+        min: physicalDamage.min * expectedMultiplier,
+        max: physicalDamage.max * expectedMultiplier,
+      };
+      if (!isNonZeroDamageRange(damage)) {
+        return [];
+      }
+
+      return [
+        createDamageComponent({
+          id: `strike:${strike.id}:${outcome.type}`,
+          label:
+            strike.label === "Attack"
+              ? outcome.label
+              : `${strike.label}: ${outcome.label}`,
+          source: "stat",
+          damageType: outcome.type,
+          damage,
+          sourceRefs: STRIKE_DAMAGE_SOURCE_REFS,
+          notes: [],
+        }),
+      ];
+    });
+  });
 }
 
 function elementalDamageFromTotals(
@@ -5451,6 +5695,245 @@ function getPassiveSkillDamagePercent(
   return total;
 }
 
+function parseRenderedStrikeModifier(
+  properties: IItem["properties"],
+  kind: keyof DamageStrikeModifiers
+): number {
+  const patterns: Record<keyof DamageStrikeModifiers, RegExp[]> = {
+    criticalChance: [
+      /^(?:\+)?([\d.]+)% (?:Chance of )?Critical Strike$/i,
+      /^Critical Strike Chance(?: \+)?([\d.]+)%$/i,
+    ],
+    deadlyStrikeChance: [
+      /^(?:\+)?([\d.]+)% (?:Chance of )?Deadly Strike$/i,
+      /^Deadly Strike Chance(?: \+)?([\d.]+)%$/i,
+    ],
+    maxDeadlyStrikeChance: [
+      /^(?:\+)?([\d.]+)% (?:to )?Maximum Deadly Strike$/i,
+      /^Maximum Deadly Strike(?: \+)?([\d.]+)%$/i,
+    ],
+    criticalMultiplierBonus: [
+      /^(?:\+)?([\d.]+)% Critical Strike Multiplier$/i,
+      /^Critical Strike Multiplier(?: \+)?([\d.]+)%$/i,
+    ],
+    deadlyStrikeMultiplierBonus: [
+      /^(?:\+)?([\d.]+)% Deadly Strike Multiplier$/i,
+      /^Deadly Strike Multiplier(?: \+)?([\d.]+)%$/i,
+    ],
+  };
+
+  return properties.reduce((total, property) => {
+    if (!property) {
+      return total;
+    }
+
+    const match = patterns[kind]
+      .map((pattern) => property.match(pattern))
+      .find(Boolean);
+    return total + (match ? Number(match[1]) : 0);
+  }, 0);
+}
+
+function parseRenderedDeadlyStrikePerLevel(
+  properties: IItem["properties"]
+): number {
+  return properties.reduce((total, property) => {
+    const match = property?.match(
+      /^(?:\+)?([\d.]+)% (?:Chance of )?Deadly Strike \(Based on Character Level\)$/i
+    );
+    return total + (match ? Number(match[1]) : 0);
+  }, 0);
+}
+
+function getItemStrikeModifiers(
+  playerItems: IItem[],
+  selectedWeapon: WeaponSelection,
+  characterLevel: number
+): DamageStrikeModifiers {
+  const selectedWeaponKey =
+    selectedWeapon.item.hash || String(selectedWeapon.item.id);
+
+  return playerItems.reduce<DamageStrikeModifiers>(
+    (total, item) => {
+      const itemKey = item.hash || String(item.id);
+      const isWeapon = item.category === "weapon";
+      const isSelectedWeapon = itemKey === selectedWeaponKey;
+      if (
+        (!isSelectedWeapon &&
+          !isEquippedItem(item) &&
+          !isActiveInventoryCharm(item)) ||
+        (isWeapon && !isSelectedWeapon)
+      ) {
+        return total;
+      }
+
+      const ledger = expandItemStats(item);
+      const rawPerLevelDeadlyStrike = ledger.item_deadlystrike_perlevel || 0;
+      const perLevelDeadlyStrike = Math.floor(
+        (rawPerLevelDeadlyStrike ||
+          parseRenderedDeadlyStrikePerLevel(item.properties)) * characterLevel
+      );
+      const rawModifiers: DamageStrikeModifiers = {
+        criticalChance: ledger.item_crit_chance || 0,
+        deadlyStrikeChance: ledger.item_deadlystrike || 0,
+        maxDeadlyStrikeChance: ledger.item_maxdeadlystrike || 0,
+        criticalMultiplierBonus: ledger.item_crit_multiplier || 0,
+        deadlyStrikeMultiplierBonus: ledger.item_ds_multiplier || 0,
+      };
+
+      return addStrikeModifiers(total, {
+        criticalChance:
+          rawModifiers.criticalChance ||
+          parseRenderedStrikeModifier(item.properties, "criticalChance"),
+        deadlyStrikeChance:
+          (rawModifiers.deadlyStrikeChance ||
+            parseRenderedStrikeModifier(
+              item.properties,
+              "deadlyStrikeChance"
+            )) + perLevelDeadlyStrike,
+        maxDeadlyStrikeChance:
+          rawModifiers.maxDeadlyStrikeChance ||
+          parseRenderedStrikeModifier(item.properties, "maxDeadlyStrikeChance"),
+        criticalMultiplierBonus:
+          rawModifiers.criticalMultiplierBonus ||
+          parseRenderedStrikeModifier(
+            item.properties,
+            "criticalMultiplierBonus"
+          ),
+        deadlyStrikeMultiplierBonus:
+          rawModifiers.deadlyStrikeMultiplierBonus ||
+          parseRenderedStrikeModifier(
+            item.properties,
+            "deadlyStrikeMultiplierBonus"
+          ),
+      });
+    },
+    { ...EMPTY_STRIKE_MODIFIERS }
+  );
+}
+
+function passiveStrikeSkillAppliesToWeapon(
+  skillName: string,
+  skillRow: string[],
+  weaponSelection: WeaponSelection
+): boolean {
+  const restrictedTypes = SKILL_WEAPON_TYPE_COLUMN_PREFIXES.flatMap((prefix) =>
+    getSkillWeaponTypeCodes(skillRow, prefix)
+  );
+  if (restrictedTypes.length > 0) {
+    return weaponSelectionMatchesAnySkillWeaponType(
+      weaponSelection,
+      restrictedTypes
+    );
+  }
+
+  const itemTypes = getItemWeaponTypeCodes(weaponSelection.item);
+  switch (getGameRowString("Skills", skillRow, "skill") || skillName) {
+    case "Sword Mastery":
+      return itemTypes.has("swor");
+    case "One Hand Mastery":
+      return weaponSelection.option.handMode === "one_handed";
+    case "Mace Mastery":
+      return itemTypes.has("blun");
+    case "Throwing Mastery":
+      return (
+        weaponSelection.option.handMode === "missile" &&
+        !isBowOrCrossbow(weaponSelection.item)
+      );
+    case "Spear Mastery":
+      return itemTypes.has("spea") || itemTypes.has("pole");
+    default:
+      return true;
+  }
+}
+
+function getPassiveStrikeModifiers(
+  weaponSelection: WeaponSelection,
+  skillMap: Map<string, SkillEntry>
+): DamageStrikeModifiers {
+  let modifiers = { ...EMPTY_STRIKE_MODIFIERS };
+  const processedSkillRows = new Set<string>();
+
+  skillMap.forEach((entry, skillName) => {
+    const skillRow = getGameRow("Skills", skillName);
+    const sourceSkillName = skillRow
+      ? getGameRowString("Skills", skillRow, "skill") || skillName
+      : skillName;
+    const appliesToWeapon = skillRow
+      ? passiveStrikeSkillAppliesToWeapon(
+          skillName,
+          skillRow,
+          weaponSelection
+        )
+      : false;
+    const hasGlobalCriticalMultiplier =
+      sourceSkillName === "Javelin and Spear Mastery";
+    if (
+      entry.level <= 0 ||
+      !skillRow ||
+      processedSkillRows.has(sourceSkillName.toLowerCase()) ||
+      (!appliesToWeapon && !hasGlobalCriticalMultiplier)
+    ) {
+      return;
+    }
+    processedSkillRows.add(sourceSkillName.toLowerCase());
+
+    modifiers = addStrikeModifiers(modifiers, {
+      criticalChance: appliesToWeapon
+        ? getGameSkillPassiveStatValue(
+            skillName,
+            [
+              "passive_critical_strike",
+              "passive_mastery_melee_crit",
+              "passive_mastery_throw_crit",
+              "item_crit_chance",
+            ],
+            skillMap
+          ) || 0
+        : 0,
+      // S13 currently applies this new multiplier to every weapon even though
+      // the mastery damage columns in Skills.txt remain spear-restricted.
+      criticalMultiplierBonus:
+        appliesToWeapon || hasGlobalCriticalMultiplier
+          ? getGameSkillPassiveStatValue(
+              skillName,
+              ["item_crit_multiplier"],
+              skillMap
+            ) || 0
+          : 0,
+    });
+  });
+
+  return modifiers;
+}
+
+function getSelectedSkillStrikeModifiers(
+  selectedSkillName: string,
+  selectedSkillLevel: number,
+  skillMap: Map<string, SkillEntry>
+): DamageStrikeModifiers {
+  if (selectedSkillName !== "Joust") {
+    return { ...EMPTY_STRIKE_MODIFIERS };
+  }
+
+  const skillRow = getGameRow("Skills", selectedSkillName);
+  return {
+    ...EMPTY_STRIKE_MODIFIERS,
+    criticalChance: skillRow
+      ? evaluateGameCalcExpression(
+          getGameRowString("Skills", skillRow, "calc2"),
+          skillRow,
+          skillMap,
+          selectedSkillLevel
+        )
+      : 0,
+  };
+}
+
+function skillCanApplyStrikeDamage(selectedSkillName: string): boolean {
+  return selectedSkillName !== "Sacrifice" && selectedSkillName !== "Smite";
+}
+
 function parseItemDamageStats(
   playerItems: IItem[],
   selectedWeapon: WeaponSelection
@@ -5674,6 +6157,42 @@ function parseItemDamageStats(
   };
 }
 
+function getSmiteItemNormalDamage(
+  playerItems: IItem[]
+): DamageRangeWithSource | undefined {
+  const sourceWeapon = playerItems.find(
+    (item) =>
+      item.location?.zone === "Equipped" &&
+      getLogicalHandSlot(item.location?.equipment) === "right" &&
+      item.category === "weapon"
+  );
+  if (!sourceWeapon) {
+    return undefined;
+  }
+
+  const ledgerDamage = expandItemStats(sourceWeapon).item_normaldamage || 0;
+  const renderedDamage = sourceWeapon.properties.reduce((total, property) => {
+    const match = property?.match(/^Damage \+(\d+)$/i);
+    return total + (match ? Number(match[1]) : 0);
+  }, 0);
+  const damage = ledgerDamage || renderedDamage;
+  if (damage <= 0) {
+    return undefined;
+  }
+
+  return {
+    damage: { min: damage, max: damage },
+    sourceRefs: [
+      {
+        table: "ItemStatCost.txt / Armory item modifiers",
+        row: sourceWeapon.name,
+        columns: ["item_normaldamage"],
+        note: "The Damage +X stat on the equipped weapon is added to Smite base damage; ordinary weapon and item min/max damage are excluded.",
+      },
+    ],
+  };
+}
+
 function getAuraFormulaSkillName(auraName: string): string {
   return getPlayerAuraDefinition(auraName)?.skillName || auraName;
 }
@@ -5806,6 +6325,35 @@ function getAuraSkillLevelBonus(aura: AuraSource): number {
       : gamePartyValue;
 
   return gameValue ?? 0;
+}
+
+function getAuraStrikeStatValue(aura: AuraSource, statName: string): number {
+  const skillMap = new Map<string, SkillEntry>();
+  const selfValue =
+    aura.carrier === "self"
+      ? getGameAuraStatValue(aura, [statName], "self", skillMap)
+      : undefined;
+  const partyValue = getGameAuraStatValue(aura, [statName], "party", skillMap);
+
+  return (
+    (aura.carrier === "self" ? (selfValue ?? partyValue) : partyValue) || 0
+  );
+}
+
+function getAuraStrikeModifiers(aura: AuraSource): DamageStrikeModifiers {
+  return {
+    criticalChance: getAuraStrikeStatValue(aura, "item_crit_chance"),
+    deadlyStrikeChance: getAuraStrikeStatValue(aura, "item_deadlystrike"),
+    maxDeadlyStrikeChance: getAuraStrikeStatValue(aura, "item_maxdeadlystrike"),
+    criticalMultiplierBonus: getAuraStrikeStatValue(
+      aura,
+      "item_crit_multiplier"
+    ),
+    deadlyStrikeMultiplierBonus: getAuraStrikeStatValue(
+      aura,
+      "item_ds_multiplier"
+    ),
+  };
 }
 
 function getTotalAuraSkillLevelBonus(activeAuras: AuraSource[]): number {
@@ -6163,6 +6711,7 @@ function getManualAuraLevelBonus(
     physicalBonusPercent: getAuraPhysicalDamagePercent(aura),
     elementalDamage: getAuraAttackDamage(aura, new Map()),
     poisonDamage: getAuraPoisonDamage(aura, new Map()),
+    strikeModifiers: getAuraStrikeModifiers(aura),
   };
 }
 
@@ -6361,7 +6910,7 @@ function isSkillWeaponTypeHandModeCompatible(
         weaponSelection.option.handMode !== "unarmed"
       );
     case "shld":
-      return false;
+      return weaponSelection.option.handMode === "smite";
     default:
       return undefined;
   }
@@ -6479,6 +7028,15 @@ function isWeaponSelectionCompatibleWithSkill(
   }
 
   if (weaponSelection.option.handMode === "summon") {
+    return false;
+  }
+
+  const isSmiteSkill = sourceSkillName === "Smite";
+  if (isSmiteSkill) {
+    return weaponSelection.option.handMode === "smite";
+  }
+
+  if (weaponSelection.option.handMode === "smite") {
     return false;
   }
 
@@ -6780,6 +7338,7 @@ function buildSummonProfile(
     activeAuras: activeAuras.map(summarizeAuraSource),
     damageScope,
     damageComponents,
+    strikeBreakdowns: [],
     damageTotals,
     ...getAuraPulseProfileFields(auraPulseDamageComponents),
     totalPhysicalDamage,
@@ -6905,6 +7464,7 @@ function buildSpellProfile(
     activeAuras: activeAuras.map(summarizeAuraSource),
     damageScope,
     damageComponents,
+    strikeBreakdowns: [],
     damageTotals,
     ...getAuraPulseProfileFields(auraPulseDamageComponents),
     totalPhysicalDamage,
@@ -6955,6 +7515,16 @@ function buildSequenceProfile(
       ...component,
       id: `sequence:${index + 1}:${component.id}`,
       label: `${hit.label}: ${component.label}`,
+    }))
+  );
+  const strikeBreakdowns = hitProfiles.flatMap(({ hit, profile }, index) =>
+    profile.strikeBreakdowns.map((strike) => ({
+      ...strike,
+      id: `sequence:${index + 1}:${strike.id}`,
+      label: `${hit.label}: ${strike.label}`,
+      physicalComponentIds: strike.physicalComponentIds.map(
+        (componentId) => `sequence:${index + 1}:${componentId}`
+      ),
     }))
   );
   const auraPulseDamageComponents = hitProfiles.flatMap(
@@ -7019,6 +7589,7 @@ function buildSequenceProfile(
     activeAuras: firstProfile?.activeAuras ?? [],
     damageScope,
     damageComponents,
+    strikeBreakdowns,
     damageTotals,
     ...getAuraPulseProfileFields(auraPulseDamageComponents),
     totalPhysicalDamage,
@@ -7095,6 +7666,7 @@ function buildProfile(
   const characterClass = characterData.character.class.name;
   const displaySkillName = skillOption.name;
   const selectedSkillName = skillOption.sourceSkillName || skillOption.name;
+  const isSmiteProfile = selectedSkillName === "Smite";
 
   const selectedPlayerAura =
     playerAuraOption.id === "none"
@@ -7124,6 +7696,12 @@ function buildProfile(
         skillOption.level;
 
   const parsedItemDamage = parseItemDamageStats(playerItems, weaponSelection);
+  const smiteItemNormalDamage = isSmiteProfile
+    ? getSmiteItemNormalDamage(playerItems)
+    : undefined;
+  const flatPhysicalDamage = isSmiteProfile
+    ? smiteItemNormalDamage?.damage || createEmptyDamageRange()
+    : parsedItemDamage.flatPhysicalDamage;
   const statBonusPercent = getStatBonusPercent(
     characterClass,
     weaponSelection,
@@ -7190,6 +7768,32 @@ function buildProfile(
           selectedSkillName,
           directSkillDamageToComponents(selectedSkillName, directDamage)
         );
+  const holyShieldLevel = isSmiteProfile
+    ? getSkillEntry(effectiveSkillMap, "Holy Shield").level
+    : 0;
+  const holyShieldDamageComponents =
+    holyShieldLevel > 0
+      ? directSkillDamageToComponents(
+          "Holy Shield",
+          getDirectSkillDamage(
+            "Holy Shield",
+            holyShieldLevel,
+            effectiveSkillMap,
+            realStats
+          )
+        )
+          .filter((component) => component.damageType === "physical")
+          .map((component) => ({
+            ...component,
+            label: "Holy Shield bonus",
+          }))
+      : [];
+  const physicalSkillDamageComponents = [
+    ...directDamageComponents.filter(
+      (component) => component.damageType === "physical"
+    ),
+    ...holyShieldDamageComponents,
+  ];
   const selectedSkillRow =
     selectedSkillName === "Basic Attack"
       ? undefined
@@ -7203,10 +7807,13 @@ function buildProfile(
     max: Math.floor(weaponSelection.damage.max * weaponSourceModifier),
   };
   const usesKickSource = weaponSelection.option.handMode === "kick";
+  const usesShieldSource = weaponSelection.option.handMode === "smite";
   const weaponSourceLabel = usesKickSource
     ? selectedSkillName === "Basic Attack"
       ? "Boot source"
       : `Boot source (${displaySkillName})`
+    : usesShieldSource
+      ? `Shield source (${displaySkillName})`
     : selectedSkillName === "Basic Attack"
       ? "Weapon source"
       : `Weapon source (${displaySkillName})`;
@@ -7218,27 +7825,66 @@ function buildProfile(
           {
             table: "Character equipment",
             row: weaponSelection.item.name,
-            columns: [usesKickSource ? "boot kick damage" : "weapon damage"],
+            columns: [
+              usesKickSource
+                ? "boot kick damage"
+                : usesShieldSource
+                  ? "shield Smite damage"
+                  : "weapon damage",
+            ],
           },
         ];
   const selectedSkillSourceNote = usesKickSource
     ? "Kick=1 marks this as a boot-sourced kick attack in the game-file skill row."
+    : usesShieldSource
+      ? "itypea1=shld and weapsel=4 mark Smite as a shield-sourced attack in the game-file skill row."
     : weaponSourceSrcDam > 0
       ? `SrcDam=${weaponSourceSrcDam} is the game-file source-damage scalar; the extracted files expose the raw value but not the engine denominator.`
       : "Source-damage and attack-signal fields are preserved from game files; opaque engine function behavior is not inferred.";
   const flatAndSkillPhysicalDamage = addDamageRange(
-    parsedItemDamage.flatPhysicalDamage,
-    directDamageComponents
-      .filter((component) => component.damageType === "physical")
-      .reduce(
-        (total, component) => addDamageRange(total, component.damage),
-        createEmptyDamageRange()
-      )
+    flatPhysicalDamage,
+    physicalSkillDamageComponents.reduce(
+      (total, component) => addDamageRange(total, component.damage),
+      createEmptyDamageRange()
+    )
   );
   const physicalMultiplier = 1 + totalPhysicalBonusPercent / 100;
   const physicalBaseComponents: DamageComponent[] = [];
 
-  if (isNonZeroDamageRange(carriedWeaponDamage)) {
+  if (isSmiteProfile) {
+    const smiteBaseDamage = addDamageRange(
+      carriedWeaponDamage,
+      flatAndSkillPhysicalDamage
+    );
+    if (isNonZeroDamageRange(smiteBaseDamage)) {
+      physicalBaseComponents.push(
+        createDamageComponent({
+          id: `smite-base:${weaponSelection.option.id}`,
+          label: "Smite physical base",
+          source: "weapon",
+          damageType: "physical",
+          damage: smiteBaseDamage,
+          baseDamage: smiteBaseDamage,
+          sourceRefs: [
+            ...equipmentDamageSourceRefs,
+            {
+              table: "Skills.txt",
+              row: "Smite",
+              columns: ["itypea1", "weapsel", "calc1"],
+              note: selectedSkillSourceNote,
+            },
+            ...holyShieldDamageComponents.flatMap(
+              (component) => component.sourceRefs
+            ),
+            ...(smiteItemNormalDamage?.sourceRefs || []),
+          ],
+          notes: [
+            "Smite base damage is the equipped shield range plus active Holy Shield damage and applicable weapon Damage +X before physical percentage bonuses.",
+          ],
+        })
+      );
+    }
+  } else if (isNonZeroDamageRange(carriedWeaponDamage)) {
     physicalBaseComponents.push(
       createDamageComponent({
         id: `weapon:${weaponSelection.option.id}:${selectedSkillName}`,
@@ -7266,15 +7912,15 @@ function buildProfile(
     );
   }
 
-  if (isNonZeroDamageRange(parsedItemDamage.flatPhysicalDamage)) {
+  if (!isSmiteProfile && isNonZeroDamageRange(flatPhysicalDamage)) {
     physicalBaseComponents.push(
       createDamageComponent({
         id: `item-flat-physical:${weaponSelection.option.id}`,
         label: "Item flat physical",
         source: "item",
         damageType: "physical",
-        damage: parsedItemDamage.flatPhysicalDamage,
-        baseDamage: parsedItemDamage.flatPhysicalDamage,
+        damage: flatPhysicalDamage,
+        baseDamage: flatPhysicalDamage,
         sourceRefs: [
           {
             table: "Armory item text",
@@ -7285,21 +7931,62 @@ function buildProfile(
     );
   }
 
-  directDamageComponents
-    .filter((component) => component.damageType === "physical")
-    .forEach((component) => {
+  if (!isSmiteProfile) {
+    physicalSkillDamageComponents.forEach((component) => {
       physicalBaseComponents.push({
         ...component,
         baseDamage: component.damage,
       });
     });
+  }
 
   const physicalComponents = physicalBaseComponents.map((component) =>
     scalePhysicalDamageComponent(component, physicalMultiplier)
   );
+  let strikeModifiers = getItemStrikeModifiers(
+    playerItems,
+    weaponSelection,
+    characterData.character.level
+  );
+  strikeModifiers = addStrikeModifiers(
+    strikeModifiers,
+    getPassiveStrikeModifiers(weaponSelection, effectiveSkillMap)
+  );
+  strikeModifiers = addStrikeModifiers(
+    strikeModifiers,
+    getSelectedSkillStrikeModifiers(
+      selectedSkillName,
+      selectedSkillLevel,
+      effectiveSkillMap
+    )
+  );
+  activeAuras.forEach((aura) => {
+    strikeModifiers = addStrikeModifiers(
+      strikeModifiers,
+      getAuraStrikeModifiers(aura)
+    );
+  });
+  const strikeBreakdowns = skillCanApplyStrikeDamage(selectedSkillName)
+    ? [
+        buildStrikeBreakdown(
+          `attack:${weaponSelection.option.id}:${selectedSkillName}`,
+          "Attack",
+          physicalComponents.map((component) => component.id),
+          strikeModifiers
+        ),
+      ]
+    : [];
+  const strikeComponents = createStrikeDamageComponents(
+    physicalComponents,
+    strikeBreakdowns
+  );
 
   const itemElementalComponents: DamageComponent[] = [];
   (["fire", "cold", "lightning", "magic"] as const).forEach((element) => {
+    if (isSmiteProfile) {
+      return;
+    }
+
     if (
       isVengeanceSkill(selectedSkillName) &&
       (element === "fire" || element === "cold" || element === "lightning")
@@ -7367,7 +8054,7 @@ function buildProfile(
           );
 
   const auraElementalComponents: DamageComponent[] = [];
-  activeAuras.forEach((aura) => {
+  (isSmiteProfile ? [] : activeAuras).forEach((aura) => {
     const addition = getAuraAttackDamage(aura, effectiveSkillMap, realStats);
     (["fire", "cold", "lightning", "magic"] as const).forEach((element) => {
       const damage = addition[element];
@@ -7413,7 +8100,8 @@ function buildProfile(
     }
   });
 
-  const itemPoisonComponents = parsedItemDamage.poisonDamage
+  const itemPoisonComponents =
+    !isSmiteProfile && parsedItemDamage.poisonDamage
     ? [
         createDamageComponent({
           id: `item-poison:${weaponSelection.option.id}`,
@@ -7442,6 +8130,7 @@ function buildProfile(
 
   const damageComponents = [
     ...physicalComponents,
+    ...strikeComponents,
     ...itemElementalComponents,
     ...skillPayloadComponents,
     ...weaponElementalDamageComponents,
@@ -7497,6 +8186,24 @@ function buildProfile(
     );
   }
 
+  if (usesShieldSource && weaponSelection.baseDamageUnavailable) {
+    notes.push(
+      "This Smite profile uses the equipped shield as its attack source, but shield base Smite damage is unavailable because Armor.txt is not present in the current extract and the armory payload does not expose shield damage."
+    );
+  }
+
+  if (isSmiteProfile && holyShieldLevel > 0) {
+    notes.push(
+      `Holy Shield level ${holyShieldLevel} damage is added to the shield base before Smite multipliers; Skills.txt applies its (Smite base level + Defiance base level) × Param7 synergy formula.`
+    );
+  }
+
+  if (!skillCanApplyStrikeDamage(selectedSkillName)) {
+    notes.push(
+      `${displaySkillName} does not benefit from Critical Strike or Deadly Strike in Project Diablo 2, so strike bonus damage is excluded.`
+    );
+  }
+
   return {
     key: `${weaponSelection.option.id}::${skillOption.id}${getSkillProfileKeySuffix(skillOption)}::${playerAuraOption.id}:${playerAuraOption.level}::${playerAuraCarrier}`,
     weaponId: weaponSelection.option.id,
@@ -7524,6 +8231,7 @@ function buildProfile(
     activeAuras: activeAuras.map(summarizeAuraSource),
     damageScope: effectiveDamageScope,
     damageComponents,
+    strikeBreakdowns,
     damageTotals,
     ...getAuraPulseProfileFields(auraPulseDamageComponents),
     totalPhysicalDamage,
@@ -7682,7 +8390,8 @@ export function calculateDamage(
   );
 
   const notes = [
-    "Damage is an estimate built from PD2 game files. Totals combine immediate hit damage with modeled damage-over-time totals, but they do not include attack speed, cast speed, hit chance, target resistances, crushing blow, deadly strike, critical strike, repeated summon attacks, or conditional buffs.",
+    "Damage is an estimate built from PD2 game files. Totals combine immediate hit damage, expected Critical/Deadly Strike bonus damage, and modeled damage-over-time totals, but they do not include attack speed, cast speed, hit chance, target resistances, crushing blow, repeated summon attacks, or conditional buffs.",
+    "Critical Strike is capped at 75% and checked before Deadly Strike; Deadly Strike is capped at 75% plus Maximum Deadly Strike, up to 100%. Expected strike bonuses apply only to instant physical attack damage, and weapon strike stats apply only to hits with that weapon.",
   ];
 
   if (weaponSelections.some((selection) => selection.sequenceHits?.length)) {

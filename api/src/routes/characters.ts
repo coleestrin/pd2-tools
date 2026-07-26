@@ -42,7 +42,24 @@ function attachDamageCalculation(
 
   try {
     enrichArmoryPayload(data);
-    data.damageCalculation = calculateDamage(data);
+    const damageCalculation = calculateDamage(data);
+    data.damageCalculation = damageCalculation;
+
+    const defaultWeaponId =
+      damageCalculation.defaultSelection?.weaponId ||
+      damageCalculation.weaponOptions[0]?.id;
+    const defaultAttack = damageCalculation.profiles.find(
+      (profile) =>
+        profile.weaponId === defaultWeaponId &&
+        profile.skillId === "Basic Attack" &&
+        profile.playerAuraId === "none" &&
+        profile.transformationId === "none"
+    );
+    const criticalStrike =
+      defaultAttack?.strikeBreakdowns[0]?.rawCriticalChance;
+    if (data.realStats && criticalStrike !== undefined) {
+      data.realStats.criticalStrike = criticalStrike;
+    }
   } catch (error: unknown) {
     logger.warn("Damage calculation failed", {
       character: data.character?.name,
