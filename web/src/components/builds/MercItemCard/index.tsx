@@ -15,7 +15,7 @@ interface Props {
   data: {
     mercItemUsage: ItemUsageStats[];
   };
-  filters: Pick<CharacterFilters, "mercItemFilter" | "searchQuery">;
+  filters: Pick<CharacterFilters, "mercItemFilter" | "filterSearchQuery">;
   updateFilters: (filters: Partial<{ mercItemFilter: string[] }>) => void;
 }
 
@@ -52,7 +52,7 @@ export default function MercItemCard({ data, filters, updateFilters }: Props) {
 
   const itemPercentages = useMemo(() => {
     if (!data.mercItemUsage) return [];
-    const searchQuery = filters.searchQuery?.toLowerCase() || "";
+    const searchQuery = filters.filterSearchQuery?.toLowerCase() || "";
 
     return data.mercItemUsage
       .reduce(
@@ -80,7 +80,7 @@ export default function MercItemCard({ data, filters, updateFilters }: Props) {
           b.percentage - a.percentage ||
           Number(b.isSelected) - Number(a.isSelected)
       );
-  }, [data.mercItemUsage, filters.searchQuery, selectedItemsSet]);
+  }, [data.mercItemUsage, filters.filterSearchQuery, selectedItemsSet]);
 
   const getItemTypeColor = (type: string) => {
     switch (type) {
