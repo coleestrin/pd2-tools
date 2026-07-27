@@ -77,7 +77,7 @@ export interface CharacterListResponse {
 
 export interface ItemUsageStats {
   item: string;
-  itemType: "Unique" | "Set" | "Runeword";
+  itemType: "Unique" | "Set" | "Runeword" | "Rare" | "Magic" | "Crafted";
   numOccurrences: number;
   totalSample: number;
   pct: number;

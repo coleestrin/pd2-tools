@@ -47,7 +47,7 @@ export interface CharacterFilter {
   sortOrder?: "asc" | "desc";
 }
 
-type ItemType = "Unique" | "Set" | "Runeword";
+type ItemType = "Unique" | "Set" | "Runeword" | "Rare" | "Magic" | "Crafted";
 
 export interface ItemUsageStats {
   item: string;
@@ -1106,6 +1106,9 @@ export default class CharacterDB_Postgres {
                     WHEN CI.is_runeword = true AND BI.name <> ALL($${params.length + 1}) THEN 'Runeword'
                     WHEN Q.name = 'Unique' AND BI.name <> ALL($${params.length + 2}) THEN 'Unique'
                     WHEN Q.name = 'Set' THEN 'Set'
+                    WHEN Q.name = 'Crafted' THEN 'Crafted'
+                    WHEN Q.name = 'Rare' THEN 'Rare'
+                    WHEN Q.name = 'Magic' THEN 'Magic'
                     ELSE NULL
                 END AS itemType,
                 COUNT(DISTINCT CI.character_db_id) AS numOccurrences,
@@ -1118,6 +1121,9 @@ export default class CharacterDB_Postgres {
                 WHEN CI.is_runeword = true AND BI.name <> ALL($${params.length + 1}) THEN 'Runeword'
                 WHEN Q.name = 'Unique' AND BI.name <> ALL($${params.length + 2}) THEN 'Unique'
                 WHEN Q.name = 'Set' THEN 'Set'
+                WHEN Q.name = 'Crafted' THEN 'Crafted'
+                WHEN Q.name = 'Rare' THEN 'Rare'
+                WHEN Q.name = 'Magic' THEN 'Magic'
                 ELSE NULL
             END IS NOT NULL
             GROUP BY BI.name, itemType
@@ -1243,6 +1249,9 @@ export default class CharacterDB_Postgres {
                     WHEN MI.is_runeword = true THEN 'Runeword'
                     WHEN Q.name = 'Unique' THEN 'Unique'
                     WHEN Q.name = 'Set' THEN 'Set'
+                    WHEN Q.name = 'Crafted' THEN 'Crafted'
+                    WHEN Q.name = 'Rare' THEN 'Rare'
+                    WHEN Q.name = 'Magic' THEN 'Magic'
                     ELSE NULL
                 END AS itemType,
                 COUNT(DISTINCT MI.character_db_id) AS numOccurrences,
@@ -1255,6 +1264,9 @@ export default class CharacterDB_Postgres {
                 WHEN MI.is_runeword = true THEN 'Runeword'
                 WHEN Q.name = 'Unique' THEN 'Unique'
                 WHEN Q.name = 'Set' THEN 'Set'
+                WHEN Q.name = 'Crafted' THEN 'Crafted'
+                WHEN Q.name = 'Rare' THEN 'Rare'
+                WHEN Q.name = 'Magic' THEN 'Magic'
                 ELSE NULL
             END IS NOT NULL
             GROUP BY BI.name, itemType

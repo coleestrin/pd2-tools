@@ -93,7 +93,13 @@ export default function UniqueCard({ data, filters, updateFilters }: Props) {
       case "Set":
         return "rgba(30, 237, 14, 0.35)";
       case "Runeword":
-        return "rgba(250, 204, 21, 0.35)";
+        return "rgba(156, 163, 175, 0.35)";
+      case "Rare":
+        return "rgba(255, 255, 0, 0.35)";
+      case "Magic":
+        return "rgba(69, 69, 255, 0.35)";
+      case "Crafted":
+        return "rgba(255, 168, 0, 0.35)";
       default:
         return "rgba(200, 200, 200, 0.1)";
     }
