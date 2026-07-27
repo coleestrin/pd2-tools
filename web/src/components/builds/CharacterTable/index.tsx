@@ -56,8 +56,12 @@ export default function PlayerTable({
   useEffect(() => {
     const fetchCharacters = async () => {
       const activeSort = sorting[0];
-      const sortBy = activeSort?.id;
-      const sortOrder = activeSort?.desc ? "desc" : "asc";
+      const sortBy = activeSort?.id ?? "level";
+      const sortOrder = activeSort
+        ? activeSort.desc
+          ? "desc"
+          : "asc"
+        : "desc";
 
       // If we have initial characters and this is not a pagination/sorting request,
       // use those instead of making an API call

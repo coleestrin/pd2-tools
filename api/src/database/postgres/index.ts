@@ -915,6 +915,13 @@ export default class CharacterDB_Postgres {
       orderByClause = `(C.full_response_json->'character'->>'mana')::int ${orderDirection}, C.character_db_id DESC`;
     } else if (filter.sortBy === "level") {
       orderByClause = `C.level ${orderDirection}, C.character_db_id DESC`;
+    } else if (filter.sortBy === "highestSkLevel") {
+      orderByClause = `
+        (C.full_response_json->'realSkills'->0->>'level')::int
+          ${orderDirection}
+          NULLS LAST,
+        C.character_db_id DESC
+      `;
     }
 
     // Execute CTE
