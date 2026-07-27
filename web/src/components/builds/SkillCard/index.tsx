@@ -52,13 +52,14 @@ export default function SkillCard({ data, filters, updateFilters }: Props) {
           }
 
           acc.push({
-            name: displayName,
+            rawName: skill.name,
+            displayName,
             percentage: skill.pct,
-            isSelected: selectedSkillsSet.has(skill.name) || selectedSkillsSet.has(displayName),
+            isSelected: selectedSkillsSet.has(skill.name),
           });
           return acc;
         },
-        [] as Array<{ name: string; percentage: number; isSelected: boolean }>
+        [] as Array<{ rawName: string; displayName: string; percentage: number; isSelected: boolean }>
       )
       .sort(
         (a, b) =>
@@ -74,18 +75,18 @@ export default function SkillCard({ data, filters, updateFilters }: Props) {
   const listHeight = Math.min(skillPercentages.length * ROW_HEIGHT, MAX_HEIGHT);
   const needsScroll = skillPercentages.length * ROW_HEIGHT > MAX_HEIGHT;
 
-  type SkillRowData = { name: string; percentage: number; isSelected: boolean };
+  type SkillRowData = { rawName: string; displayName: string; percentage: number; isSelected: boolean };
 
   const SkillRow = ({
     index,
     skills,
     style,
   }: RowComponentProps<{ skills: SkillRowData[] }>) => {
-    const { name, percentage, isSelected } = skills[index];
+    const { rawName, displayName, percentage, isSelected } = skills[index];
     return (
       <div style={style}>
         <Paper
-          key={name}
+          key={rawName}
           withBorder
           radius={0}
           p="5"
@@ -106,7 +107,7 @@ export default function SkillCard({ data, filters, updateFilters }: Props) {
             if (backgroundBar) {
               backgroundBar.style.width = "0%";
             }
-            handleSkillSelect(name);
+            handleSkillSelect(rawName);
           }}
         >
           <div
@@ -122,7 +123,7 @@ export default function SkillCard({ data, filters, updateFilters }: Props) {
               zIndex: 0,
             }}
           />
-          <Tooltip label={name} position="right" openDelay={250} withArrow>
+          <Tooltip label={displayName} position="right" openDelay={250} withArrow>
             <Flex
               justify="space-between"
               align="center"
@@ -130,8 +131,8 @@ export default function SkillCard({ data, filters, updateFilters }: Props) {
             >
               <Flex align="center" gap="6px" style={{ minWidth: 0 }}>
                 <img
-                  src={`/icons/${name.replaceAll(" ", "_")}.png`}
-                  alt={name}
+                  src={`/icons/${displayName.replaceAll(" ", "_")}.png`}
+                  alt={displayName}
                   style={{
                     width: "20px",
                     height: "20px",
@@ -139,7 +140,7 @@ export default function SkillCard({ data, filters, updateFilters }: Props) {
                     objectFit: "contain",
                   }}
                 />
-                <Text lineClamp={1}>{name}</Text>
+                <Text lineClamp={1}>{displayName}</Text>
               </Flex>
               {isSelected ? (
                 <ActionIcon
@@ -147,7 +148,7 @@ export default function SkillCard({ data, filters, updateFilters }: Props) {
                   variant="default"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleSkillSelect(name);
+                    handleSkillSelect(rawName);
                   }}
                 >
                   <IconX size={14} />
