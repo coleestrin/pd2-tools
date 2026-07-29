@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import rateLimit from "express-rate-limit";
-import { characterDB } from "../database";
+import { characterDB, CharacterFilter } from "../database";
 import { validateSeason } from "../middleware/validation";
 import { config, logger as mainLogger } from "../config";
 import CharacterStatParser from "../utils/character-stats";
@@ -95,11 +95,18 @@ router.get(
         mercTypes,
         mercItems,
         season,
+        sortBy,
+        sortOrder,
       } = req.query;
 
-      const filter: Record<string, unknown> & {
-        levelRange?: { min?: number; max?: number };
-      } = {};
+      const filter: CharacterFilter = {};
+
+      if (sortBy && typeof sortBy === "string") {
+        filter.sortBy = sortBy;
+      }
+      if (sortOrder === "asc" || sortOrder === "desc") {
+        filter.sortOrder = sortOrder;
+      }
 
       if (minLevel || maxLevel) {
         filter.levelRange = {};

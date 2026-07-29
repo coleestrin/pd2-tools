@@ -65,6 +65,8 @@ export interface CharacterFilter {
     max?: number;
   };
   season?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 export interface CharacterListResponse {
@@ -75,7 +77,7 @@ export interface CharacterListResponse {
 
 export interface ItemUsageStats {
   item: string;
-  itemType: "Unique" | "Set" | "Runeword";
+  itemType: "Unique" | "Set" | "Runeword" | "Rare" | "Magic" | "Crafted";
   numOccurrences: number;
   totalSample: number;
   pct: number;
