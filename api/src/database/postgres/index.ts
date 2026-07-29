@@ -76,6 +76,9 @@ const IGNORED_UNIQUES_ARRAY = [
   "Annihilus",
   "Call to Arms",
   "Lidless Wall",
+  "Small Charm",
+  "Large Charm",
+  "Grand Charm",
 ];
 
 export default class CharacterDB_Postgres {
@@ -1106,9 +1109,9 @@ export default class CharacterDB_Postgres {
                     WHEN CI.is_runeword = true AND BI.name <> ALL($${params.length + 1}) THEN 'Runeword'
                     WHEN Q.name = 'Unique' AND BI.name <> ALL($${params.length + 2}) THEN 'Unique'
                     WHEN Q.name = 'Set' THEN 'Set'
-                    WHEN Q.name = 'Crafted' THEN 'Crafted'
-                    WHEN Q.name = 'Rare' THEN 'Rare'
-                    WHEN Q.name = 'Magic' THEN 'Magic'
+                    WHEN Q.name = 'Crafted' AND BI.name NOT LIKE '%Charm' THEN 'Crafted'
+                    WHEN Q.name = 'Rare' AND BI.name NOT LIKE '%Charm' THEN 'Rare'
+                    WHEN Q.name = 'Magic' AND BI.name NOT LIKE '%Charm' THEN 'Magic'
                     ELSE NULL
                 END AS itemType,
                 COUNT(DISTINCT CI.character_db_id) AS numOccurrences,
@@ -1121,9 +1124,9 @@ export default class CharacterDB_Postgres {
                 WHEN CI.is_runeword = true AND BI.name <> ALL($${params.length + 1}) THEN 'Runeword'
                 WHEN Q.name = 'Unique' AND BI.name <> ALL($${params.length + 2}) THEN 'Unique'
                 WHEN Q.name = 'Set' THEN 'Set'
-                WHEN Q.name = 'Crafted' THEN 'Crafted'
-                WHEN Q.name = 'Rare' THEN 'Rare'
-                WHEN Q.name = 'Magic' THEN 'Magic'
+                WHEN Q.name = 'Crafted' AND BI.name NOT LIKE '%Charm' THEN 'Crafted'
+                WHEN Q.name = 'Rare' AND BI.name NOT LIKE '%Charm' THEN 'Rare'
+                WHEN Q.name = 'Magic' AND BI.name NOT LIKE '%Charm' THEN 'Magic'
                 ELSE NULL
             END IS NOT NULL
             GROUP BY BI.name, itemType
