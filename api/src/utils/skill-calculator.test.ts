@@ -591,6 +591,34 @@ describe("D2SkillParser", () => {
       );
     });
 
+    it("should apply Martial Arts tree skill bonuses to Assassin skills", () => {
+      const char = createMockCharacter(
+        "Assassin",
+        [{ name: "Fists of Fire", level: 20 }],
+        [
+          {
+            name: "Gauntlets",
+            properties: ["+3 to Martial Arts Skills (Assassin Only)"],
+          },
+          {
+            name: "Grand Charm",
+            properties: ["+1 to Martial Arts Skills (Assassin Only)"],
+          },
+        ]
+      );
+
+      const result = parser.calculateTotalSkills(char);
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            skill: "Fists of Fire",
+            level: 24,
+            baseLevel: 20,
+          }),
+        ])
+      );
+    });
+
     it("should handle Hammerdin build", () => {
       const char = createMockCharacter(
         "Paladin",

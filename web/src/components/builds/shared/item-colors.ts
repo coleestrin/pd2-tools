@@ -5,7 +5,13 @@ export const getItemTypeBaseColor = (type: string): string => {
     case "Set":
       return "#1eed0e";
     case "Runeword":
-      return "#FACC15";
+      return "#9CA3AF";
+    case "Rare":
+      return "#ffff00";
+    case "Magic":
+      return "#4545ff";
+    case "Crafted":
+      return "#ffa800";
     default:
       return "#6b7280";
   }

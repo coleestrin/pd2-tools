@@ -1574,10 +1574,11 @@ class D2SkillParser {
     characterClass: string,
     totalSkills: Map<string, number>
   ) {
-    const targetCategory = this.normalize(bonus.target) + " skills"; // Add 'skills' to match category format
+    const targetCategory = this.normalize(bonus.target).replace(/\s+skills?$/, "");
     const affectedSkills = this.skillDefinitions.filter((skill) => {
       const hasCategory = skill.categories.some(
-        (category) => this.normalize(category) === targetCategory
+        (category) =>
+          this.normalize(category).replace(/\s+skills?$/, "") === targetCategory
       );
       const isClassSkill = skill.categories.some(
         (category) => this.normalize(category) === `${characterClass} skills`
