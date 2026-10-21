@@ -25,7 +25,6 @@ import {
   DEFAULT_CATEGORY,
 } from "../components/economy/shared";
 import { ItemsTable } from "../components/economy/ItemsTable";
-import EconomyDisclaimer from "../components/economy/disclaimer";
 import { DEFAULT_VIEW_SEASON, SEASON_OPTIONS } from "../types";
 
 export default function Economy() {
@@ -43,9 +42,10 @@ export default function Economy() {
       : DEFAULT_VIEW_SEASON
     : DEFAULT_VIEW_SEASON;
 
-  const { isPending, data } = useQuery({
+  const { isLoading, data } = useQuery({
     queryKey: ["economyItems", season],
     queryFn: () => economyAPI.getItems(season),
+    enabled: false,
   });
 
   const flatNavItems = useMemo(() => NAV_ITEMS.flatMap((s) => s.items), []);
@@ -136,7 +136,6 @@ export default function Economy() {
           content={`Track the price and supply of ${currentCategoryLabel || "items"} in Project Diablo 2`}
         />
       </Helmet>
-      <EconomyDisclaimer />
 
       <Box
         hiddenFrom="sm"
@@ -242,13 +241,13 @@ export default function Economy() {
                 {currentCategoryLabel}
               </Title>
               <Skeleton
-                visible={isPending}
+                visible={isLoading}
                 animate={true}
                 style={{ height: "1000px" }}
               >
                 <ItemsTable
                   items={filteredItems}
-                  isPending={isPending}
+                  isPending={isLoading}
                   category={currentCategoryLabel}
                   search={seasonSearch}
                 />

@@ -13,6 +13,7 @@ import Character from "./pages/Character";
 import Account from "./pages/Account";
 import Economy from "./pages/Economy";
 import ItemDetail from "./pages/ItemDetail";
+import EconomyArchived from "./components/economy/EconomyArchived";
 import Statistics from "./pages/Statistics";
 import Leaderboard from "./pages/Leaderboard";
 import CharacterExport from "./pages/CharacterExport";
@@ -66,11 +67,13 @@ function App() {
                   />
 
                   {/* Economy */}
-                  <Route path="/economy/:category" element={<Economy />} />
-                  <Route
-                    path="/economy/item/:itemNameURL"
-                    element={<ItemDetail />}
-                  />
+                  <Route element={<EconomyArchived />}>
+                    <Route path="/economy/:category" element={<Economy />} />
+                    <Route
+                      path="/economy/item/:itemNameURL"
+                      element={<ItemDetail />}
+                    />
+                  </Route>
 
                   {/* Statistics */}
                   <Route path="/statistics" element={<Statistics />} />

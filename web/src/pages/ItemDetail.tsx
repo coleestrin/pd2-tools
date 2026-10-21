@@ -27,7 +27,6 @@ import {
   Navigation,
   NAV_ITEMS,
 } from "../components/economy/shared";
-import EconomyDisclaimer from "../components/economy/disclaimer";
 import { DEFAULT_VIEW_SEASON } from "../types";
 
 function formatItemNameFromUrl(urlName: string | undefined): string {
@@ -50,14 +49,14 @@ export default function ItemDetail() {
   const seasonSearch =
     season !== DEFAULT_VIEW_SEASON ? `?season=${season}` : "";
 
-  const { isPending, data } = useQuery({
+  const { isLoading, data } = useQuery({
     queryKey: [itemNameURL, season],
     queryFn: () => {
       const itemData = itemNameURL ? ECONOMY_ITEMS_DATA[itemNameURL] : null;
       if (!itemData) return Promise.reject(new Error("Item not found"));
       return economyAPI.getItem(itemData.itemNameInternal, season);
     },
-    enabled: !!itemNameURL,
+    enabled: false,
   });
 
   const itemDisplayName = useMemo(
@@ -154,7 +153,6 @@ export default function ItemDetail() {
           content={`View the price and price history of ${currentItemData.displayName} on Project Diablo 2`}
         />
       </Helmet>
-      <EconomyDisclaimer />
       <Box
         hiddenFrom="sm"
         style={{
@@ -262,7 +260,7 @@ export default function ItemDetail() {
                 </Button>
               </Group>
 
-              <Skeleton visible={isPending}>
+              <Skeleton visible={isLoading}>
                 <Card withBorder shadow="sm" padding="lg">
                   <Text fw={500} mb="md">
                     Historical Price & Listings
@@ -312,7 +310,7 @@ export default function ItemDetail() {
                 </Card>
               </Skeleton>
 
-              <Skeleton visible={isPending}>
+              <Skeleton visible={isLoading}>
                 <Card withBorder shadow="sm" padding="lg">
                   <Text fw={500} mb="md">
                     Recent Listings
