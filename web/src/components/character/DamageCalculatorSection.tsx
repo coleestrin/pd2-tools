@@ -560,13 +560,18 @@ function canUsePrecomputedAuraProfile(
 function getElementalDelta(
   next: DamageProfile["totalElementalDamage"],
   previous: DamageProfile["totalElementalDamage"],
-  multiplier: number
+  multiplier: number,
+  bonusPercent: DamageProfile["enchantDamageBonusPercent"] = {}
 ): DamageProfile["totalElementalDamage"] {
   const delta: DamageProfile["totalElementalDamage"] = {};
 
   DAMAGE_ELEMENTS.forEach((element) => {
-    const nextRange = next[element];
-    const previousRange = previous[element];
+    const percent = bonusPercent[element as "fire" | "cold"] || 0;
+    const scale = (damage: DamageProfile["totalDamage"] | undefined) => damage && percent
+      ? { min: Math.floor(damage.min * (1 + percent / 100)), max: Math.floor(damage.max * (1 + percent / 100)) }
+      : damage;
+    const nextRange = scale(next[element]);
+    const previousRange = scale(previous[element]);
     const { min, max } = getCarriedDamageDelta(nextRange || createEmptyRange(), previousRange, multiplier);
 
     if (min || max) {
@@ -1280,11 +1285,19 @@ export function applyAuraToProfile(
 
   const physicalBonusDelta =
     nextBonus.physicalBonusPercent - existingBonus.physicalBonusPercent;
+  const replaceEnchant = replaceExistingAura && existingAura &&
+    (auraOption.name === "Enchant" || auraOption.name === "Cold Enchant");
+  const baseDamageComponents = replaceEnchant
+    ? profile.damageComponents.filter((component) => !(component.source === "aura" &&
+        component.sourceRefs.some((reference) => reference.row === auraOption.name)))
+    : profile.damageComponents;
   const attackDamageMultiplier = profile.attackDamageMultiplier ?? 1;
   const elementalDelta = getElementalDelta(
     nextBonus.elementalDamage,
-    existingBonus.elementalDamage,
-    attackDamageMultiplier
+    replaceEnchant ? {} : existingBonus.elementalDamage,
+    attackDamageMultiplier,
+    auraOption.name === "Enchant" || auraOption.name === "Cold Enchant"
+      ? profile.enchantDamageBonusPercent : undefined
   );
   const poisonDelta = getPoisonDelta(
     nextBonus.poisonDamage,
@@ -1377,7 +1390,7 @@ export function applyAuraToProfile(
   const damageComponents = rebuildStrikeDamageComponents(
     [
       ...rescalePhysicalComponents(
-        profile.damageComponents,
+        baseDamageComponents,
         previousMultiplier,
         nextMultiplier
       ),
@@ -2147,7 +2160,7 @@ export function DamageCalculatorSection({
           const auraOption = precomputedAuraProfileRow!.auraOption;
           let normalizedProfile = applyAuraToProfile(
             normalizeDamageProfile(precomputedAuraProfile), auraOption,
-            row.isParty, row.level, row.source
+            row.isParty, row.level, row.source, true
           );
           const auraAppliesAsParty =
             row.isParty || normalizedBaseProfile.skillDamageMode === "summon";

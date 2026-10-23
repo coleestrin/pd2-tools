@@ -231,6 +231,7 @@ export interface DamageProfile {
   transformationId: string;
   skillDamageMode: "weapon" | "spell" | "summon";
   attackDamageMultiplier?: number;
+  enchantDamageBonusPercent?: Partial<Record<"fire" | "cold", number>>;
   skillName: string;
   sourceSkillName?: string;
   summonVariant?: string;

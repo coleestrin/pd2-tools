@@ -42,6 +42,16 @@ function createMockItem(
 }
 
 describe("StatParser", () => {
+  it.each([
+    { properties: [], modifiers: [{ name: "extra-magi", values: [5] }], expected: 5 },
+    { properties: ["+4% to Magic Skill Damage"], modifiers: [], expected: 4 },
+    { properties: ["+5% to Magic Skill Damage"], modifiers: [{ name: "passive_mag_mastery", values: [5] }], expected: 5 },
+  ])("reads magic skill damage once from active item stats or text ($expected)", ({ properties, modifiers, expected }) => {
+    const item = createMockItem("Socketed magic jewel", properties, "Body Armor", modifiers);
+    expect(new CharacterStatParser(createMockCharacter([item])).parseAndGetCharStats().magicSkillDamage).toBe(expected);
+    item.location = { zone: "Stored", storage: "Stash", equipment: "Body Armor" };
+    expect(new CharacterStatParser(createMockCharacter([item])).parseAndGetCharStats().magicSkillDamage).toBe(0);
+  });
   describe("Base Stats Initialization", () => {
     it("should initialize with character base attributes", () => {
       const char = createMockCharacter([]);

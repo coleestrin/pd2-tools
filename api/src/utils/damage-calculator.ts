@@ -2203,7 +2203,7 @@ function getGameElementalBonusPercent(
   }
 
   if (element === "magic") {
-    return 0;
+    return getElementalSkillDamageBonusPercent(element, realStats);
   }
 
   return (
@@ -5183,7 +5183,7 @@ function getElementalSkillDamageBonusPercent(
     case "lightning":
       return realStats.lightningSkillDamage ?? 0;
     case "magic":
-      return 0;
+      return realStats.magicSkillDamage ?? 0;
     default:
       return 0;
   }
@@ -6550,10 +6550,14 @@ function getAuraAttackDamage(
     Record<"fire" | "cold" | "lightning" | "magic", DamageRange>
   > = {};
 
-  const skillDamageBonusApplies = aura.source === "player_skill";
+  // PD2's Enchants store edmn/edmx (no caster mastery). The recipient's
+  // elemental bonus is applied when its attack carries the buff.
+  const isEnchant = aura.name === "Enchant" || aura.name === "Cold Enchant";
+  const skillDamageBonusApplies = aura.source === "player_skill" && !isEnchant;
   const auraFormulaSkillMap =
     aura.source === "player_skill" ? skillMap : EMPTY_SKILL_MAP;
   const getAuraRange = (element: "fire" | "cold" | "lightning" | "magic") =>
+    (isEnchant ? getGameBuffElementalRange(aura, element, auraFormulaSkillMap) : undefined) ||
     getGameAuraElementalRange(aura, element, auraFormulaSkillMap) ||
     getGameBuffElementalRange(aura, element, auraFormulaSkillMap);
 
@@ -7249,7 +7253,7 @@ function getSummonModeNotes(
       "MonStats.txt does not expose a stable monster row for this summon in the current extract; only Skills.txt payloads are modeled."
     );
   } else if (getGameRowNumber("MonStats", monsterRow, "Crit") > 0) {
-    notes.push("Summon totals represent ordinary hits; the monster's innate critical-hit roll is not included in these totals.");
+    notes.push("The monster's separate innate critical-hit roll is not included; source-assigned Critical Strike and aura Deadly Strike are modeled separately.");
   }
 
   return notes;
@@ -7378,6 +7382,34 @@ function buildSummonProfile(
     ...scaledBaseComponents,
     ...auraElementalComponents,
   ].filter((component) => isNonZeroDamageRange(component.damage));
+  const physicalComponentIds = damageComponents.filter((component) =>
+    component.damageType === "physical" && component.timing === "instant"
+  ).map((component) => component.id);
+  let strikeModifiers = { ...EMPTY_STRIKE_MODIFIERS };
+  if (selectedSkillRow) {
+    for (let index = 1; index <= 5; index += 1) {
+      if (getGameRowString("Skills", selectedSkillRow, `sumskill${index}`) !== "Critical Strike") continue;
+      const level = evaluateGameCalcExpression(
+        getGameRowString("Skills", selectedSkillRow, `sumsk${index}calc`),
+        selectedSkillRow, effectiveSkillMap, selectedSkillLevel
+      );
+      if (level > 0) {
+        strikeModifiers.criticalChance += getGameSkillPassiveStatValue(
+          "Critical Strike", ["passive_critical_strike"],
+          new Map([["Critical Strike", { level, baseLevel: level }]])
+        ) || 0;
+      }
+    }
+  }
+  activeAuras.forEach((aura) => {
+    strikeModifiers = addStrikeModifiers(strikeModifiers, getAuraStrikeModifiers(
+      aura, aura.source === "player_skill" ? effectiveSkillMap : EMPTY_SKILL_MAP
+    ));
+  });
+  const strikeBreakdowns = physicalComponentIds.length ? [buildStrikeBreakdown(
+    `summon:${skillOption.id}`, skillOption.name, physicalComponentIds, strikeModifiers
+  )] : [];
+  damageComponents.push(...createStrikeDamageComponents(damageComponents, strikeBreakdowns));
   const damageTotals = buildDamageTotals(damageComponents);
   const auraPulseDamageComponents = [
     ...getActiveAuraPulseDamageComponents(
@@ -7436,7 +7468,7 @@ function buildSummonProfile(
     activeAuras: activeAuras.map(summarizeAuraSource),
     damageScope,
     damageComponents,
-    strikeBreakdowns: [],
+    strikeBreakdowns,
     damageTotals,
     ...getAuraPulseProfileFields(auraPulseDamageComponents),
     totalPhysicalDamage,
@@ -7696,6 +7728,7 @@ function buildSequenceProfile(
     transformationId: "none",
     skillDamageMode: "weapon",
     attackDamageMultiplier: firstProfile?.attackDamageMultiplier,
+    enchantDamageBonusPercent: firstProfile?.enchantDamageBonusPercent,
     skillName: skillOption.name,
     sourceSkillName: skillOption.sourceSkillName,
     chargeVariant: skillOption.chargeVariant,
@@ -8112,12 +8145,9 @@ function buildProfile(
       return;
     }
 
-    const isMeleeHit = weaponSelection.option.handMode !== "missile" &&
-      (selectedSkillName === "Basic Attack" || (selectedSkillRow &&
-        getGameRowString("Skills", selectedSkillRow, "range") === "h2h"));
     const elementalSkillDamageBonus =
       getElementalSkillDamageBonusPercent(element, realStats) +
-      (isMeleeHit && element !== "magic"
+      (element !== "magic"
         ? getGameMasteryDamageBonusPercent(element, effectiveSkillMap)
         : 0);
     const scaledDamage = scaleDamageRangeInStages(
@@ -8174,6 +8204,10 @@ function buildProfile(
             realStats
           );
 
+  const enchantDamageBonusPercent = {
+    fire: getGameElementalBonusPercent("fire", effectiveSkillMap, realStats),
+    cold: getGameElementalBonusPercent("cold", effectiveSkillMap, realStats),
+  };
   const auraElementalComponents: DamageComponent[] = [];
   (isSmiteProfile ? [] : activeAuras).forEach((aura) => {
     const addition = getAuraAttackDamage(aura, effectiveSkillMap, realStats);
@@ -8189,7 +8223,12 @@ function buildProfile(
           label: `${aura.name} ${element}`,
           source: "aura",
           damageType: element,
-          damage: floorScaleDamageRange(damage, weaponSourceModifier),
+          damage: floorScaleDamageRange(
+            aura.name === "Enchant" || aura.name === "Cold Enchant"
+              ? scaleDamageRange(damage, enchantDamageBonusPercent[element as "fire" | "cold"] || 0)
+              : damage,
+            weaponSourceModifier
+          ),
           sourceRefs: [
             {
               table: "Skills.txt",
@@ -8357,6 +8396,7 @@ function buildProfile(
     transformationId: "none",
     skillDamageMode: "weapon",
     attackDamageMultiplier: weaponSourceModifier,
+    enchantDamageBonusPercent,
     skillName: displaySkillName,
     sourceSkillName: skillOption.sourceSkillName,
     chargeVariant: skillOption.chargeVariant,
@@ -9107,7 +9147,7 @@ export function calculateDamage(
 
   const notes = [
     "Damage is an estimate built from PD2 game files. Totals combine immediate hit damage, expected Critical/Deadly Strike bonus damage, and modeled damage-over-time totals, but they do not include attack speed, cast speed, hit chance, target resistances, crushing blow, repeated summon attacks, or conditional buffs.",
-    "Critical Strike is capped at 75% and checked before Deadly Strike; Deadly Strike is capped at 75% plus Maximum Deadly Strike, up to 100%. Expected strike bonuses apply to instant physical weapon hits and Twister, Tornado, and Shock Wave. Weapon strike stats use the selected weapon.",
+    "Critical Strike is capped at 75% and checked before Deadly Strike; Deadly Strike is capped at 75% plus Maximum Deadly Strike, up to 100%. Expected strike bonuses apply to instant physical weapon hits, eligible summon hits, and Twister, Tornado, and Shock Wave. Summons use their own assigned skills and auras; weapon strike stats use the selected weapon.",
     "External aura entries assume up to 20 invested skill points. Battle Command can give a different all-skills bonus if its caster has fewer invested points; owned Battle Command uses the character's actual invested points.",
   ];
 

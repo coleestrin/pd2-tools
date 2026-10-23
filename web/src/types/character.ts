@@ -168,6 +168,7 @@ export interface RealStats {
   coldSkillDamage: number;
   lightningSkillDamage: number;
   poisonSkillDamage: number;
+  magicSkillDamage?: number;
   firePierce: number;
   coldPierce: number;
   lightningPierce: number;

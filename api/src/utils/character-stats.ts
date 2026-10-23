@@ -58,6 +58,7 @@ export default class CharacterStatParser {
       coldSkillDamage: 0,
       lightningSkillDamage: 0,
       poisonSkillDamage: 0,
+      magicSkillDamage: 0,
 
       firePierce: 0,
       coldPierce: 0,
@@ -89,6 +90,10 @@ export default class CharacterStatParser {
       }
 
       const expandedStats = expandItemStats(item);
+      this.characterStats.magicSkillDamage = (this.characterStats.magicSkillDamage || 0) +
+        (expandedStats.passive_mag_mastery || this.sumMatches(
+          /^(?:\+)?([\d.]+)% (?:to )?Magic Skill Damage$/i, item.properties
+        ));
       const criticalStrike =
         expandedStats.item_crit_chance ||
         this.sumMatches(

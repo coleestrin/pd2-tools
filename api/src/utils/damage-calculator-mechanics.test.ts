@@ -287,6 +287,80 @@ describe("independent damage mechanics", () => {
     expect(baseProfile(data).totalElementalDamage.fire).toEqual({ min: 12, max: 24 });
   });
 
+  it("applies the installed magic skill damage stat to carried magic damage", () => {
+    const data = character();
+    data.items[0].properties.push("Adds 100-200 Magic Damage");
+    data.realStats = { magicSkillDamage: 5 } as CharacterData["realStats"];
+    expect(baseProfile(data).totalElementalDamage.magic).toEqual({ min: 105, max: 210 });
+  });
+
+  it("applies a 5% magic jewel bonus to source-backed Bone Spear damage", () => {
+    const data = character("Bone Spear", 20);
+    data.realStats = { magicSkillDamage: 5 } as CharacterData["realStats"];
+    // Source tiers: 12+7*7+8*9+4*12 = 181; 18+7*7+8*9+4*13 = 191.
+    expect(baseProfile(data, "Bone Spear").totalElementalDamage.magic).toEqual({ min: 190, max: 200 });
+  });
+
+  it.each([
+    ["Fire Mastery", "fire", "Adds 10-20 Fire Damage", 12, 24],
+    ["Cold Mastery", "cold", "Adds 10-20 Cold Damage", 11, 22],
+    ["Lightning Mastery", "lightning", "Adds 10-20 Lightning Damage", 15, 30],
+  ] as const)("applies %s to ranged item damage", (skill, element, property, min, max) => {
+    const data = character(skill, 1);
+    data.items[0] = weapon("bow", "Right Hand", "bow");
+    data.items[0].damage = { one_handed: {}, two_handed: {}, missile: { minimum: 100, maximum: 200 } } as IItem["damage"];
+    data.items[0].properties.push(property);
+    expect(baseProfile(data).totalElementalDamage[element]).toEqual({ min, max });
+  });
+
+  it("applies Spirit of Barbs to a pet's physical hit without inheriting owner gear", () => {
+    const data = character("Summon Spirit Wolf", 1);
+    data.realSkills!.push({ skill: "Spirit of Barbs", level: 20, baseLevel: 1 });
+    data.items[0].modifiers = [{ name: "item_deadlystrike", values: [100] }] as IItem["modifiers"];
+    const calc = calculateDamage(data);
+    const profiles = calc.profiles.filter((p) => p.skillId === "Summon Spirit Wolf");
+    const base = profiles.find((p) => p.playerAuraId === "none")!;
+    const spirit = profiles.find((p) => p.playerAuraId === "Spirit of Barbs" && p.playerAuraLevel === 20)!;
+    expect(base.totalPhysicalDamage).toEqual({ min: 12, max: 18 });
+    expect(base.damageTotals.byElement.deadly).toBeUndefined();
+    expect(spirit.strikeBreakdowns[0].deadlyStrikeChance).toBe(27);
+    expect(spirit.damageTotals.byElement.deadly?.min).toBeCloseTo(1.62);
+    expect(spirit.damageTotals.byElement.deadly?.max).toBeCloseTo(2.43);
+  });
+
+  it.each([0, 1])("gives Valkyrie only its source-assigned Critical Strike hard points (%s)", (baseLevel) => {
+    const data = character("Valkyrie", 1);
+    data.character.class = { id: 0, name: "Amazon" };
+    data.realSkills!.push({ skill: "Critical Strike", level: 20, baseLevel });
+    const p = calculateDamage(data).profiles.find((p) => p.sourceSkillName === "Valkyrie" && p.playerAuraId === "none")!;
+    // sumsk3calc reads the owner's hard points; Critical Strike 1 = 15%.
+    expect(p.strikeBreakdowns[0].criticalChance).toBe(baseLevel ? 15 : 0);
+    expect(p.damageTotals.byElement.critical?.min || 0).toBeCloseTo(p.totalPhysicalDamage.min * (baseLevel ? .15 : 0));
+  });
+
+  it("uses PD2 Enchant's synergy and the ranged recipient's mastery without a caster double application", () => {
+    const data = character("Enchant", 1);
+    data.items[0] = weapon("bow", "Right Hand", "bow");
+    data.items[0].damage = { one_handed: {}, two_handed: {}, missile: { minimum: 100, maximum: 200 } } as IItem["damage"];
+    data.realSkills!.push({ skill: "Warmth", level: 20, baseLevel: 1 }, { skill: "Fire Mastery", level: 1, baseLevel: 1 });
+    data.realStats = { fireSkillDamage: 10 } as CharacterData["realStats"];
+    const profiles = calculateDamage(data).profiles.filter((p) => p.skillId === "Basic Attack" && p.weaponId.startsWith("primary:") && p.playerAuraId === "Enchant" && p.playerAuraLevel === 1);
+    // EMin/EMax 25/35, HitShift 7; Warmth's one hard point adds 20%:
+    // buff 15-21, then recipient +20% mastery and +10% item skill damage = 19-27.
+    expect(profiles.find((p) => p.playerAuraCarrier === "self")!.totalElementalDamage.fire).toEqual({ min: 19, max: 27 });
+    // External caster's allocation/mastery is unknown: bare buff 12-17, recipient +30%.
+    expect(profiles.find((p) => p.playerAuraCarrier === "party")!.totalElementalDamage.fire).toEqual({ min: 15, max: 22 });
+  });
+
+  it("uses Cold Enchant's Chilling Armor hard points and the recipient's cold bonus", () => {
+    const data = character("Cold Enchant", 1);
+    data.realSkills!.push({ skill: "Chilling Armor", level: 20, baseLevel: 1 }, { skill: "Cold Mastery", level: 1, baseLevel: 1 });
+    data.realStats = { coldSkillDamage: 10 } as CharacterData["realStats"];
+    const p = calculateDamage(data).profiles.find((p) => p.skillId === "Basic Attack" && p.weaponId.startsWith("primary:") && p.playerAuraId === "Cold Enchant" && p.playerAuraCarrier === "self")!;
+    // Base 3-4; +26% hard-point synergy stores 3-5, then +10% mastery/+10% item = 3-6.
+    expect(p.totalElementalDamage.cold).toEqual({ min: 3, max: 6 });
+  });
+
   it("adds minimum-only damage without manufacturing maximum damage", () => {
     const data = character();
     data.items.push({

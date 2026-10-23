@@ -99,6 +99,59 @@ function aura(id: string): DamageAuraOption {
 }
 
 describe("damage calculator aura interactions", () => {
+  it.each([false, true])("scales an Enchant by recipient mastery once (party=%s), including level replacement", (party) => {
+    const p = profile();
+    p.enchantDamageBonusPercent = { fire: 30 };
+    const enchant = aura("Enchant");
+    for (const rows of [enchant.selfLevelBonuses, enchant.partyLevelBonuses]) {
+      rows[0].elementalDamage = { fire: { min: 15, max: 21 } };
+      rows.push({ ...bonus(40), elementalDamage: { fire: { min: 20, max: 30 } } });
+    }
+    const first = applyAuraToProfile(p, enchant, party, "20", "manual");
+    expect(first.totalElementalDamage.fire).toEqual({ min: 19, max: 27 });
+    expect(applyAuraToProfile(first, enchant, party, "20", "manual").totalDamage).toEqual(first.totalDamage);
+    const upgraded = applyAuraToProfile(first, enchant, party, "40", "manual");
+    expect(upgraded.totalElementalDamage.fire).toEqual({ min: 26, max: 39 });
+    expect(upgraded.totalPhysicalDamage).toEqual(p.totalPhysicalDamage);
+    const pet = { ...p, skillDamageMode: "summon" as const, enchantDamageBonusPercent: undefined };
+    expect(applyAuraToProfile(pet, enchant, party, "20", "manual").totalElementalDamage.fire).toEqual({ min: 15, max: 21 });
+  });
+
+  it("combines a pet's Critical Strike with Spirit of Barbs and keeps elemental summon damage separate", () => {
+    const p = profile();
+    p.skillDamageMode = "summon";
+    p.strikeBreakdowns = [{
+      id: "pet", label: "Pet", physicalComponentIds: ["physical"],
+      rawCriticalChance: 15, criticalChance: 15, criticalMultiplier: 2,
+      rawDeadlyStrikeChance: 0, rawMaxDeadlyStrikeChance: 75,
+      deadlyStrikeChance: 0, maxDeadlyStrikeChance: 75,
+      effectiveDeadlyStrikeChance: 0, deadlyStrikeMultiplier: 1.5,
+    }];
+    const spirit = aura("Spirit of Barbs");
+    spirit.partyLevelBonuses[0].strikeModifiers.deadlyStrikeChance = 27;
+    const result = applyAuraToProfile(p, spirit, true, "20", "manual");
+    expect(result.strikeBreakdowns[0].effectiveDeadlyStrikeChance).toBe(22.95);
+    expect(result.damageTotals.byElement.critical).toEqual({ min: 15, max: 30 });
+    expect(result.damageTotals.byElement.deadly?.min).toBeCloseTo(11.475);
+    expect(result.damageTotals.byElement.deadly?.max).toBeCloseTo(22.95);
+    p.strikeBreakdowns = [];
+    expect(applyAuraToProfile(p, spirit, true, "20", "manual").totalDamage).toEqual(p.totalDamage);
+  });
+
+  it("replaces a cached owned summon Enchant with the selected external caster at the same level", () => {
+    const p = profile();
+    p.skillDamageMode = "summon";
+    const enchant = aura("Enchant");
+    enchant.summonLevelBonusesByWeaponSet = {
+      primary: [{ ...bonus(20), elementalDamage: { fire: { min: 100, max: 200 } } }],
+    };
+    enchant.partyLevelBonuses[0].elementalDamage = { fire: { min: 10, max: 20 } };
+    const cached = applyAuraToProfile(p, enchant, false, "20", "player_skill");
+    expect(cached.totalElementalDamage.fire).toEqual({ min: 100, max: 200 });
+    const selected = applyAuraToProfile(cached, enchant, true, "20", "manual", true);
+    expect(selected.totalElementalDamage.fire).toEqual({ min: 10, max: 20 });
+  });
+
   it.each([false, true])("applies a spirit's strike bonus to an eligible spell (party=%s) without attack aura damage", (party) => {
     const p = profile();
     p.skillDamageMode = "spell";

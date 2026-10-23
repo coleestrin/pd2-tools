@@ -10,9 +10,11 @@ The active installation and `ProjectD2/Live` archives/DLLs match each other and 
 - Tornado/Twister next-hit delay is **9 frames**; Fire Arrow ground duration is **50 frames**. These source changes do not establish collision frequency or overlap. Static Field variants use **8%**; a complete current-life Static Field damage sequence is outside the existing fixed-payload model.
 - Updated monster resistances, boss life, innate modifiers and English names come directly from the target tables. Map 209 is **The Fortress of Aranoch**, with **seven** selectable species. Decaying Swamplands' existing six-species curated pool is restored to area selection.
 - Source metadata also includes Blade Fury's removed per-point pierce, PvP trap limits and new boss/missile records. Unmodeled pierce/collision and PvP behavior are not inferred from those cells. PvE Crushing Blow constants were checked against the updated DLL.
-- Character payload and target HTTP cache versions are **`damage-model-v16`** and **`season-14-v4`**. See [BETA_VALIDATION.md](BETA_VALIDATION.md) for native evidence, numeric fixtures and fresh QA.
+- Character payload and target HTTP cache versions are **`damage-model-v17`** and **`season-14-v4`**. See [BETA_VALIDATION.md](BETA_VALIDATION.md) for native evidence, numeric fixtures and fresh QA.
 
 These changes agree with the developer's [Open Beta Patch 2 announcement](https://www.reddit.com/r/ProjectDiablo2/comments/1xcu7qa/season_14_open_beta_patch_2/); installed files remain the numeric source of truth.
+
+The [final Alliance patch notes](https://docs.google.com/document/d/1VA1rqc7AaCBLikb2iPK939laUH-Td7C8fPyPuVTFWAo/edit) were then checked against the imported files and calculation paths. That review corrected ranged item mastery, Enchant recipient scaling, summon strike bonuses and magic skill damage. The new magic jewel property is **extra-magi → passive_mag_mastery (357)**; active item values now feed magic spell and carried item damage without counting rendered text twice. PD2 Enchants use **edmn/edmx**, so their stored buff includes hard-point synergy without caster mastery; the attacking recipient's elemental bonus applies once. Summons receive applicable aura Deadly Strike and explicitly assigned Critical Strike (such as Valkyrie's owner-hard-point transfer), while owner gear strike stats remain excluded. Selecting an external party buff also replaces an owned cached buff's source-specific values.
 
 ## Sources used by the calculator
 

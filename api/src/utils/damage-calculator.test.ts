@@ -1414,7 +1414,7 @@ describeWithGameData("damage calculator component model", () => {
     );
   });
 
-  it("provides caster and weapon-set damage for stacked owned elemental buffs", () => {
+  it("keeps owned Enchant's source buff separate from recipient item bonuses", () => {
     const character = createCharacter("Enchant", 20);
     character.character.class = { id: 1, name: "Sorceress" };
     character.character.skills.push({ id: 37, name: "Warmth", level: 20 });
@@ -1442,7 +1442,12 @@ describeWithGameData("damage calculator component model", () => {
         enchant.selfLevelBonusesByWeaponSet[weaponSet].find(
           (bonus) => bonus.level === enchant.level
         ).elementalDamage.fire
-      ).toEqual(payload);
+      ).toEqual({ min: 722, max: 842 });
+      // Source level 20 = 144.5-168.5, Warmth 20 adds 400%; edmn/edmx
+      // store whole 722-842. The attacking recipient's +40% applies once.
+      expect(payload).toEqual(weaponSet === "primary"
+        ? { min: 1010, max: 1178 }
+        : { min: 722, max: 842 });
       if (weaponSet === "primary") {
         const summon = calculation.profiles.find(
           (profile) =>
