@@ -43,6 +43,8 @@ export interface CharacterFilter {
     max?: number;
   };
   season?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 type ItemType = "Unique" | "Set" | "Runeword";
@@ -901,6 +903,27 @@ export default class CharacterDB_Postgres {
 
     const { filterCTE, params } = this.buildFilterCTE(filter, gameModeId);
 
+    // Determine dynamic order by
+    const orderDirection = filter.sortOrder === "asc" ? "ASC" : "DESC";
+    let orderByClause = `C.level ${orderDirection}, C.character_db_id DESC`;
+
+    if (filter.sortBy === "name") {
+      orderByClause = `C.api_character_name ${orderDirection}, C.character_db_id DESC`;
+    } else if (filter.sortBy === "life") {
+      orderByClause = `(C.full_response_json->'character'->>'life')::int ${orderDirection}, C.character_db_id DESC`;
+    } else if (filter.sortBy === "mana") {
+      orderByClause = `(C.full_response_json->'character'->>'mana')::int ${orderDirection}, C.character_db_id DESC`;
+    } else if (filter.sortBy === "level") {
+      orderByClause = `C.level ${orderDirection}, C.character_db_id DESC`;
+    } else if (filter.sortBy === "highestSkLevel") {
+      orderByClause = `
+        (C.full_response_json->'realSkills'->0->>'level')::int
+          ${orderDirection}
+          NULLS LAST,
+        C.character_db_id DESC
+      `;
+    }
+
     // Execute CTE
     const queryParams = [...params, pageSize, (page - 1) * pageSize];
     const combinedQuery = `
@@ -912,7 +935,7 @@ export default class CharacterDB_Postgres {
                 SELECT C.full_response_json
                 FROM Characters C
                 WHERE C.character_db_id IN (SELECT character_db_id FROM FilteredCharIDs)
-                ORDER BY C.level DESC, C.character_db_id DESC
+                ORDER BY ${orderByClause}
                 LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length}
             ),
             ClassBreakdown AS (
