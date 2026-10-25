@@ -65,6 +65,8 @@ export interface CharacterFilter {
     max?: number;
   };
   season?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 export interface CharacterListResponse {
