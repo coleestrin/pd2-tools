@@ -43,9 +43,11 @@ export interface CharacterFilter {
     max?: number;
   };
   season?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
-type ItemType = "Unique" | "Set" | "Runeword";
+type ItemType = "Unique" | "Set" | "Runeword" | "Rare" | "Magic" | "Crafted";
 
 export interface ItemUsageStats {
   item: string;
@@ -74,6 +76,9 @@ const IGNORED_UNIQUES_ARRAY = [
   "Annihilus",
   "Call to Arms",
   "Lidless Wall",
+  "Small Charm",
+  "Large Charm",
+  "Grand Charm",
 ];
 
 export default class CharacterDB_Postgres {
@@ -901,6 +906,27 @@ export default class CharacterDB_Postgres {
 
     const { filterCTE, params } = this.buildFilterCTE(filter, gameModeId);
 
+    // Determine dynamic order by
+    const orderDirection = filter.sortOrder === "asc" ? "ASC" : "DESC";
+    let orderByClause = `C.level ${orderDirection}, C.character_db_id DESC`;
+
+    if (filter.sortBy === "name") {
+      orderByClause = `C.api_character_name ${orderDirection}, C.character_db_id DESC`;
+    } else if (filter.sortBy === "life") {
+      orderByClause = `(C.full_response_json->'character'->>'life')::int ${orderDirection}, C.character_db_id DESC`;
+    } else if (filter.sortBy === "mana") {
+      orderByClause = `(C.full_response_json->'character'->>'mana')::int ${orderDirection}, C.character_db_id DESC`;
+    } else if (filter.sortBy === "level") {
+      orderByClause = `C.level ${orderDirection}, C.character_db_id DESC`;
+    } else if (filter.sortBy === "highestSkLevel") {
+      orderByClause = `
+        (C.full_response_json->'realSkills'->0->>'level')::int
+          ${orderDirection}
+          NULLS LAST,
+        C.character_db_id DESC
+      `;
+    }
+
     // Execute CTE
     const queryParams = [...params, pageSize, (page - 1) * pageSize];
     const combinedQuery = `
@@ -912,7 +938,7 @@ export default class CharacterDB_Postgres {
                 SELECT C.full_response_json
                 FROM Characters C
                 WHERE C.character_db_id IN (SELECT character_db_id FROM FilteredCharIDs)
-                ORDER BY C.level DESC, C.character_db_id DESC
+                ORDER BY ${orderByClause}
                 LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length}
             ),
             ClassBreakdown AS (
@@ -1083,6 +1109,9 @@ export default class CharacterDB_Postgres {
                     WHEN CI.is_runeword = true AND BI.name <> ALL($${params.length + 1}) THEN 'Runeword'
                     WHEN Q.name = 'Unique' AND BI.name <> ALL($${params.length + 2}) THEN 'Unique'
                     WHEN Q.name = 'Set' THEN 'Set'
+                    WHEN Q.name = 'Crafted' AND BI.name NOT LIKE '%Charm' THEN 'Crafted'
+                    WHEN Q.name = 'Rare' AND BI.name NOT LIKE '%Charm' THEN 'Rare'
+                    WHEN Q.name = 'Magic' AND BI.name NOT LIKE '%Charm' THEN 'Magic'
                     ELSE NULL
                 END AS itemType,
                 COUNT(DISTINCT CI.character_db_id) AS numOccurrences,
@@ -1095,6 +1124,9 @@ export default class CharacterDB_Postgres {
                 WHEN CI.is_runeword = true AND BI.name <> ALL($${params.length + 1}) THEN 'Runeword'
                 WHEN Q.name = 'Unique' AND BI.name <> ALL($${params.length + 2}) THEN 'Unique'
                 WHEN Q.name = 'Set' THEN 'Set'
+                WHEN Q.name = 'Crafted' AND BI.name NOT LIKE '%Charm' THEN 'Crafted'
+                WHEN Q.name = 'Rare' AND BI.name NOT LIKE '%Charm' THEN 'Rare'
+                WHEN Q.name = 'Magic' AND BI.name NOT LIKE '%Charm' THEN 'Magic'
                 ELSE NULL
             END IS NOT NULL
             GROUP BY BI.name, itemType
@@ -1220,6 +1252,9 @@ export default class CharacterDB_Postgres {
                     WHEN MI.is_runeword = true THEN 'Runeword'
                     WHEN Q.name = 'Unique' THEN 'Unique'
                     WHEN Q.name = 'Set' THEN 'Set'
+                    WHEN Q.name = 'Crafted' THEN 'Crafted'
+                    WHEN Q.name = 'Rare' THEN 'Rare'
+                    WHEN Q.name = 'Magic' THEN 'Magic'
                     ELSE NULL
                 END AS itemType,
                 COUNT(DISTINCT MI.character_db_id) AS numOccurrences,
@@ -1232,6 +1267,9 @@ export default class CharacterDB_Postgres {
                 WHEN MI.is_runeword = true THEN 'Runeword'
                 WHEN Q.name = 'Unique' THEN 'Unique'
                 WHEN Q.name = 'Set' THEN 'Set'
+                WHEN Q.name = 'Crafted' THEN 'Crafted'
+                WHEN Q.name = 'Rare' THEN 'Rare'
+                WHEN Q.name = 'Magic' THEN 'Magic'
                 ELSE NULL
             END IS NOT NULL
             GROUP BY BI.name, itemType
