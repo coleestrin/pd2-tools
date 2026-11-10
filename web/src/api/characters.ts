@@ -38,6 +38,8 @@ export const charactersAPI = {
       minLevel: filter.levelRange?.min,
       maxLevel: filter.levelRange?.max,
       season: filter.season,
+      sortBy: filter.sortBy,
+      sortOrder: filter.sortOrder,
     });
   },
 
