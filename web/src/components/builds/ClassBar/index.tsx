@@ -244,7 +244,10 @@ export default function ClassBar({
   updateFilters,
 }: BuildsComponentProps) {
   const isMobile = useMediaQuery("(max-width: 767px)");
-  const [searchInput, setSearchInput] = useState(filters.searchQuery);
+  const [searchInput, setSearchInput] = useState(filters.filterSearchQuery);
+  const [characterSearchInput, setCharacterSearchInput] = useState(
+    filters.searchQuery
+  );
   const [settingsOpened, setSettingsOpened] = useState(false);
   const [accountQueueOpened, setAccountQueueOpened] = useState(false);
   const searchTimeout = useRef<NodeJS.Timeout>();
@@ -270,7 +273,7 @@ export default function ClassBar({
     }
 
     searchTimeout.current = setTimeout(() => {
-      updateFilters({ searchQuery: value });
+      updateFilters({ filterSearchQuery: value });
     }, 300);
   };
 
@@ -279,11 +282,29 @@ export default function ClassBar({
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
     }
+    updateFilters({ filterSearchQuery: "" });
+  };
+
+  const handleCharacterSearchChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setCharacterSearchInput(value);
+    if (value.length >= 3 || value.length === 0) {
+      updateFilters({ searchQuery: value });
+    } else {
+      updateFilters({ searchQuery: "" });
+    }
+  };
+
+  const handleCharacterSearchClear = () => {
+    setCharacterSearchInput("");
     updateFilters({ searchQuery: "" });
   };
 
   const handleResetFilters = () => {
     setSearchInput("");
+    setCharacterSearchInput("");
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
     }
@@ -294,6 +315,7 @@ export default function ClassBar({
       mercTypeFilter: [],
       mercItemFilter: [],
       searchQuery: "",
+      filterSearchQuery: "",
     });
   };
 
@@ -402,15 +424,34 @@ export default function ClassBar({
           }}
         >
           <Flex align="center" justify="space-between" h="100%">
-            {!isMobile && (
-              <Text>
-                Found{" "}
-                <Text span fw={700}>
-                  {data.breakdown.total?.toLocaleString()}
-                </Text>{" "}
-                characters
-              </Text>
-            )}
+            <Flex align="center" gap="md">
+              <TextInput
+                placeholder="Search characters..."
+                rightSection={
+                  characterSearchInput ? (
+                    <ActionIcon
+                      variant="transparent"
+                      color="gray"
+                      onClick={handleCharacterSearchClear}
+                    >
+                      <IconX size={16} />
+                    </ActionIcon>
+                  ) : null
+                }
+                value={characterSearchInput}
+                onChange={handleCharacterSearchChange}
+                style={{ width: isMobile ? "100%" : "260px" }}
+              />
+              {!isMobile && (
+                <Text>
+                  Found{" "}
+                  <Text span fw={700}>
+                    {data.breakdown.total?.toLocaleString()}
+                  </Text>{" "}
+                  characters
+                </Text>
+              )}
+            </Flex>
             <Flex gap="md" style={{ marginLeft: isMobile ? "0" : "auto" }}>
               <Button
                 variant="outline"

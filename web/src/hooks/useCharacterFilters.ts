@@ -17,6 +17,7 @@ export interface CharacterFilters {
   mercTypeFilter: string[];
   mercItemFilter: string[];
   searchQuery: string;
+  filterSearchQuery: string;
   minLevel: number;
   maxLevel: number;
   season: number;
@@ -79,6 +80,7 @@ export function useCharacterFilters(): UseCharacterFiltersReturn {
       mercItemFilter:
         searchParams.get("mercItems")?.split(",").filter(Boolean) || [],
       searchQuery: searchParams.get("query") || "",
+      filterSearchQuery: "",
       minLevel: parseInt(
         searchParams.get("minLevel") || levelRange.min.toString()
       ),

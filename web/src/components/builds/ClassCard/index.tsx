@@ -28,7 +28,7 @@ type Breakdown = {
 
 interface Props {
   breakdown: Record<string, number>;
-  filters: Pick<CharacterFilters, "classFilter" | "searchQuery">;
+  filters: Pick<CharacterFilters, "classFilter" | "filterSearchQuery">;
   updateFilters: (filters: Partial<{ classFilter: string[] }>) => void;
 }
 
@@ -51,7 +51,7 @@ export default function ClassCard({
   };
 
   const filteredClasses = useMemo(() => {
-    const searchQuery = filters.searchQuery?.toLowerCase() || "";
+    const searchQuery = filters.filterSearchQuery?.toLowerCase() || "";
     const total = breakdown.total || 0;
 
     // Single pass for filtering, mapping, and sorting
@@ -81,7 +81,7 @@ export default function ClassCard({
         }>
       )
       .sort((a, b) => b.percentage - a.percentage);
-  }, [breakdown, filters.searchQuery, selectedClassesSet]);
+  }, [breakdown, filters.filterSearchQuery, selectedClassesSet]);
 
   const hasClasses = filteredClasses.length > 0;
 

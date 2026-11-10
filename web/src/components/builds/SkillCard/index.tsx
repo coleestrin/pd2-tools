@@ -10,7 +10,7 @@ interface Props {
   data: {
     skillUsage: SkillUsageStats[];
   };
-  filters: Pick<CharacterFilters, "skillFilter" | "searchQuery">;
+  filters: Pick<CharacterFilters, "skillFilter" | "filterSearchQuery">;
   updateFilters: (
     filters: Partial<{ skillFilter: SkillRequirement[] }>
   ) => void;
@@ -35,7 +35,7 @@ export default function SkillCard({ data, filters, updateFilters }: Props) {
 
   const skillPercentages = useMemo(() => {
     if (!data.skillUsage) return [];
-    const searchQuery = filters.searchQuery?.toLowerCase() || "";
+    const searchQuery = filters.filterSearchQuery?.toLowerCase() || "";
 
     // Single pass transformation and filtering
     return data.skillUsage
@@ -63,7 +63,7 @@ export default function SkillCard({ data, filters, updateFilters }: Props) {
           b.percentage - a.percentage ||
           Number(b.isSelected) - Number(a.isSelected)
       );
-  }, [data.skillUsage, filters.searchQuery, selectedSkillsSet]);
+  }, [data.skillUsage, filters.filterSearchQuery, selectedSkillsSet]);
 
   const hasSkills = skillPercentages.length > 0;
 

@@ -45,7 +45,7 @@ interface Props {
   data: {
     mercTypeUsage: MercTypeStats[];
   };
-  filters: Pick<CharacterFilters, "mercTypeFilter" | "searchQuery">;
+  filters: Pick<CharacterFilters, "mercTypeFilter" | "filterSearchQuery">;
   updateFilters: (filters: Partial<{ mercTypeFilter: string[] }>) => void;
 }
 
@@ -63,7 +63,7 @@ export default function MercTypeCard({ data, filters, updateFilters }: Props) {
   };
 
   const filteredMercTypes = useMemo(() => {
-    const searchQuery = filters.searchQuery?.toLowerCase() || "";
+    const searchQuery = filters.filterSearchQuery?.toLowerCase() || "";
 
     return data.mercTypeUsage
       .filter((mercType) => {
@@ -88,7 +88,7 @@ export default function MercTypeCard({ data, filters, updateFilters }: Props) {
         isSelected: selectedMercTypesSet.has(mercType.mercType),
       }))
       .sort((a, b) => b.percentage - a.percentage);
-  }, [data.mercTypeUsage, filters.searchQuery, selectedMercTypesSet]);
+  }, [data.mercTypeUsage, filters.filterSearchQuery, selectedMercTypesSet]);
 
   const hasMercTypes = filteredMercTypes.length > 0;
 

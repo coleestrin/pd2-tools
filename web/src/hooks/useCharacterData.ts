@@ -31,6 +31,7 @@ export function useCharacterData(
   const [error, setError] = useState<Error | null>(null);
   const hasInitiallyFetched = useRef(false);
   const isLoading = useRef(false);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     let mounted = true;
@@ -39,6 +40,7 @@ export function useCharacterData(
       //if (isLoading.current) return;
 
       isLoading.current = true;
+      const requestId = ++requestIdRef.current;
 
       try {
         const [
@@ -61,6 +63,7 @@ export function useCharacterData(
               requiredMercItems: filters.mercItemFilter,
               levelRange: { min: filters.minLevel, max: filters.maxLevel },
               season: filters.season,
+              query: filters.searchQuery || undefined,
             },
             1,
             40
@@ -107,7 +110,7 @@ export function useCharacterData(
           }),
         ]);
 
-        if (mounted) {
+        if (mounted && requestId === requestIdRef.current) {
           setData({
             characters: charactersData.characters,
             itemUsage: itemsData,
@@ -121,11 +124,13 @@ export function useCharacterData(
           hasInitiallyFetched.current = true;
         }
       } catch (err) {
-        if (mounted) {
+        if (mounted && requestId === requestIdRef.current) {
           setError(err as Error);
         }
       } finally {
-        isLoading.current = false;
+        if (requestId === requestIdRef.current) {
+          isLoading.current = false;
+        }
       }
     }
 
@@ -144,6 +149,7 @@ export function useCharacterData(
     filters.minLevel,
     filters.maxLevel,
     filters.season,
+    filters.searchQuery,
   ]);
 
   return {

@@ -95,6 +95,7 @@ router.get(
         skills,
         mercTypes,
         mercItems,
+        query,
         season,
       } = req.query;
 
@@ -138,6 +139,9 @@ router.get(
       }
       if (mercItems) {
         filter.requiredMercItems = (mercItems as string).split(",");
+      }
+      if (query && (query as string).trim().length >= 3) {
+        filter.searchQuery = (query as string).trim();
       }
       if (season) {
         filter.season = parseInt(season as string, 10);
