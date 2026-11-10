@@ -259,4 +259,9 @@ const skillCategories = new Map([
   ["Cold Mastery", "Cold Spells"],
 ]);
 
+export function normalizeSkillName(name: string): string {
+  if (name === "Berserker") return "Berserk";
+  return name;
+}
+
 export default skillCategories;
