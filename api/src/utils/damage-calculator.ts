@@ -6485,12 +6485,17 @@ function getGameAuraStatValue(
   }
 
   const formulaSkillMap = new Map(skillMap);
-  formulaSkillMap.set(getGameRowString("Skills", skillRow, "skill"), {
+  const formulaEntry = {
     level: aura.level,
     // A manually entered external aura has no character allocation payload.
     // Model up to maxlvl hard points; owned auras pass their actual allocation.
     baseLevel: aura.baseLevel ?? Math.min(aura.level, getGameRowNumber("Skills", skillRow, "maxlvl") || 20),
-  });
+  };
+  formulaSkillMap.set(getGameRowString("Skills", skillRow, "skill"), formulaEntry);
+  // Barbs Aura's item_maxdeadlystrike reads skill('Spirit of Barbs'.blvl).
+  if (!formulaSkillMap.has(aura.name)) {
+    formulaSkillMap.set(aura.name, formulaEntry);
+  }
   return evaluateGameCalcExpression(
     calc,
     skillRow,

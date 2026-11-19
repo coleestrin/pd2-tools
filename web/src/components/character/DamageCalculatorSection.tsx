@@ -750,7 +750,7 @@ function getDamageModelDisplayNotes(
     )
   ) {
     notes.push(
-      "Spirit of Barbs' extra Deadly Strike cap depends on its owner's hard points. Party hard points are unavailable, so that extra cap is omitted."
+      "Spirit of Barbs' extra Deadly Strike cap depends on its owner's hard points. Party hard points are unavailable, so up to 20 are assumed."
     );
   }
 

@@ -50,7 +50,7 @@ Calculations still use one global mechanics snapshot. Selecting a historical cha
 - Fire Claws now has separate weapon-hit fire and a damage-bearing ground missile. Its ground payload uses the beta SkillDesc **5/2** display multiplier, replacing the generic fire-missile multiplier. Per-hit and per-second components remain separately identified; missile count is informational.
 - Fire Arrow, Phoenix Strike, Meteor ground fire, Poison Creeper, skeleton archers, wolves, Grizzly, Heart of Wolverine and curse procs use their extracted revised formulas.
 - Poison Strike's conditional pierce is read from its temporary aura stat. Warmth's flat AR and Battle Command increments are applied before percentage AR. Temporary attack-speed buffs include Split Throw.
-- Spirit of Barbs' additional Deadly Strike cap uses the owner's **hard points**, including owned-aura precomputed values. Unknown party hard points are not inferred from soft aura level; the UI explains the omitted extra cap.
+- Spirit of Barbs' additional Deadly Strike cap uses the owner's **hard points**, including owned-aura precomputed values. Party members get the same Skills.txt `aurastat` cap, `skill('Spirit of Barbs'.blvl)/4`; an external druid's hard points are unknown, so up to `maxlvl` (20) hard points are assumed, as for other manually entered auras.
 - Quoted expressions inside formulas are handled without changing the extracted cells. A restricted integer arithmetic parser evaluates each operation without executing source formulas as JavaScript.
 - New populated area IDs **207–210** are available as map comparisons; empty guild halls are excluded. Library's Hell area level is **87**.
 

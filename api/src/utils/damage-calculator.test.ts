@@ -1985,6 +1985,15 @@ describeWithGameData("damage calculator component model", () => {
       deadlyStrikeChance: 27,
       maxDeadlyStrikeChance: 5,
     });
+    // Party members get Barbs Aura's aurastat3 cap, skill('Spirit of Barbs'.blvl)/4,
+    // with up to maxlvl hard points assumed for an external druid.
+    expect(
+      [8, 20, 30].map(
+        (aura) =>
+          spiritOfBarbs.partyLevelBonuses.find((bonus) => bonus.level === aura)
+            ?.strikeModifiers.maxDeadlyStrikeChance
+      )
+    ).toEqual([2, 5, 5]);
 
     const blessedAimProfile = calculation.profiles.find(
       (profile) =>
