@@ -3787,11 +3787,50 @@ function getMercenaryLevel(expPerLevel: number, experience: number): number {
   return level;
 }
 
+const MERCENARY_ELEMENT_SKILL_NAMES: Record<string, string> = {
+  fire: "fire skills",
+  cold: "cold skills",
+  ltng: "lightning skills",
+  pois: "poison skills",
+  mag: "magic skills",
+};
+
+// D2MOO SKILLS_GetBonusSkillLevel for non-player units: all skills, the
+// skill's element skills (item_elemskill by EType), "+N to X (Class Only)"
+// (item_singleskill) and "+N to X" (item_nonclassskill, capped at 3 for a
+// skill with hard levels). Class and skill-tab bonuses only apply to players.
+function getMercenarySkillBonus(
+  properties: (string | null)[],
+  skillName: string,
+  elementType: string
+): number {
+  const elementSkills = MERCENARY_ELEMENT_SKILL_NAMES[elementType];
+  let bonus = 0;
+  let nonClassBonus = 0;
+  properties.forEach((property) => {
+    const match = property?.match(/^\+(\d+) to (.+?)( \(\w+ Only\))?$/i);
+    if (!match) {
+      return;
+    }
+    const target = match[2].toLowerCase();
+    if (
+      target === "all skills" ||
+      (!match[3] && target === elementSkills) ||
+      (match[3] && target === skillName.toLowerCase())
+    ) {
+      bonus += Number(match[1]);
+    } else if (!match[3] && target === skillName.toLowerCase()) {
+      nonClassBonus += Number(match[1]);
+    }
+  });
+  return bonus + Math.min(3, nonClassBonus);
+}
+
 // Mirrors the game's hireling skill assignment (D2MOO MONSTERAI_UpdateMercStatsAndSkills
 // and DATATBLS_GetHirelingTxtRecordFromIdAndLevel): the last bracket at or
 // below the merc level (else the first bracket), a Skills.txt reqlevel gate,
-// and LevelN + floor(levelUps * LvlPerLvlN / 32) clamped to 0-32. Merc
-// +All Skills then raises the hard level.
+// and LevelN + floor(levelUps * LvlPerLvlN / 32) clamped to 0-32. Merc gear
+// skill bonuses then raise the hard level.
 function collectMercenaryNativeAuras(
   mercenary: NonNullable<CharacterData["mercenary"]>
 ): AuraSource[] {
@@ -3810,15 +3849,8 @@ function collectMercenaryNativeAuras(
     hirelingRows
       .filter((row) => Number(row.Level) <= mercenaryLevel)
       .pop() || hirelingRows[0];
-
-  const allSkillsLevel = (mercenary.items || []).reduce(
-    (total, item) =>
-      total +
-      item.properties.reduce((itemTotal, property) => {
-        const match = property?.match(/^\+(\d+) to All Skills$/i);
-        return itemTotal + (match ? Number(match[1]) : 0);
-      }, 0),
-    0
+  const itemProperties = (mercenary.items || []).flatMap(
+    (item) => item.properties
   );
 
   const auras: AuraSource[] = [];
@@ -3853,7 +3885,13 @@ function collectMercenaryNativeAuras(
     if (hardLevel > 0) {
       auras.push({
         name: skillName,
-        level: hardLevel + allSkillsLevel,
+        level:
+          hardLevel +
+          getMercenarySkillBonus(
+            itemProperties,
+            skillName,
+            getGameRowString("Skills", skillRow, "EType")
+          ),
         source: "mercenary_native",
         carrier: "party",
       });
@@ -6622,9 +6660,12 @@ function getGameBuffElementalRange(
     return undefined;
   }
 
+  // Holy Fire/Freeze/Shock and Sanctuary list their added damage only as
+  // passivestats, which the game applies to the aura owner, not party members.
   const canUseElementalPayload =
     isGameSelfOrPartyBuffSkill(aura.name) ||
-    (isPlayerAuraSkill(aura.name) &&
+    (aura.carrier === "self" &&
+      isPlayerAuraSkill(aura.name) &&
       hasSelfElementalAuraDamageStats(skillRow, element));
   if (!canUseElementalPayload) {
     return undefined;
@@ -8925,6 +8966,10 @@ function buildCombatData(
       defensePercent: Math.max(0, -stat("skill_armor_percent")),
       defenseFlat: Math.max(0, -stat("armorclass")),
       reductions,
+      openWounds: Math.max(0, stat("item_openwounds")),
+      openWoundsDps: Math.max(0, stat("deep_wounds")),
+      selfOpenWoundsDps: Math.max(0, stat("deep_wounds", "self")) ||
+        Math.max(0, stat("deep_wounds")),
     };
   };
   const skillData: DamageCombatData["skills"] = {};

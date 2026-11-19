@@ -358,6 +358,30 @@ describe("effective damage: independent arithmetic and boundaries", () => {
       expected + ((5 * 254 * 25) / 256) * 3
     );
   });
+  it("adds Thorns aura Open Wounds, using the passivestat damage only for its owner", () => {
+    const { profile, combat, run } = setup();
+    const base = 14 * 9 + 15 * 18 + 15 * 27 + 15 * 36 + 30 * 45 + 25;
+    combat.effects.Thorns = Array.from({ length: 81 }, () => ({
+      attackSpeed: 0,
+      attackRatingPercent: 0,
+      defensePercent: 0,
+      defenseFlat: 0,
+      reductions: emptyCombatResistances(),
+      openWounds: 100,
+      openWoundsDps: 32,
+      selfOpenWoundsDps: 42,
+    }));
+    expect(run().openWoundsDps).toBe(0);
+    profile.activeAuras = [
+      { name: "Thorns", level: 20, source: "mercenary_native", carrier: "party" },
+    ];
+    expect(run().openWoundsDps).toBeCloseTo((((base + 5 * 32) * 25) / 256) * 3);
+    profile.activeAuras = [
+      { name: "Thorns", level: 20, source: "player_skill", carrier: "self" },
+    ];
+    expect(run().openWoundsDps).toBeCloseTo((((base + 5 * 42) * 25) / 256) * 3);
+  });
+
   it("can model blockable and unblockable observed summon payloads without guessing their AI", () => {
     const { catalog, run } = setup("summon");
     catalog.monsters[0].block = [50, 50, 50];

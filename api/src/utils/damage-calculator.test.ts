@@ -785,10 +785,6 @@ function getExpectedAuraPayloadsFromSkillsTxt(
   expect(maxParam).toBeDefined();
 
   return {
-    party: {
-      min: Math.floor(min),
-      max: Math.floor(max),
-    },
     self: {
       min: Math.floor(
         (Math.floor(min * 256) *
@@ -1501,6 +1497,12 @@ describeWithGameData("damage calculator component model", () => {
       calculation.combat.effects["Holy Fire"][20].selfAttackRatingPercent
     ).toBe(145);
     expect(calculation.combat.effects["Holy Freeze"][20].attackSpeed).toBe(0);
+    // Thorns aurastats: OW 15 + lvl/3 and deep_wounds edmn; owner passive edmn * 4 / 3.
+    expect(calculation.combat.effects.Thorns[20]).toMatchObject({
+      openWounds: 21,
+      openWoundsDps: 32,
+      selfOpenWoundsDps: 42,
+    });
     expect(calculation.combat.effects.Sanctuary[1].reductions.magic).toBe(5);
     expect(calculation.combat.effects.Sanctuary[3].reductions.magic).toBe(6);
     expect(calculation.combat.effects.Decrepify[1].reductions.physical).toBe(
@@ -2827,7 +2829,7 @@ describeWithGameData("damage calculator component model", () => {
     expect(rabiesProfile!.totalPoisonDamage!.total).toBeGreaterThan(35000);
   });
 
-  it("models elemental attack aura payloads from Skills.txt fixed-point formulas", () => {
+  it("models elemental attack aura payloads for the owner only, from Skills.txt passivestats", () => {
     const calculation = calculateDamage(createCharacter("Rabies", 20));
     const cases = [
       { skill: "Holy Fire", element: "fire", level: 20 },
@@ -2847,10 +2849,11 @@ describeWithGameData("damage calculator component model", () => {
         option!.selfLevelBonuses.find((bonus) => bonus.level === level)!
           .elementalDamage[element]
       ).toEqual(expected.self);
+      // The damage is only a passivestat (owner); no aurastat reaches party members.
       expect(
         option!.partyLevelBonuses.find((bonus) => bonus.level === level)!
           .elementalDamage[element]
-      ).toEqual(expected.party);
+      ).toBeUndefined();
     });
   });
 
@@ -3941,6 +3944,8 @@ describeWithGameData("damage calculator component model", () => {
       [28, 140 * 85 * 85 * 86, "Might", 18],
       // Id 35 (A4 Light-Hell): Sanctuary 30 at 79, +0/32.
       [35, 120 * 85 * 85 * 86, "Sanctuary", 30],
+      // Id 12 (Act 2 Comb-Hell): Thorns 18 at 75, +0/32.
+      [12, 130 * 90 * 90 * 91, "Thorns", 18],
       // A merc below its only bracket (75) still uses that first bracket.
       [14, 130 * 60 * 60 * 61, "Blessed Aim", 18],
       // Id 11 (Off-Nightmare) at level 30 uses bracket 43: 11 + floor(-13 * 7 / 32) = 8.
@@ -3997,6 +4002,47 @@ describeWithGameData("damage calculator component model", () => {
         calculation.playerAuraOptions.find((option) => option.id === "Blessed Aim")
           ?.level
       ).toBe(21);
+    });
+
+    it("adds merc element, single-skill and capped oskill bonuses like the game", () => {
+      const character = createCharacter("Basic Attack", 1);
+      // Holy Shock 25 (EType ltng) + 1 all + 2 lightning + 1 single + min(3, 2 + 3) oskill.
+      character.mercenary = mercenary(23, 130 * 98 * 98 * 99, [
+        createSimpleItem({
+          id: "merc-weapon",
+          hash: "merc-weapon",
+          properties: [
+            "+1 to All Skills",
+            "+2 to Lightning Skills",
+            "+1 to Fire Skills",
+            "+1 to Holy Shock (Paladin Only)",
+            "+2 to Holy Shock",
+            "+2 to Paladin Skills",
+            "+1 to Offensive Auras (Paladin Only)",
+          ],
+        }),
+        createSimpleItem({
+          id: "merc-helm",
+          hash: "merc-helm",
+          properties: ["+3 to Holy Shock"],
+        }),
+      ]);
+      expect(mercenaryAuras(character)).toEqual([
+        { name: "Holy Shock", level: 32, source: "mercenary_native", carrier: "party" },
+      ]);
+
+      // Blessed Aim has no EType, so element skills do not raise it.
+      const offensive = createCharacter("Basic Attack", 1);
+      offensive.mercenary = mercenary(14, 130 * 94 * 94 * 95, [
+        createSimpleItem({
+          id: "merc-elements",
+          hash: "merc-elements",
+          properties: ["+3 to Lightning Skills", "+3 to Magic Skills"],
+        }),
+      ]);
+      expect(mercenaryAuras(offensive)).toEqual([
+        { name: "Blessed Aim", level: 18, source: "mercenary_native", carrier: "party" },
+      ]);
     });
 
     it("keeps native merc auras removable instead of baking them into profiles", () => {
