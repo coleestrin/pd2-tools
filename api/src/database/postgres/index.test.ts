@@ -444,6 +444,30 @@ describe("CharacterDB_Postgres - Season Tracking", () => {
       expect(page2.total).toBe(3);
     });
 
+    it("should sort across all matching characters, not just one page", async () => {
+      const sortedByLife = async (page: number) =>
+        db.getFilteredCharacters(
+          gameModeSC,
+          {
+            season: season11,
+            sort: { field: "life", order: "asc" },
+          },
+          page,
+          2
+        );
+
+      const page1 = await sortedByLife(1);
+      const page2 = await sortedByLife(2);
+
+      expect(page1.characters.map((c) => c.character.name)).toEqual([
+        sampleChar3_Sorc.character.name, // life 800
+        sampleChar1_Sorc.character.name, // life 1000
+      ]);
+      expect(page2.characters.map((c) => c.character.name)).toEqual([
+        sampleChar2_Pala.character.name, // life 1200
+      ]);
+    });
+
     it("should return breakdown by class", async () => {
       const { breakdown } = await db.getFilteredCharacters(gameModeSC, {
         season: season11,

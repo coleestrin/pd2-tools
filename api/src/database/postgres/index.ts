@@ -43,7 +43,17 @@ export interface CharacterFilter {
     max?: number;
   };
   season?: number;
+  sort?: { field: CharacterSortField; order: "asc" | "desc" };
 }
+
+export type CharacterSortField = "level" | "life" | "mana" | "highestSkLevel";
+
+const CHARACTER_SORT_EXPRESSIONS: Record<CharacterSortField, string> = {
+  level: "C.level",
+  life: "(C.full_response_json->'character'->>'life')::numeric",
+  mana: "(C.full_response_json->'character'->>'mana')::numeric",
+  highestSkLevel: "(C.full_response_json->'realSkills'->0->>'level')::numeric",
+};
 
 type ItemType = "Unique" | "Set" | "Runeword";
 
@@ -903,6 +913,9 @@ export default class CharacterDB_Postgres {
 
     // Execute CTE
     const queryParams = [...params, pageSize, (page - 1) * pageSize];
+    const orderBy = filter.sort
+      ? `${CHARACTER_SORT_EXPRESSIONS[filter.sort.field]} ${filter.sort.order === "asc" ? "ASC" : "DESC"} NULLS LAST, C.character_db_id DESC`
+      : "C.level DESC, C.character_db_id DESC";
     const combinedQuery = `
             WITH FilteredCharIDs AS MATERIALIZED (${filterCTE}),
             TotalCount AS (
@@ -912,7 +925,7 @@ export default class CharacterDB_Postgres {
                 SELECT C.full_response_json
                 FROM Characters C
                 WHERE C.character_db_id IN (SELECT character_db_id FROM FilteredCharIDs)
-                ORDER BY C.level DESC, C.character_db_id DESC
+                ORDER BY ${orderBy}
                 LIMIT $${queryParams.length - 1} OFFSET $${queryParams.length}
             ),
             ClassBreakdown AS (

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import rateLimit from "express-rate-limit";
 import { characterDB } from "../database";
+import type { CharacterSortField } from "../database/postgres";
 import { validateSeason } from "../middleware/validation";
 import { config, logger as mainLogger } from "../config";
 import CharacterStatParser from "../utils/character-stats";
@@ -69,6 +70,13 @@ function attachDamageCalculation(
   }
 }
 
+const CHARACTER_SORT_FIELDS: CharacterSortField[] = [
+  "level",
+  "life",
+  "mana",
+  "highestSkLevel",
+];
+
 const characterRefreshLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
@@ -96,6 +104,8 @@ router.get(
         mercTypes,
         mercItems,
         season,
+        sortBy,
+        sortOrder,
       } = req.query;
 
       const filter: Record<string, unknown> & {
@@ -143,6 +153,15 @@ router.get(
         filter.season = parseInt(season as string, 10);
       } else {
         filter.season = config.currentSeason;
+      }
+      if (
+        typeof sortBy === "string" &&
+        CHARACTER_SORT_FIELDS.includes(sortBy as CharacterSortField)
+      ) {
+        filter.sort = {
+          field: sortBy as CharacterSortField,
+          order: sortOrder === "asc" ? "asc" : "desc",
+        };
       }
 
       const result = await characterDB.getFilteredCharacters(
