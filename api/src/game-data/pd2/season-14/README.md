@@ -16,6 +16,14 @@ These changes agree with the developer's [Open Beta Patch 2 announcement](https:
 
 The [final Alliance patch notes](https://docs.google.com/document/d/1VA1rqc7AaCBLikb2iPK939laUH-Td7C8fPyPuVTFWAo/edit) were then checked against the imported files and calculation paths. That review corrected ranged item mastery, Enchant recipient scaling, summon strike bonuses and magic skill damage. The new magic jewel property is **extra-magi → passive_mag_mastery (357)**; active item values now feed magic spell and carried item damage without counting rendered text twice. PD2 Enchants use **edmn/edmx**, so their stored buff includes hard-point synergy without caster mastery; the attacking recipient's elemental bonus applies once. Summons receive applicable aura Deadly Strike and explicitly assigned Critical Strike (such as Valkyrie's owner-hard-point transfer), while owner gear strike stats remain excluded. Selecting an external party buff also replaces an owned cached buff's source-specific values.
 
+## Mercenary auras (November 18)
+
+`Hireling.txt` was added from the installed November 4 `pd2data.mpq` (extracted November 18; the archive hash is in the manifest). It is the only table from that build. The other tables remain the October 23 snapshot; the November 4 build changed none of `Skills.txt`, `Missiles.txt`, `SkillDesc.txt`, `Properties.txt` or `ItemStatCost.txt`.
+
+A mercenary's native aura is read from the expansion (`Version` 100) row whose `Id` is the armory merc `type`. The merc level comes from its experience (level L needs `Exp/Lvl` × L² × (L + 1)). Following the game's hireling code ([D2MOO](https://github.com/ThePhrozenKeep/D2MOO) `DATATBLS_GetHirelingTxtRecordFromIdAndLevel` and `MONSTERAI_UpdateMercStatsAndSkills`), the row used is the last bracket whose `Level` is at or below the merc level, or the first bracket when none is. A skill is assigned only once the merc reaches its `Skills.txt` `reqlevel`, at `LevelN + floor((mercLevel − Level) × LvlPerLvlN / 32)` clamped to 0–32, plus merc gear bonuses as `SKILLS_GetBonusSkillLevel` applies them to non-players: +All Skills, +element skills matching the skill's `EType` (`item_elemskill`), "+N to Skill (Class Only)" (`item_singleskill`) and "+N to Skill" (`item_nonclassskill`, capped at 3). Class and skill-tab bonuses apply only to players. Item-granted auras (such as Insight's Meditation) keep their listed level, because `SKILLS_GetSkillLevel` adds no bonus to item-owned skills. Only skills with `aura` = 1 are added. Native and merc-item auras are loaded as removable party aura rows.
+
+Party auras follow `Skills.txt`: party members receive only `aurastat` effects, while `passivestat` effects belong to the aura's owner. Holy Fire, Holy Freeze, Holy Shock and Sanctuary therefore add no elemental damage to a party member's attacks; Sanctuary's magic-resistance reduction still applies. Thorns' `aurastat` Open Wounds chance and damage (`item_openwounds`, `deep_wounds`) are added to the party's Open Wounds, with the owner using its `passivestat` damage. The Resist auras' and Salvation's elemental mastery `aurastat`s (`passive_*_mastery`) are not yet modeled. The character payload cache version is **`damage-model-v18`**.
+
 ## Sources used by the calculator
 
 | File | Purpose |
@@ -26,6 +34,7 @@ The [final Alliance patch notes](https://docs.google.com/document/d/1VA1rqc7AaCB
 | `MonStats.txt`, `MonLvl.txt` | Monster targets, summon bases and difficulty scaling |
 | `MonStats2.txt`, `MonProp.txt`, `SuperUniques.txt`, `MonPreset.txt` | Target eligibility, innate defenses and auras, fixed named-monster modifiers, and direct encounter placements |
 | `Levels.txt` | Area levels and monster populations, including the four new populated map/event records |
+| `Hireling.txt` | Mercenary native aura levels by type and experience |
 | `Properties.txt`, `ItemStatCost.txt` | Armory modifier expansion, stat names and local/global stat behavior |
 | `Armor.txt`, `Weapons.txt` | Base combat data, weapon speeds and socket limits |
 | `CharStats.txt` | Class attack-rating constants and source growth values; armory life/mana are not rewritten |
@@ -41,7 +50,7 @@ Calculations still use one global mechanics snapshot. Selecting a historical cha
 - Fire Claws now has separate weapon-hit fire and a damage-bearing ground missile. Its ground payload uses the beta SkillDesc **5/2** display multiplier, replacing the generic fire-missile multiplier. Per-hit and per-second components remain separately identified; missile count is informational.
 - Fire Arrow, Phoenix Strike, Meteor ground fire, Poison Creeper, skeleton archers, wolves, Grizzly, Heart of Wolverine and curse procs use their extracted revised formulas.
 - Poison Strike's conditional pierce is read from its temporary aura stat. Warmth's flat AR and Battle Command increments are applied before percentage AR. Temporary attack-speed buffs include Split Throw.
-- Spirit of Barbs' additional Deadly Strike cap uses the owner's **hard points**, including owned-aura precomputed values. Unknown party hard points are not inferred from soft aura level; the UI explains the omitted extra cap.
+- Spirit of Barbs' additional Deadly Strike cap uses the owner's **hard points**, including owned-aura precomputed values. Party members get the same Skills.txt `aurastat` cap, `skill('Spirit of Barbs'.blvl)/4`; an external druid's hard points are unknown, so up to `maxlvl` (20) hard points are assumed, as for other manually entered auras.
 - Quoted expressions inside formulas are handled without changing the extracted cells. A restricted integer arithmetic parser evaluates each operation without executing source formulas as JavaScript.
 - New populated area IDs **207–210** are available as map comparisons; empty guild halls are excluded. Library's Hell area level is **87**.
 

@@ -703,6 +703,27 @@ function loadPd2GameData(): GameData {
 
 const pd2GameData = loadPd2GameData();
 
+// Hireling.txt repeats each hireling Id once per level bracket and also keeps
+// classic rows, so it cannot use the first-row-per-key game table index.
+function loadExpansionHirelingRows(): Array<Record<string, string>> {
+  const [header = "", ...lines] = fs
+    .readFileSync(path.join(PD2_GAME_DATA_DIRECTORY, "Hireling.txt"), "utf8")
+    .replace(/^\uFEFF/, "")
+    .split(/\r?\n/);
+  const columns = header.split("\t");
+  return lines
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const cells = line.split("\t");
+      return Object.fromEntries(
+        columns.map((column, index) => [column, cells[index] || ""])
+      );
+    })
+    .filter((row) => row.Version === "100");
+}
+
+const EXPANSION_HIRELING_ROWS = loadExpansionHirelingRows();
+
 const GAME_DAMAGE_LEVEL_THRESHOLDS = [8, 16, 22, 28, Infinity] as const;
 const DEFAULT_MAX_SELECTABLE_SKILL_LEVEL = 60;
 
@@ -3747,6 +3768,136 @@ function collectAlwaysActiveAuras(
     });
   }
 
+  if (mercenary) {
+    auras.push(...collectMercenaryNativeAuras(mercenary));
+  }
+
+  return auras;
+}
+
+// A hireling reaches level L at ExpPerLvl * L^2 * (L + 1) experience.
+function getMercenaryLevel(expPerLevel: number, experience: number): number {
+  let level = 0;
+  while (
+    expPerLevel > 0 &&
+    expPerLevel * (level + 1) ** 2 * (level + 2) <= experience
+  ) {
+    level += 1;
+  }
+  return level;
+}
+
+const MERCENARY_ELEMENT_SKILL_NAMES: Record<string, string> = {
+  fire: "fire skills",
+  cold: "cold skills",
+  ltng: "lightning skills",
+  pois: "poison skills",
+  mag: "magic skills",
+};
+
+// D2MOO SKILLS_GetBonusSkillLevel for non-player units: all skills, the
+// skill's element skills (item_elemskill by EType), "+N to X (Class Only)"
+// (item_singleskill) and "+N to X" (item_nonclassskill, capped at 3 for a
+// skill with hard levels). Class and skill-tab bonuses only apply to players.
+function getMercenarySkillBonus(
+  properties: (string | null)[],
+  skillName: string,
+  elementType: string
+): number {
+  const elementSkills = MERCENARY_ELEMENT_SKILL_NAMES[elementType];
+  let bonus = 0;
+  let nonClassBonus = 0;
+  properties.forEach((property) => {
+    const match = property?.match(/^\+(\d+) to (.+?)( \(\w+ Only\))?$/i);
+    if (!match) {
+      return;
+    }
+    const target = match[2].toLowerCase();
+    if (
+      target === "all skills" ||
+      (!match[3] && target === elementSkills) ||
+      (match[3] && target === skillName.toLowerCase())
+    ) {
+      bonus += Number(match[1]);
+    } else if (!match[3] && target === skillName.toLowerCase()) {
+      nonClassBonus += Number(match[1]);
+    }
+  });
+  return bonus + Math.min(3, nonClassBonus);
+}
+
+// Mirrors the game's hireling skill assignment (D2MOO MONSTERAI_UpdateMercStatsAndSkills
+// and DATATBLS_GetHirelingTxtRecordFromIdAndLevel): the last bracket at or
+// below the merc level (else the first bracket), a Skills.txt reqlevel gate,
+// and LevelN + floor(levelUps * LvlPerLvlN / 32) clamped to 0-32. Merc gear
+// skill bonuses then raise the hard level.
+function collectMercenaryNativeAuras(
+  mercenary: NonNullable<CharacterData["mercenary"]>
+): AuraSource[] {
+  const hirelingRows = EXPANSION_HIRELING_ROWS.filter(
+    (row) => Number(row.Id) === mercenary.type
+  );
+  if (hirelingRows.length === 0) {
+    return [];
+  }
+
+  const mercenaryLevel = getMercenaryLevel(
+    Number(hirelingRows[0]["Exp/Lvl"]),
+    Number(mercenary.experience) || 0
+  );
+  const hirelingRow =
+    hirelingRows
+      .filter((row) => Number(row.Level) <= mercenaryLevel)
+      .pop() || hirelingRows[0];
+  const itemProperties = (mercenary.items || []).flatMap(
+    (item) => item.properties
+  );
+
+  const auras: AuraSource[] = [];
+  for (let index = 1; index <= 6; index += 1) {
+    const skillName = normalizeSkillName(hirelingRow[`Skill${index}`] || "");
+    const skillRow = skillName ? getGameRow("Skills", skillName) : undefined;
+    // The game stops assigning skills at the first empty slot.
+    if (!skillRow) {
+      break;
+    }
+
+    if (
+      mercenaryLevel < getGameRowNumber("Skills", skillRow, "reqlevel") ||
+      getGameRowString("Skills", skillRow, "aura") !== "1" ||
+      !isDamageAura(skillName)
+    ) {
+      continue;
+    }
+
+    const hardLevel = Math.min(
+      32,
+      Math.max(
+        0,
+        Number(hirelingRow[`Level${index}`]) +
+          Math.floor(
+            ((mercenaryLevel - Number(hirelingRow.Level)) *
+              Number(hirelingRow[`LvlPerLvl${index}`])) /
+              32
+          )
+      )
+    );
+    if (hardLevel > 0) {
+      auras.push({
+        name: skillName,
+        level:
+          hardLevel +
+          getMercenarySkillBonus(
+            itemProperties,
+            skillName,
+            getGameRowString("Skills", skillRow, "EType")
+          ),
+        source: "mercenary_native",
+        carrier: "party",
+      });
+    }
+  }
+
   return auras;
 }
 
@@ -6334,12 +6485,17 @@ function getGameAuraStatValue(
   }
 
   const formulaSkillMap = new Map(skillMap);
-  formulaSkillMap.set(getGameRowString("Skills", skillRow, "skill"), {
+  const formulaEntry = {
     level: aura.level,
     // A manually entered external aura has no character allocation payload.
     // Model up to maxlvl hard points; owned auras pass their actual allocation.
     baseLevel: aura.baseLevel ?? Math.min(aura.level, getGameRowNumber("Skills", skillRow, "maxlvl") || 20),
-  });
+  };
+  formulaSkillMap.set(getGameRowString("Skills", skillRow, "skill"), formulaEntry);
+  // Barbs Aura's item_maxdeadlystrike reads skill('Spirit of Barbs'.blvl).
+  if (!formulaSkillMap.has(aura.name)) {
+    formulaSkillMap.set(aura.name, formulaEntry);
+  }
   return evaluateGameCalcExpression(
     calc,
     skillRow,
@@ -6509,9 +6665,12 @@ function getGameBuffElementalRange(
     return undefined;
   }
 
+  // Holy Fire/Freeze/Shock and Sanctuary list their added damage only as
+  // passivestats, which the game applies to the aura owner, not party members.
   const canUseElementalPayload =
     isGameSelfOrPartyBuffSkill(aura.name) ||
-    (isPlayerAuraSkill(aura.name) &&
+    (aura.carrier === "self" &&
+      isPlayerAuraSkill(aura.name) &&
       hasSelfElementalAuraDamageStats(skillRow, element));
   if (!canUseElementalPayload) {
     return undefined;
@@ -8812,6 +8971,10 @@ function buildCombatData(
       defensePercent: Math.max(0, -stat("skill_armor_percent")),
       defenseFlat: Math.max(0, -stat("armorclass")),
       reductions,
+      openWounds: Math.max(0, stat("item_openwounds")),
+      openWoundsDps: Math.max(0, stat("deep_wounds")),
+      selfOpenWoundsDps: Math.max(0, stat("deep_wounds", "self")) ||
+        Math.max(0, stat("deep_wounds")),
     };
   };
   const skillData: DamageCombatData["skills"] = {};

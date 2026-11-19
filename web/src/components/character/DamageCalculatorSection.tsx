@@ -275,7 +275,7 @@ const DAMAGE_TYPE_COLORS: Record<string, string> = {
   magic: STAT_COLORS.magic,
 };
 
-type AuraSelectionRow = {
+export type AuraSelectionRow = {
   rowId: string;
   auraId: string;
   level: string;
@@ -312,7 +312,7 @@ function getAuraDefaultLevel(auraOption?: DamageAuraOption | null) {
   return String(auraOption.level ?? auraOption.levelOptions[0] ?? 1);
 }
 
-function normalizeAuraSelectionRows(
+export function normalizeAuraSelectionRows(
   rows: AuraSelectionRow[],
   auraOptions: DamageAuraOption[]
 ): AuraSelectionRow[] {
@@ -352,7 +352,7 @@ function getAuraSourcePriority(source?: ActiveAuraSummary["source"]): number {
   }
 }
 
-function getInitialAuraSelectionRows(
+export function getInitialAuraSelectionRows(
   damageCalculation: DamageCalculation
 ): AuraSelectionRow[] {
   const rowsByAuraId = new Map<string, AuraSelectionRow>();
@@ -428,6 +428,31 @@ function getInitialAuraSelectionRows(
     Array.from(rowsByAuraId.values()),
     damageCalculation.playerAuraOptions
   );
+}
+
+// Re-selecting a mercenary aura restores its loaded party carrier and minimum
+// level, so removing and adding it back is lossless.
+export function selectAuraForRow(
+  row: AuraSelectionRow,
+  auraOption: DamageAuraOption,
+  damageCalculation: DamageCalculation | null | undefined
+): AuraSelectionRow {
+  const automaticRow = damageCalculation
+    ? getInitialAuraSelectionRows(damageCalculation).find(
+        (candidate) =>
+          candidate.auraId === auraOption.id &&
+          candidate.automaticSource?.startsWith("mercenary_")
+      )
+    : undefined;
+
+  return {
+    ...row,
+    auraId: auraOption.id,
+    level: automaticRow?.level ?? getAuraDefaultLevel(auraOption),
+    isParty: automaticRow?.isParty ?? row.isParty,
+    automaticLevel: automaticRow?.automaticLevel,
+    automaticSource: automaticRow?.automaticSource,
+  };
 }
 
 function getDamageTypeColor(damageType: string | null | undefined) {
@@ -725,7 +750,7 @@ function getDamageModelDisplayNotes(
     )
   ) {
     notes.push(
-      "Spirit of Barbs' extra Deadly Strike cap depends on its owner's hard points. Party hard points are unavailable, so that extra cap is omitted."
+      "Spirit of Barbs' extra Deadly Strike cap depends on its owner's hard points. Party hard points are unavailable, so up to 20 are assumed."
     );
   }
 
@@ -1981,13 +2006,7 @@ export function DamageCalculatorSection({
           };
         }
 
-        return {
-          ...row,
-          auraId,
-          level: getAuraDefaultLevel(auraOption),
-          automaticLevel: undefined,
-          automaticSource: undefined,
-        };
+        return selectAuraForRow(row, auraOption, damageCalculation);
       })
     );
   };

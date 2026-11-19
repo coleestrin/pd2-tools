@@ -18,7 +18,7 @@ public static class Pd2ArchiveReader {
 }
 "@
 $qaArchives=@('pd2data.mpq','pd2assets.mpq','pd2monchars.mpq','pd2maps.mpq','patch_d2.mpq' | ForEach-Object { Join-Path $ArchiveDirectory $_ }) + @('patch_d2.mpq','d2exp.mpq','d2data.mpq' | ForEach-Object { Join-Path $GameRoot $_ })
-$qaNames=@('MonLvl','Levels','Weapons','CharStats','MonStats','MonStats2','MonProp','MonPreset','SuperUniques','Skills','ItemTypes','Armor','Missiles','SkillDesc','Properties','ItemStatCost' | ForEach-Object { "data\global\excel\$_.txt" }) + @('data\global\excel\MonStats.bin','data\global\AnimData.d2','data\local\lng\eng\string.tbl','data\local\lng\eng\expansionstring.tbl','data\local\lng\eng\patchstring.tbl')
+$qaNames=@('MonLvl','Levels','Weapons','CharStats','MonStats','MonStats2','MonProp','MonPreset','SuperUniques','Skills','ItemTypes','Armor','Missiles','SkillDesc','Properties','ItemStatCost','Hireling' | ForEach-Object { "data\global\excel\$_.txt" }) + @('data\global\excel\MonStats.bin','data\global\AnimData.d2','data\local\lng\eng\string.tbl','data\local\lng\eng\expansionstring.tbl','data\local\lng\eng\patchstring.tbl')
 $qaManifest=@()
 foreach($qaName in $qaNames){foreach($qaArchiveName in $qaArchives){$qaArchive=[IntPtr]::Zero
 if(-not [Pd2ArchiveReader]::SFileOpenArchive($qaArchiveName,0,256,[ref]$qaArchive)){continue}
