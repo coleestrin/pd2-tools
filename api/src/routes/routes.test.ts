@@ -113,6 +113,45 @@ describe("API Routes", () => {
         );
       });
 
+      it("should pass sortBy and sortOrder to the database so sorting spans all pages", async () => {
+        (characterDB.getFilteredCharacters as jest.Mock).mockResolvedValue({
+          total: 0,
+          characters: [],
+          breakdown: {},
+        });
+
+        await request(app)
+          .get("/api/v1/characters")
+          .query({ sortBy: "life", sortOrder: "asc" })
+          .expect(200);
+
+        expect(characterDB.getFilteredCharacters).toHaveBeenCalledWith(
+          "softcore",
+          expect.objectContaining({
+            sort: { field: "life", order: "asc" },
+          }),
+          1,
+          50
+        );
+      });
+
+      it("should ignore unsupported sortBy values", async () => {
+        (characterDB.getFilteredCharacters as jest.Mock).mockResolvedValue({
+          total: 0,
+          characters: [],
+          breakdown: {},
+        });
+
+        await request(app)
+          .get("/api/v1/characters")
+          .query({ sortBy: "name; DROP TABLE Characters" })
+          .expect(200);
+
+        const calls = (characterDB.getFilteredCharacters as jest.Mock).mock.calls;
+        const [, filter] = calls[calls.length - 1];
+        expect(filter.sort).toBeUndefined();
+      });
+
       it("should filter by level range", async () => {
         (characterDB.getFilteredCharacters as jest.Mock).mockResolvedValue({
           total: 10,
