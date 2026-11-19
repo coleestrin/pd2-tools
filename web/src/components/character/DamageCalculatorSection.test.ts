@@ -7,6 +7,10 @@ import type {
 import {
   applyAuraToProfile,
   findPrecomputedAuraProfile,
+  getInitialAuraSelectionRows,
+  normalizeAuraSelectionRows,
+  selectAuraForRow,
+  type AuraSelectionRow,
 } from "./DamageCalculatorSection";
 
 function profile(): DamageProfile {
@@ -321,5 +325,162 @@ describe("damage calculator aura interactions", () => {
       true
     );
     expect(lowered.totalDamage).toEqual(seed.totalDamage);
+  });
+});
+
+describe("mercenary aura rows", () => {
+  function auraOption(id: string, level: number, deadlyStrikeChance = 0): DamageAuraOption {
+    const levelOptions = Array.from({ length: 30 }, (_, index) => index + 1);
+    const bonuses = levelOptions.map((optionLevel) => {
+      const row = bonus(optionLevel);
+      row.strikeModifiers.deadlyStrikeChance =
+        optionLevel === level ? deadlyStrikeChance : 0;
+      return row;
+    });
+    return {
+      id,
+      name: id,
+      level,
+      source: "manual",
+      defaultActive: false,
+      levelOptions,
+      levelBonuses: bonuses,
+      selfLevelBonuses: bonuses,
+      partyLevelBonuses: bonuses,
+    };
+  }
+
+  // Mirrors an Act 2 Offensive merc (native Blessed Aim 18) wearing Insight.
+  function calculation(): DamageCalculation {
+    return {
+      playerAuraOptions: [
+        { ...auraOption("none", 0), name: "No active aura", source: "none" },
+        auraOption("Blessed Aim", 18, 14),
+        auraOption("Meditation", 17),
+        auraOption("Might", 1),
+      ],
+      alwaysActiveAuras: [
+        { name: "Blessed Aim", level: 18, source: "mercenary_native", carrier: "party" },
+        { name: "Meditation", level: 17, source: "mercenary_item", carrier: "party" },
+      ],
+    } as unknown as DamageCalculation;
+  }
+
+  const strip = (rows: AuraSelectionRow[]) =>
+    rows.map(({ auraId, level, isParty, automaticLevel, automaticSource }) => ({
+      auraId,
+      level,
+      isParty,
+      automaticLevel,
+      automaticSource,
+    }));
+  const remove = (rows: AuraSelectionRow[], auraId: string) =>
+    normalizeAuraSelectionRows(
+      rows.filter((row) => row.auraId !== auraId),
+      calculation().playerAuraOptions
+    );
+  const add = (rows: AuraSelectionRow[], auraId: string) => {
+    const option = calculation().playerAuraOptions.find((candidate) => candidate.id === auraId)!;
+    return normalizeAuraSelectionRows(
+      rows.map((row) =>
+        row.auraId === "none" ? selectAuraForRow(row, option, calculation()) : row
+      ),
+      calculation().playerAuraOptions
+    );
+  };
+  const nativeBlessedAim = {
+    auraId: "Blessed Aim",
+    level: "18",
+    isParty: true,
+    automaticLevel: 18,
+    automaticSource: "mercenary_native",
+  };
+  const itemMeditation = {
+    auraId: "Meditation",
+    level: "17",
+    isParty: true,
+    automaticLevel: 17,
+    automaticSource: "mercenary_item",
+  };
+  const emptyRow = { auraId: "none", level: "0", isParty: false };
+
+  it("loads every native and item merc aura as an active party row", () => {
+    expect(strip(getInitialAuraSelectionRows(calculation()))).toEqual([
+      nativeBlessedAim,
+      itemMeditation,
+      emptyRow,
+    ]);
+  });
+
+  it("restores merc auras exactly when they are removed and added back in any order", () => {
+    const initial = getInitialAuraSelectionRows(calculation());
+
+    const withoutBlessedAim = remove(initial, "Blessed Aim");
+    expect(strip(withoutBlessedAim)).toEqual([itemMeditation, emptyRow]);
+    expect(strip(add(withoutBlessedAim, "Blessed Aim"))).toEqual([
+      itemMeditation,
+      nativeBlessedAim,
+      emptyRow,
+    ]);
+
+    const empty = remove(remove(initial, "Meditation"), "Blessed Aim");
+    expect(strip(empty)).toEqual([emptyRow]);
+    expect(strip(add(add(empty, "Blessed Aim"), "Meditation"))).toEqual(
+      strip(initial)
+    );
+    expect(strip(add(add(empty, "Meditation"), "Blessed Aim"))).toEqual([
+      itemMeditation,
+      nativeBlessedAim,
+      emptyRow,
+    ]);
+  });
+
+  it("restores the party carrier after the user unchecks it, removes, and re-adds", () => {
+    const unchecked = getInitialAuraSelectionRows(calculation()).map((row) =>
+      row.auraId === "Blessed Aim" ? { ...row, isParty: false } : row
+    );
+    const readded = add(remove(unchecked, "Blessed Aim"), "Blessed Aim");
+    expect(strip(readded).find((row) => row.auraId === "Blessed Aim")).toEqual(
+      nativeBlessedAim
+    );
+  });
+
+  it("adds a non-mercenary aura as a manual self row next to merc auras", () => {
+    const rows = add(getInitialAuraSelectionRows(calculation()), "Might");
+    expect(strip(rows)).toEqual([
+      nativeBlessedAim,
+      itemMeditation,
+      { auraId: "Might", level: "1", isParty: false },
+      emptyRow,
+    ]);
+    expect(strip(remove(rows, "Might"))).toEqual(
+      strip(getInitialAuraSelectionRows(calculation()))
+    );
+  });
+
+  it("applies merc Blessed Aim Deadly Strike to Twister and removes it cleanly", () => {
+    const twister = profile();
+    twister.skillDamageMode = "spell";
+    twister.skillName = twister.skillId = "Twister";
+    twister.strikeBreakdowns = [{
+      id: "spell", label: "Twister", physicalComponentIds: ["physical"],
+      rawCriticalChance: 0, criticalChance: 0, criticalMultiplier: 2,
+      rawDeadlyStrikeChance: 44, rawMaxDeadlyStrikeChance: 75,
+      deadlyStrikeChance: 44, maxDeadlyStrikeChance: 75,
+      effectiveDeadlyStrikeChance: 44, deadlyStrikeMultiplier: 1.5,
+    }];
+    const blessedAim = calculation().playerAuraOptions[1];
+
+    const buffed = applyAuraToProfile(twister, blessedAim, true, "18", "mercenary_native");
+    expect(buffed.strikeBreakdowns[0].deadlyStrikeChance).toBe(58);
+    expect(buffed.strikeBreakdowns[0].effectiveDeadlyStrikeChance).toBe(58);
+    expect(buffed.activeAuras).toEqual([
+      expect.objectContaining({ name: "Blessed Aim", level: 18, source: "mercenary_native", carrier: "party" }),
+    ]);
+    // Reapplying the same row is idempotent, and the removed state is the unbuffed profile.
+    expect(applyAuraToProfile(buffed, blessedAim, true, "18", "mercenary_native").totalDamage)
+      .toEqual(buffed.totalDamage);
+    expect(twister.strikeBreakdowns[0].deadlyStrikeChance).toBe(44);
+    expect(buffed.totalDamage.min).toBeGreaterThan(twister.totalDamage.min);
   });
 });

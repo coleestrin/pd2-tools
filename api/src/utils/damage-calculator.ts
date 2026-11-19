@@ -703,6 +703,27 @@ function loadPd2GameData(): GameData {
 
 const pd2GameData = loadPd2GameData();
 
+// Hireling.txt repeats each hireling Id once per level bracket and also keeps
+// classic rows, so it cannot use the first-row-per-key game table index.
+function loadExpansionHirelingRows(): Array<Record<string, string>> {
+  const [header = "", ...lines] = fs
+    .readFileSync(path.join(PD2_GAME_DATA_DIRECTORY, "Hireling.txt"), "utf8")
+    .replace(/^\uFEFF/, "")
+    .split(/\r?\n/);
+  const columns = header.split("\t");
+  return lines
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const cells = line.split("\t");
+      return Object.fromEntries(
+        columns.map((column, index) => [column, cells[index] || ""])
+      );
+    })
+    .filter((row) => row.Version === "100");
+}
+
+const EXPANSION_HIRELING_ROWS = loadExpansionHirelingRows();
+
 const GAME_DAMAGE_LEVEL_THRESHOLDS = [8, 16, 22, 28, Infinity] as const;
 const DEFAULT_MAX_SELECTABLE_SKILL_LEVEL = 60;
 
@@ -3747,7 +3768,81 @@ function collectAlwaysActiveAuras(
     });
   }
 
+  if (mercenary) {
+    auras.push(...collectMercenaryNativeAuras(mercenary));
+  }
+
   return auras;
+}
+
+// A hireling reaches level L at ExpPerLvl * L^2 * (L + 1) experience.
+function getMercenaryLevel(expPerLevel: number, experience: number): number {
+  let level = 0;
+  while (
+    expPerLevel > 0 &&
+    expPerLevel * (level + 1) ** 2 * (level + 2) <= experience
+  ) {
+    level += 1;
+  }
+  return level;
+}
+
+// Hireling.txt skill levels grow by LvlPerLvl/32 per merc level above the
+// bracket's base level. Merc +All Skills raises those skills as well.
+function collectMercenaryNativeAuras(
+  mercenary: NonNullable<CharacterData["mercenary"]>
+): AuraSource[] {
+  const hirelingRows = EXPANSION_HIRELING_ROWS.filter(
+    (row) => Number(row.Id) === mercenary.type
+  );
+  if (hirelingRows.length === 0) {
+    return [];
+  }
+
+  const mercenaryLevel = getMercenaryLevel(
+    Number(hirelingRows[0]["Exp/Lvl"]),
+    Number(mercenary.experience) || 0
+  );
+  const hirelingRow = hirelingRows
+    .filter((row) => Number(row.Level) <= mercenaryLevel)
+    .sort((left, right) => Number(right.Level) - Number(left.Level))[0];
+  if (!hirelingRow) {
+    return [];
+  }
+
+  const allSkillsLevel = (mercenary.items || []).reduce(
+    (total, item) =>
+      total +
+      item.properties.reduce((itemTotal, property) => {
+        const match = property?.match(/^\+(\d+) to All Skills$/i);
+        return itemTotal + (match ? Number(match[1]) : 0);
+      }, 0),
+    0
+  );
+
+  return [1, 2, 3, 4, 5, 6].flatMap((index): AuraSource[] => {
+    const skillName = normalizeSkillName(hirelingRow[`Skill${index}`] || "");
+    const skillRow = skillName ? getGameRow("Skills", skillName) : undefined;
+    if (
+      !skillRow ||
+      getGameRowString("Skills", skillRow, "aura") !== "1" ||
+      !isDamageAura(skillName)
+    ) {
+      return [];
+    }
+
+    const level =
+      Number(hirelingRow[`Level${index}`]) +
+      Math.trunc(
+        ((mercenaryLevel - Number(hirelingRow.Level)) *
+          Number(hirelingRow[`LvlPerLvl${index}`])) /
+          32
+      ) +
+      allSkillsLevel;
+    return level > 0
+      ? [{ name: skillName, level, source: "mercenary_native", carrier: "party" }]
+      : [];
+  });
 }
 
 function summarizeAuraSource(source: AuraSource): ActiveAuraSummary {

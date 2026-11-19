@@ -3905,6 +3905,161 @@ describeWithGameData("damage calculator component model", () => {
     expect(profile?.breakdown.physicalBonusPercent.activeAuras).toBe(0);
   });
 
+  describe("native mercenary auras", () => {
+    function mercenary(type: number, experience: number, items: IItem[] = []) {
+      return {
+        id: 1,
+        name_id: 1,
+        type,
+        experience,
+        name: "Hireling",
+        description: "Test",
+        items,
+      };
+    }
+
+    function mercenaryAuras(character: CharacterData) {
+      return calculateDamage(character).alwaysActiveAuras.filter((aura) =>
+        aura.source.startsWith("mercenary")
+      );
+    }
+
+    it.each([
+      // Hireling.txt Id 14 (Act 2 Off-Hell): Blessed Aim 18 at 75, +0/32.
+      [14, 130 * 94 * 94 * 95, "Blessed Aim", 18],
+      // Id 8 (Off-Normal) bracket 43 gives 11 + floor(31 * 7 / 32) at merc level 74.
+      [8, 110 * 75 * 75 * 76 - 1, "Blessed Aim", 17],
+      // Level 75 is reached at exactly ExpPerLvl * 75^2 * 76 and uses the 18/0 bracket.
+      [8, 110 * 75 * 75 * 76, "Blessed Aim", 18],
+      // Id 23 (A3 Ltng-Hell): Holy Shock 21 + floor((98 - 79) * 8 / 32).
+      [23, 130 * 98 * 98 * 99, "Holy Shock", 25],
+      // Id 5 (Rogue Ice-Hell): Meditation 18 + floor((90 - 67) * 12 / 32).
+      [5, 120 * 90 * 90 * 91, "Meditation", 26],
+      // Id 28 (A5 Mght-Hell): Might 18 at 80, +0/32.
+      [28, 140 * 85 * 85 * 86, "Might", 18],
+      // Id 35 (A4 Light-Hell): Sanctuary 30 at 79, +0/32.
+      [35, 120 * 85 * 85 * 86, "Sanctuary", 30],
+    ])(
+      "derives type %i with %i experience as party %s %i",
+      (type, experience, name, level) => {
+        const character = createCharacter("Basic Attack", 1);
+        character.mercenary = mercenary(type, experience);
+
+        expect(mercenaryAuras(character)).toEqual([
+          { name, level, source: "mercenary_native", carrier: "party" },
+        ]);
+      }
+    );
+
+    it("adds merc +All Skills to native auras but not to item-granted auras", () => {
+      const character = createCharacter("Basic Attack", 1);
+      character.mercenary = mercenary(14, 130 * 94 * 94 * 95, [
+        createSimpleItem({
+          id: "merc-helm",
+          hash: "merc-helm",
+          properties: ["+2 to All Skills"],
+        }),
+        createSimpleItem({
+          id: "merc-insight",
+          hash: "merc-insight",
+          properties: [
+            "Level 17 Meditation Aura When Equipped",
+            "+1 to All Skills",
+          ],
+        }),
+      ]);
+
+      const calculation = calculateDamage(character);
+
+      expect(mercenaryAuras(character)).toEqual([
+        {
+          name: "Blessed Aim",
+          level: 21,
+          source: "mercenary_native",
+          carrier: "party",
+        },
+        {
+          name: "Meditation",
+          level: 17,
+          source: "mercenary_item",
+          carrier: "party",
+        },
+      ]);
+      expect(
+        calculation.playerAuraOptions.find((option) => option.id === "Blessed Aim")
+          ?.level
+      ).toBe(21);
+    });
+
+    it("keeps native merc auras removable instead of baking them into profiles", () => {
+      const character = createCharacter("Basic Attack", 1);
+      character.mercenary = mercenary(28, 140 * 85 * 85 * 86);
+
+      const calculation = calculateDamage(character);
+      const profile = calculation.profiles.find(
+        (candidate) =>
+          candidate.skillName === "Basic Attack" &&
+          candidate.playerAuraId === "none"
+      );
+
+      expect(profile?.activeAuras).toEqual([]);
+      expect(profile?.breakdown.physicalBonusPercent.activeAuras).toBe(0);
+      expect(
+        calculation.playerAuraOptions.find((option) => option.id === "Might")
+          ?.level
+      ).toBe(18);
+    });
+
+    it("keeps the stronger source when native and item auras overlap", () => {
+      const character = createCharacter("Basic Attack", 1);
+      character.items[0].properties = ["Level 25 Might Aura When Equipped"];
+      character.mercenary = mercenary(28, 140 * 85 * 85 * 86, [
+        createSimpleItem({
+          id: "merc-might",
+          hash: "merc-might",
+          properties: ["Level 10 Might Aura When Equipped"],
+        }),
+      ]);
+      expect(
+        calculateDamage(character).alwaysActiveAuras.filter(
+          (aura) => aura.name === "Might"
+        )
+      ).toEqual([
+        expect.objectContaining({ level: 25, source: "player_item" }),
+      ]);
+
+      character.items[0].properties = ["Level 5 Might Aura When Equipped"];
+      expect(
+        calculateDamage(character).alwaysActiveAuras.filter(
+          (aura) => aura.name === "Might"
+        )
+      ).toEqual([
+        {
+          name: "Might",
+          level: 18,
+          source: "mercenary_native",
+          carrier: "party",
+        },
+      ]);
+    });
+
+    it.each([
+      // Id 29 (A5 Wwnd-Hell): Battle Orders, Battle Cry and MonWhirlwind are not auras.
+      [29, 140 * 85 * 85 * 86],
+      // Id 34 (A4 Dark-Hell): Amplify Damage is a curse.
+      [34, 120 * 85 * 85 * 86],
+      // Id 14 before its only expansion bracket at level 75.
+      [14, 0],
+      // Unknown hireling Id.
+      [999, 130 * 94 * 94 * 95],
+    ])("adds no native aura for type %i with %i experience", (type, experience) => {
+      const character = createCharacter("Basic Attack", 1);
+      character.mercenary = mercenary(type, experience);
+
+      expect(mercenaryAuras(character)).toEqual([]);
+    });
+  });
+
   it("adds source-backed two-weapon sequence profiles for optional dual-wield cycles", () => {
     const character = createCharacter("Whirlwind", 20);
     character.character.class = { id: 4, name: "Barbarian" };

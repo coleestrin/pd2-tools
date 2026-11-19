@@ -16,6 +16,12 @@ These changes agree with the developer's [Open Beta Patch 2 announcement](https:
 
 The [final Alliance patch notes](https://docs.google.com/document/d/1VA1rqc7AaCBLikb2iPK939laUH-Td7C8fPyPuVTFWAo/edit) were then checked against the imported files and calculation paths. That review corrected ranged item mastery, Enchant recipient scaling, summon strike bonuses and magic skill damage. The new magic jewel property is **extra-magi → passive_mag_mastery (357)**; active item values now feed magic spell and carried item damage without counting rendered text twice. PD2 Enchants use **edmn/edmx**, so their stored buff includes hard-point synergy without caster mastery; the attacking recipient's elemental bonus applies once. Summons receive applicable aura Deadly Strike and explicitly assigned Critical Strike (such as Valkyrie's owner-hard-point transfer), while owner gear strike stats remain excluded. Selecting an external party buff also replaces an owned cached buff's source-specific values.
 
+## Mercenary auras (November 18)
+
+`Hireling.txt` was added from the installed November 4 `pd2data.mpq` (extracted November 18; the archive hash is in the manifest). It is the only table from that build. The other tables remain the October 23 snapshot; the November 4 build changed none of `Skills.txt`, `Missiles.txt`, `SkillDesc.txt`, `Properties.txt` or `ItemStatCost.txt`.
+
+A mercenary's native aura is read from the expansion (`Version` 100) row whose `Id` is the armory merc `type`. The merc level comes from its experience (level L needs `Exp/Lvl` × L² × (L + 1)). The row used is the highest bracket whose `Level` is at or below the merc level, and its skill level is `LevelN + (mercLevel − Level) × LvlPerLvlN / 32` plus any +All Skills on merc gear. Only skills with `aura` = 1 are added. Native and merc-item auras are loaded as removable party aura rows. The character payload cache version is **`damage-model-v18`**.
+
 ## Sources used by the calculator
 
 | File | Purpose |
@@ -26,6 +32,7 @@ The [final Alliance patch notes](https://docs.google.com/document/d/1VA1rqc7AaCB
 | `MonStats.txt`, `MonLvl.txt` | Monster targets, summon bases and difficulty scaling |
 | `MonStats2.txt`, `MonProp.txt`, `SuperUniques.txt`, `MonPreset.txt` | Target eligibility, innate defenses and auras, fixed named-monster modifiers, and direct encounter placements |
 | `Levels.txt` | Area levels and monster populations, including the four new populated map/event records |
+| `Hireling.txt` | Mercenary native aura levels by type and experience |
 | `Properties.txt`, `ItemStatCost.txt` | Armory modifier expansion, stat names and local/global stat behavior |
 | `Armor.txt`, `Weapons.txt` | Base combat data, weapon speeds and socket limits |
 | `CharStats.txt` | Class attack-rating constants and source growth values; armory life/mana are not rewritten |

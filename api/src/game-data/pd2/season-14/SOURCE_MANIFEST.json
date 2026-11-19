@@ -123,6 +123,14 @@
       "rows": 68,
       "columns": 21,
       "extractedSha256": "371c19892dc026aff5ae4535237d26d60b55f113f81fd9c067ad174683209ba2"
+    },
+    "Hireling.txt": {
+      "sha256": "b9cf2693ec718816d6f152b41d72718d724d2a50483e95c9f8685ebef8986f7e",
+      "source": "pd2data.mpq (installed November 4 build, archive SHA-256 7e41718ef7b737464d13ee82f4e7093c63bc3797eed6f76953e1c7b406e08d09)",
+      "extractedOn": "2026-11-18",
+      "rows": 156,
+      "columns": 73,
+      "extractedSha256": "6c692f895e7d68f5e8b4c9d60b93cb7436791fe0d56ef8c7087e81310ce1e36e"
     }
   },
   "compiledValidation": {
