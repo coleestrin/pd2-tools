@@ -3787,8 +3787,11 @@ function getMercenaryLevel(expPerLevel: number, experience: number): number {
   return level;
 }
 
-// Hireling.txt skill levels grow by LvlPerLvl/32 per merc level above the
-// bracket's base level. Merc +All Skills raises those skills as well.
+// Mirrors the game's hireling skill assignment (D2MOO MONSTERAI_UpdateMercStatsAndSkills
+// and DATATBLS_GetHirelingTxtRecordFromIdAndLevel): the last bracket at or
+// below the merc level (else the first bracket), a Skills.txt reqlevel gate,
+// and LevelN + floor(levelUps * LvlPerLvlN / 32) clamped to 0-32. Merc
+// +All Skills then raises the hard level.
 function collectMercenaryNativeAuras(
   mercenary: NonNullable<CharacterData["mercenary"]>
 ): AuraSource[] {
@@ -3803,12 +3806,10 @@ function collectMercenaryNativeAuras(
     Number(hirelingRows[0]["Exp/Lvl"]),
     Number(mercenary.experience) || 0
   );
-  const hirelingRow = hirelingRows
-    .filter((row) => Number(row.Level) <= mercenaryLevel)
-    .sort((left, right) => Number(right.Level) - Number(left.Level))[0];
-  if (!hirelingRow) {
-    return [];
-  }
+  const hirelingRow =
+    hirelingRows
+      .filter((row) => Number(row.Level) <= mercenaryLevel)
+      .pop() || hirelingRows[0];
 
   const allSkillsLevel = (mercenary.items || []).reduce(
     (total, item) =>
@@ -3820,29 +3821,46 @@ function collectMercenaryNativeAuras(
     0
   );
 
-  return [1, 2, 3, 4, 5, 6].flatMap((index): AuraSource[] => {
+  const auras: AuraSource[] = [];
+  for (let index = 1; index <= 6; index += 1) {
     const skillName = normalizeSkillName(hirelingRow[`Skill${index}`] || "");
     const skillRow = skillName ? getGameRow("Skills", skillName) : undefined;
+    // The game stops assigning skills at the first empty slot.
+    if (!skillRow) {
+      break;
+    }
+
     if (
-      !skillRow ||
+      mercenaryLevel < getGameRowNumber("Skills", skillRow, "reqlevel") ||
       getGameRowString("Skills", skillRow, "aura") !== "1" ||
       !isDamageAura(skillName)
     ) {
-      return [];
+      continue;
     }
 
-    const level =
-      Number(hirelingRow[`Level${index}`]) +
-      Math.trunc(
-        ((mercenaryLevel - Number(hirelingRow.Level)) *
-          Number(hirelingRow[`LvlPerLvl${index}`])) /
-          32
-      ) +
-      allSkillsLevel;
-    return level > 0
-      ? [{ name: skillName, level, source: "mercenary_native", carrier: "party" }]
-      : [];
-  });
+    const hardLevel = Math.min(
+      32,
+      Math.max(
+        0,
+        Number(hirelingRow[`Level${index}`]) +
+          Math.floor(
+            ((mercenaryLevel - Number(hirelingRow.Level)) *
+              Number(hirelingRow[`LvlPerLvl${index}`])) /
+              32
+          )
+      )
+    );
+    if (hardLevel > 0) {
+      auras.push({
+        name: skillName,
+        level: hardLevel + allSkillsLevel,
+        source: "mercenary_native",
+        carrier: "party",
+      });
+    }
+  }
+
+  return auras;
 }
 
 function summarizeAuraSource(source: AuraSource): ActiveAuraSummary {

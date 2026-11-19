@@ -458,6 +458,40 @@ describe("mercenary aura rows", () => {
     );
   });
 
+  it("restores a merc aura the player also owns as its merc party row", () => {
+    const owned = calculation();
+    owned.playerAuraOptions[1] = {
+      ...owned.playerAuraOptions[1],
+      level: 25,
+      source: "character_skill",
+    };
+    const option = owned.playerAuraOptions[1];
+    const initial = getInitialAuraSelectionRows(owned);
+    expect(strip(initial)[0]).toEqual(nativeBlessedAim);
+
+    const emptyRow = normalizeAuraSelectionRows(
+      initial.filter((row) => row.auraId !== "Blessed Aim"),
+      owned.playerAuraOptions
+    ).find((row) => row.auraId === "none")!;
+    expect(strip([selectAuraForRow(emptyRow, option, owned)])).toEqual([
+      nativeBlessedAim,
+    ]);
+  });
+
+  it("re-adds a removed player item aura as a plain self row", () => {
+    const withItemAura = calculation();
+    withItemAura.alwaysActiveAuras = [
+      { name: "Might", level: 5, source: "player_item", carrier: "self" },
+    ];
+    const option = withItemAura.playerAuraOptions[3];
+    const emptyRow = getInitialAuraSelectionRows(withItemAura).find(
+      (row) => row.auraId === "none"
+    )!;
+    expect(strip([selectAuraForRow(emptyRow, option, withItemAura)])).toEqual([
+      { auraId: "Might", level: "1", isParty: false },
+    ]);
+  });
+
   it("applies merc Blessed Aim Deadly Strike to Twister and removes it cleanly", () => {
     const twister = profile();
     twister.skillDamageMode = "spell";

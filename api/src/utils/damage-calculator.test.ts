@@ -3933,12 +3933,20 @@ describeWithGameData("damage calculator component model", () => {
       [8, 110 * 75 * 75 * 76, "Blessed Aim", 18],
       // Id 23 (A3 Ltng-Hell): Holy Shock 21 + floor((98 - 79) * 8 / 32).
       [23, 130 * 98 * 98 * 99, "Holy Shock", 25],
+      // Id 4 (Rogue Fire-Hell): Vigor 18 at 67, +0/32.
+      [4, 120 * 97 * 97 * 98, "Vigor", 18],
       // Id 5 (Rogue Ice-Hell): Meditation 18 + floor((90 - 67) * 12 / 32).
       [5, 120 * 90 * 90 * 91, "Meditation", 26],
       // Id 28 (A5 Mght-Hell): Might 18 at 80, +0/32.
       [28, 140 * 85 * 85 * 86, "Might", 18],
       // Id 35 (A4 Light-Hell): Sanctuary 30 at 79, +0/32.
       [35, 120 * 85 * 85 * 86, "Sanctuary", 30],
+      // A merc below its only bracket (75) still uses that first bracket.
+      [14, 130 * 60 * 60 * 61, "Blessed Aim", 18],
+      // Id 11 (Off-Nightmare) at level 30 uses bracket 43: 11 + floor(-13 * 7 / 32) = 8.
+      [11, 120 * 30 * 30 * 31, "Blessed Aim", 8],
+      // Id 8 at level 12 meets Blessed Aim's reqlevel: 3 + floor(3 * 7 / 32).
+      [8, 110 * 12 * 12 * 13, "Blessed Aim", 3],
     ])(
       "derives type %i with %i experience as party %s %i",
       (type, experience, name, level) => {
@@ -4048,7 +4056,11 @@ describeWithGameData("damage calculator component model", () => {
       [29, 140 * 85 * 85 * 86],
       // Id 34 (A4 Dark-Hell): Amplify Damage is a curse.
       [34, 120 * 85 * 85 * 86],
-      // Id 14 before its only expansion bracket at level 75.
+      // Id 8 at level 11 is below Blessed Aim's Skills.txt reqlevel of 12.
+      [8, 110 * 11 * 11 * 12],
+      // Id 5 at level 23 is below Meditation's reqlevel of 24.
+      [5, 120 * 23 * 23 * 24],
+      // A level 0 merc meets no aura reqlevel.
       [14, 0],
       // Unknown hireling Id.
       [999, 130 * 94 * 94 * 95],

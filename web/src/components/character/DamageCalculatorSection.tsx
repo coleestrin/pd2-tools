@@ -430,8 +430,8 @@ export function getInitialAuraSelectionRows(
   );
 }
 
-// Re-selecting an automatic aura restores its original carrier and minimum
-// level, so removing and adding back a mercenary aura is lossless.
+// Re-selecting a mercenary aura restores its loaded party carrier and minimum
+// level, so removing and adding it back is lossless.
 export function selectAuraForRow(
   row: AuraSelectionRow,
   auraOption: DamageAuraOption,
@@ -439,7 +439,9 @@ export function selectAuraForRow(
 ): AuraSelectionRow {
   const automaticRow = damageCalculation
     ? getInitialAuraSelectionRows(damageCalculation).find(
-        (candidate) => candidate.auraId === auraOption.id
+        (candidate) =>
+          candidate.auraId === auraOption.id &&
+          candidate.automaticSource?.startsWith("mercenary_")
       )
     : undefined;
 
