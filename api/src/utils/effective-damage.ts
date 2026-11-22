@@ -530,6 +530,23 @@ export function calculateEffectiveDamage(
         ? combat.werewolfAttackRatingBonuses?.[allSkills] || 0
         : 0)
   );
+  // Thorns' aurastats give the party Open Wounds; its owner uses the passivestat damage.
+  const auraWounds = [...active].reduce(
+    (sum, [name, level]) => {
+      const effect = combat.effects[name]?.[Math.min(80, level)];
+      const isSelf =
+        profile.activeAuras.find((a) => a.name === name)?.carrier === "self";
+      return {
+        chance: sum.chance + (effect?.openWounds || 0),
+        damage:
+          sum.damage +
+          ((isSelf ? effect?.selfOpenWoundsDps : undefined) ??
+            effect?.openWoundsDps ??
+            0),
+      };
+    },
+    { chance: 0, damage: 0 }
+  );
   return targets.map((monster) => {
     const level = Math.max(
       1,
@@ -751,7 +768,7 @@ export function calculateEffectiveDamage(
             45 * Math.max(0, l - 60);
         const bleed =
           (Math.trunc(
-            (bleedBase + 25 + 5 * hand.openWoundsDps) *
+            (bleedBase + 25 + 5 * (hand.openWoundsDps + auraWounds.damage)) *
               Math.max(0, 1 - woundPhysicalResistance / 100)
           ) *
             25) /
@@ -759,7 +776,9 @@ export function calculateEffectiveDamage(
         bleedStreams.push({
           trials: timing.rate! * 5,
           chance:
-            ((hitData[index]?.hit || 0) * clamp(hand.openWounds, 0, 100)) / 100,
+            ((hitData[index]?.hit || 0) *
+              clamp(hand.openWounds + auraWounds.chance, 0, 100)) /
+            100,
           damage: Math.max(0, bleed),
         });
       });

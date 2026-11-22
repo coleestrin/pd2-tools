@@ -91,6 +91,9 @@ export interface CombatAuraLevel {
   defensePercent: number;
   defenseFlat: number;
   reductions: CombatResistances;
+  openWounds?: number;
+  openWoundsDps?: number;
+  selfOpenWoundsDps?: number;
 }
 export interface DamageCombatData {
   commandSelfBonuses?: number[];
