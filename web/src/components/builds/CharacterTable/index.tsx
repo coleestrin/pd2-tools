@@ -3,6 +3,7 @@ import {
   MantineReactTable,
   MRT_ColumnDef,
   MRT_PaginationState,
+  MRT_SortingState,
   useMantineReactTable,
 } from "mantine-react-table";
 import { IconGrave } from "@tabler/icons-react";
@@ -49,12 +50,13 @@ export default function PlayerTable({
     pageIndex: 0,
     pageSize: 40,
   });
-  // Effect to fetch data when pagination or filters change
+  const [sorting, setSorting] = useState<MRT_SortingState>([]);
+  // Effect to fetch data when pagination, sorting or filters change
   useEffect(() => {
     const fetchCharacters = async () => {
       // If we have initial characters and this is not a pagination request,
       // use those instead of making an API call
-      if (initialCharacters && pagination.pageIndex === 0) {
+      if (initialCharacters && pagination.pageIndex === 0 && !sorting.length) {
         setCharacterData(initialCharacters);
         setTotalRowCount(initialTotal || 0); // Use the initial total
         setIsLoading(false);
@@ -69,7 +71,7 @@ export default function PlayerTable({
       }
 
       // Only proceed with API call if we're paginating or don't have initial data
-      if (pagination.pageIndex > 0 || !initialCharacters) {
+      if (pagination.pageIndex > 0 || !initialCharacters || sorting.length) {
         try {
           const queryParams = new URLSearchParams({
             gameMode: filters.gameMode,
@@ -119,7 +121,13 @@ export default function PlayerTable({
               season: filters.season,
             },
             pagination.pageIndex + 1,
-            pagination.pageSize
+            pagination.pageSize,
+            sorting[0]
+              ? {
+                  sortBy: sorting[0].id,
+                  sortOrder: sorting[0].desc ? "desc" : "asc",
+                }
+              : undefined
           ); // page is 1-indexed in API
 
           setCharacterData(jsonResponse.characters || []);
@@ -142,6 +150,7 @@ export default function PlayerTable({
   }, [
     pagination.pageIndex,
     pagination.pageSize,
+    sorting,
     filters,
     initialCharacters,
     initialTotal,
@@ -262,12 +271,18 @@ export default function PlayerTable({
     enableColumnActions: false,
     enableColumnFilters: false,
     enableSorting: true,
+    manualSorting: true,
+    onSortingChange: (updater) => {
+      setSorting(updater);
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    },
 
     state: {
       isLoading: isLoading,
       showProgressBars: isRefetching,
       pagination,
       showAlertBanner: isError,
+      sorting,
     },
     initialState: {
       density: "xs",

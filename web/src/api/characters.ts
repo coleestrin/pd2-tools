@@ -21,12 +21,15 @@ export const charactersAPI = {
     gameMode: string = "softcore",
     filter: CharacterFilter = {},
     page: number = 1,
-    pageSize: number = 20
+    pageSize: number = 20,
+    sort?: { sortBy: string; sortOrder: "asc" | "desc" }
   ): Promise<CharacterListResponse> {
     return apiClient.get<CharacterListResponse>(API_ENDPOINTS.characters, {
       gameMode,
       page,
       pageSize,
+      sortBy: sort?.sortBy,
+      sortOrder: sort?.sortOrder,
       classes: filter.requiredClasses?.join(","),
       items: filter.requiredItems?.join(","),
       skills:
